@@ -1,0 +1,11 @@
+<project name="rac" default="src">
+    <property name="solution" value="solution.zip"/>
+
+    <target name="clean">
+        <delete file="${solution}"/>
+    </target>
+
+    <target name="src" depends="clean">
+        <zip basedir="src" destfile="${solution}" excludes="src.iml"/>
+    </target>
+</project>
