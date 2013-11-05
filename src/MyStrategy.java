@@ -11,7 +11,7 @@ public class MyStrategy implements Strategy {
     private static final Army ARMY = new Army();
 
     @Override
-    public void move(Trooper self, World world, Game game, Move move) {
+    public void move(@NotNull Trooper self, @NotNull World world, @NotNull Game game, @NotNull Move move) {
         Warrior warrior = WARRIORS.get(self.getId());
         if (warrior == null) {
             warrior = new Warrior(ARMY);

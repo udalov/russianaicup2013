@@ -7,11 +7,11 @@ public class Warrior {
 
     private final Army army;
 
-    public Warrior(Army army) {
+    public Warrior(@NotNull Army army) {
         this.army = army;
     }
 
-    public void move(Trooper self, World world, Game game, Move move) {
+    public void move(@NotNull Trooper self, @NotNull World world, @NotNull Game game, @NotNull Move move) {
         if (self.getActionPoints() < game.getStandingMoveCost()) return;
 
         move.setAction(ActionType.MOVE);
