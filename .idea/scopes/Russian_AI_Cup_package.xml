@@ -1,3 +1,3 @@
 <component name="DependencyValidationManager">
-  <scope name="Russian AI Cup package" pattern="file[model]:*/||file[runner]:Runner.java" />
+  <scope name="Russian AI Cup package" pattern="file[model]:*/||file[runner]:Runner.java||file[runner]:RemoteProcessClient.java" />
 </component>
