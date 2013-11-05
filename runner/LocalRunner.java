@@ -26,11 +26,11 @@ public class LocalRunner {
      */
     public static void main(String[] args) throws IOException, InterruptedException {
         HashSet<String> set = new HashSet<>(Arrays.asList(args));
-        run(set.contains("-vis"), set.contains("-sync"), 3, set.contains("smartGuy"), set.contains("-keyboard"));
+        run(set.contains("-vis"), set.contains("-sync"), 3, set.contains("-smart"), set.contains("-keyboard"));
 
         while (true) {
             try {
-                Runner.main(args);
+                Runner.main(new String[]{});
             } catch (ConnectException e) {
                 if ("Connection refused".equals(e.getMessage())) {
                     Thread.sleep(500);
