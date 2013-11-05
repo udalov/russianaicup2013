@@ -10,19 +10,32 @@ public class WarriorTurn {
     private final World world;
     private final Game game;
 
+    private final Board board;
+
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
         this.self = self;
         this.world = world;
         this.game = game;
+
+        this.board = new Board(world.getCells());
     }
 
     public void makeTurn(@NotNull Move move) {
         if (!canMove()) return;
 
-        move.setAction(ActionType.MOVE);
+        Direction direction = move();
+        if (direction == null) {
+            direction = Util.DIRECTIONS[RANDOM.nextInt(Util.DIRECTIONS.length)];
+        }
 
-        move.setDirection(Direction.values()[RANDOM.nextInt(Direction.values().length)]);
+        move.setAction(ActionType.MOVE);
+        move.setDirection(direction);
+    }
+
+    @Nullable
+    private Direction move() {
+        return new BestPathFinder(board).findFirstMove(Point.byUnit(self), army.getDislocation(board));
     }
 
     private boolean canMove() {
