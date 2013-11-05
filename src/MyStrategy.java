@@ -7,16 +7,10 @@ public class MyStrategy implements Strategy {
 
     @Override
     public void move(Trooper self, World world, Game game, Move move) {
-        if (self.getActionPoints() < game.getStandingMoveCost()) {
-            return;
-        }
+        if (self.getActionPoints() < game.getStandingMoveCost()) return;
 
         move.setAction(ActionType.MOVE);
 
-        if (random.nextBoolean()) {
-            move.setDirection(random.nextBoolean() ? Direction.NORTH : Direction.SOUTH);
-        } else {
-            move.setDirection(random.nextBoolean() ? Direction.WEST : Direction.EAST);
-        }
+        move.setDirection(Direction.values()[random.nextInt(Direction.values().length)]);
     }
 }
