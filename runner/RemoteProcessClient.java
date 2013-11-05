@@ -357,7 +357,8 @@ public final class RemoteProcessClient implements Closeable {
         }
 
         if (offset != byteCount) {
-            throw new IOException(String.format("Can't read %d bytes from input stream.", byteCount));
+            System.err.println("Terminated: can't read " + byteCount + " bytes from input stream");
+            System.exit(1);
         }
 
         return bytes;
