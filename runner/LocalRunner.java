@@ -1,15 +1,20 @@
 import java.io.IOException;
 import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 
 public class LocalRunner {
+    private static final String LOG_FILE = "out/log.txt";
+
     private static void run(boolean vis, boolean sync, int teamSize, boolean smartGuy, boolean keyboardPlayer) throws IOException {
         ProcessBuilder b = new ProcessBuilder("java", "-jar", "lib/local-runner.jar",
                 String.valueOf(vis),
                 String.valueOf(sync),
                 String.valueOf(teamSize),
-                "out/log.txt",
+                LOG_FILE,
                 String.valueOf(smartGuy),
                 String.valueOf(keyboardPlayer)
         );
@@ -33,6 +38,10 @@ public class LocalRunner {
                 }
             }
             break;
+        }
+
+        for (String line : Files.readAllLines(Paths.get(LOG_FILE), StandardCharsets.UTF_8)) {
+            System.out.println(line);
         }
     }
 }
