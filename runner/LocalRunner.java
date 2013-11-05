@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Arrays;
+import java.util.HashSet;
 
 public class LocalRunner {
     private static void run(boolean vis, boolean sync, int teamSize, boolean smartGuy, boolean keyboardPlayer) throws IOException {
@@ -14,8 +16,13 @@ public class LocalRunner {
         b.start();
     }
 
+    /**
+     * @param args -vis, -sync, -smartGuy, -keyboard
+     */
     public static void main(String[] args) throws IOException, InterruptedException {
-        run(true, true, 3, false, false);
+        HashSet<String> set = new HashSet<>(Arrays.asList(args));
+        run(set.contains("-vis"), set.contains("-sync"), 3, set.contains("smartGuy"), set.contains("-keyboard"));
+
         while (true) {
             try {
                 Runner.main(args);
