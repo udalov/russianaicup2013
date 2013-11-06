@@ -1,25 +1,23 @@
 import model.Direction;
+import model.Trooper;
+import model.World;
 
 public class Army {
-    private final int worldWidth;
-    private final int worldHeight;
+    private final Board board;
+    private final Point dislocation;
 
-    private Point dislocation;
+    public Army(@NotNull Trooper someTrooper, @NotNull World world) {
+        this.board = new Board(world.getCells());
 
-    public Army(int worldWidth, int worldHeight) {
-        this.worldWidth = worldWidth;
-        this.worldHeight = worldHeight;
+        Point p = new Point(world.getWidth() - someTrooper.getX(), world.getHeight() - someTrooper.getY());
+        while (!board.free(p.x, p.y)) {
+            p = p.go(Direction.SOUTH);
+        }
+        this.dislocation = p;
     }
 
     @NotNull
     public Point getDislocation(@NotNull Board board) {
-        if (dislocation == null) {
-            Point p = new Point(worldWidth / 2, worldHeight / 2);
-            while (!board.free(p.x, p.y)) {
-                p = p.go(Direction.SOUTH);
-            }
-            dislocation = p;
-        }
         return dislocation;
     }
 }

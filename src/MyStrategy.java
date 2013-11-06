@@ -9,7 +9,7 @@ public class MyStrategy implements Strategy {
     @Override
     public void move(@NotNull Trooper self, @NotNull World world, @NotNull Game game, @NotNull Move move) {
         if (ARMY == null) {
-            ARMY = new Army(world.getWidth(), world.getHeight());
+            ARMY = new Army(self, world);
         }
         new WarriorTurn(ARMY, self, world, game).makeTurn(move);
     }

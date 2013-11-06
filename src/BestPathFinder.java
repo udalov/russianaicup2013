@@ -26,6 +26,7 @@ public class BestPathFinder {
 
         while (!set.isEmpty()) {
             Point point = set.first();
+            if (point == to) break;
             set.remove(point);
             int curd = dist.get(point);
 
