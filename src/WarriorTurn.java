@@ -26,7 +26,7 @@ public class WarriorTurn {
         this.game = game;
 
         this.me = Point.byUnit(self);
-        this.board = new Board(world.getCells());
+        this.board = new Board(world);
         this.enemies = new ArrayList<>(15);
         this.allies = new EnumMap<>(TrooperType.class);
         for (Trooper trooper : world.getTroopers()) {
@@ -40,12 +40,6 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        if (world.getMoveIndex() >= 1) {
-            if (self.getStance() != TrooperStance.KNEELING && self.getActionPoints() >= game.getStanceChangeCost()) {
-                return Go.lowerStance();
-            }
-        }
-
         Direction useMedikit = useMedikit();
         if (useMedikit != null) return Go.useMedikit(useMedikit);
 
@@ -144,17 +138,26 @@ public class WarriorTurn {
     private Direction move() {
         if (self.getActionPoints() < getMoveCost()) return null;
 
-        Trooper leader = getLeader();
+        BestPathFinder finder = new BestPathFinder(board);
+        Trooper leader = findLeader();
 
-        Point target = self.getType() == leader.getType()
-                ? army.getDislocation(board)
-                : Point.byUnit(leader);
+        if (self.getType() == leader.getType()) {
+            return finder.findFirstMove(me, army.getDislocation());
+        }
 
-        return new BestPathFinder(board).findFirstMove(me, target);
+        Point target = Point.byUnit(leader);
+        for (Direction direction : Util.DIRECTIONS) {
+            Point nearLeader = target.go(direction);
+            if (board.isPassable(nearLeader)) {
+                return finder.findFirstMove(me, nearLeader);
+            }
+        }
+
+        return null;
     }
 
     @NotNull
-    private Trooper getLeader() {
+    private Trooper findLeader() {
         for (TrooperType type : LEADERSHIP_ORDER) {
             Trooper trooper = allies.get(type);
             if (trooper != null) return trooper;

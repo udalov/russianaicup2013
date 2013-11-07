@@ -26,16 +26,18 @@ public class BestPathFinder {
 
         while (!set.isEmpty()) {
             Point point = set.first();
-            if (point == to) break;
+            if (point.equals(to)) break;
             set.remove(point);
             int curd = dist.get(point);
 
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = point.go(direction);
-                if (board.free(next.x, next.y)) {
-                    Integer d = dist.get(next);
-                    if (d == null || d > curd + 1) {
-                        dist.put(next, curd + 1);
+                Board.Cell cell = board.get(next);
+                if (cell != null && cell != Board.Cell.OBSTACLE) {
+                    Integer curDist = dist.get(next);
+                    int newDist = curd + cellWeight(cell);
+                    if (curDist == null || curDist > newDist) {
+                        dist.put(next, newDist);
                         prev.put(next, point);
                         set.add(next);
                     }
@@ -49,6 +51,15 @@ public class BestPathFinder {
             if (back == null) return null;
             if (back == from) return from.direction(cur);
             cur = back;
+        }
+    }
+
+    private int cellWeight(@NotNull Board.Cell cell) {
+        switch (cell) {
+            case FREE: return 5;
+            case BONUS: return 1;
+            case TROOPER: return 20;
+            default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }
 }
