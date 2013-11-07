@@ -14,8 +14,8 @@ public class WarriorTurn {
     private final World world;
     private final Game game;
 
+    private final Point me;
     private final Board board;
-
     private final List<Trooper> enemies;
     private final Map<TrooperType, Trooper> allies;
 
@@ -25,8 +25,8 @@ public class WarriorTurn {
         this.world = world;
         this.game = game;
 
+        this.me = Point.byUnit(self);
         this.board = new Board(world.getCells());
-
         this.enemies = new ArrayList<>(15);
         this.allies = new EnumMap<>(TrooperType.class);
         for (Trooper trooper : world.getTroopers()) {
@@ -44,6 +44,22 @@ public class WarriorTurn {
                 move.setAction(ActionType.LOWER_STANCE);
                 return;
             }
+        }
+
+        Point useMedikit = useMedikit();
+        if (useMedikit != null) {
+            move.setAction(ActionType.USE_MEDIKIT);
+            move.setX(useMedikit.x);
+            move.setY(useMedikit.y);
+            return;
+        }
+
+        Point heal = heal();
+        if (heal != null) {
+            move.setAction(ActionType.HEAL);
+            move.setX(heal.x);
+            move.setY(heal.y);
+            return;
         }
 
         Point grenade = throwGrenade();
@@ -67,6 +83,44 @@ public class WarriorTurn {
             move.setAction(ActionType.MOVE);
             move.setDirection(direction);
         }
+    }
+
+    @Nullable
+    private Point useMedikit() {
+        if (!self.isHoldingMedikit()) return null;
+        if (self.getActionPoints() < game.getMedikitUseCost()) return null;
+
+        for (Trooper trooper : allies.values()) {
+            if (trooper.getHitpoints() < trooper.getMaximalHitpoints() / 2) {
+                Point wounded = Point.byUnit(trooper);
+                if (wounded.isNeighbor(me)) {
+                    return wounded;
+                }
+            }
+        }
+
+        if (self.getHitpoints() < self.getMaximalHitpoints() / 2) return me;
+
+        return null;
+    }
+
+    @Nullable
+    private Point heal() {
+        if (self.getType() != FIELD_MEDIC) return null;
+        if (self.getActionPoints() < game.getFieldMedicHealCost()) return null;
+
+        for (Trooper trooper : allies.values()) {
+            if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
+                Point wounded = Point.byUnit(trooper);
+                if (wounded.isNeighbor(me)) {
+                    return wounded;
+                }
+            }
+        }
+
+        if (self.getHitpoints() < self.getMaximalHitpoints()) return me;
+
+        return null;
     }
 
     @Nullable
@@ -106,7 +160,7 @@ public class WarriorTurn {
                 ? army.getDislocation(board)
                 : Point.byUnit(leader);
 
-        return new BestPathFinder(board).findFirstMove(Point.byUnit(self), target);
+        return new BestPathFinder(board).findFirstMove(me, target);
     }
 
     @NotNull

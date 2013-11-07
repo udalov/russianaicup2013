@@ -40,6 +40,10 @@ public final class Point implements Comparable<Point> {
         throw new IllegalStateException(neighbor + " is not neighbor to " + this);
     }
 
+    public boolean isNeighbor(@NotNull Point that) {
+        return Math.abs(x - that.x) + Math.abs(y - that.y) == 1;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
