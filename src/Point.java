@@ -37,7 +37,7 @@ public final class Point implements Comparable<Point> {
         int dy = neighbor.y - y;
         if (dy > 0) return SOUTH;
         if (dy < 0) return NORTH;
-        throw new IllegalStateException(neighbor + " is not neighbor to " + this);
+        return CURRENT_POINT;
     }
 
     public boolean isNeighbor(@NotNull Point that) {

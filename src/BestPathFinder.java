@@ -49,7 +49,11 @@ public class BestPathFinder {
         while (true) {
             Point back = prev.get(cur);
             if (back == null) return null;
-            if (back == from) return from.direction(cur);
+            if (back == from) {
+                Direction result = from.direction(cur);
+                assert result != Direction.CURRENT_POINT : "To travel from " + from + " to " + to + " do nothing first, they said";
+                return result;
+            }
             cur = back;
         }
     }

@@ -46,6 +46,16 @@ public class WarriorTurn {
         Direction heal = heal();
         if (heal != null) return Go.heal(heal);
 
+        if (self.getType() == FIELD_MEDIC && self.getActionPoints() >= getMoveCost()) {
+            Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
+            if (wounded != null) {
+                Direction move = new BestPathFinder(board).findFirstMove(me, wounded);
+                if (move != null) {
+                    return Go.move(move);
+                }
+            }
+        }
+
         if (findTargetToShoot(self.getShootingRange()) != null) {
             if (eatFieldRation()) return Go.eatFieldRation();
         }
@@ -67,20 +77,7 @@ public class WarriorTurn {
         if (!self.isHoldingMedikit()) return null;
         if (self.getActionPoints() < game.getMedikitUseCost()) return null;
 
-        for (Trooper trooper : allies.values()) {
-            if (trooper.getHitpoints() < trooper.getMaximalHitpoints() / 2) {
-                Point wounded = Point.byUnit(trooper);
-                if (wounded.isNeighbor(me)) {
-                    return me.direction(wounded);
-                }
-            }
-        }
-
-        if (self.getHitpoints() < self.getMaximalHitpoints() / 2) {
-            return Direction.CURRENT_POINT;
-        }
-
-        return null;
+        return findWoundedNeighbor(self.getMaximalHitpoints() / 2);
     }
 
     @Nullable
@@ -88,20 +85,31 @@ public class WarriorTurn {
         if (self.getType() != FIELD_MEDIC) return null;
         if (self.getActionPoints() < game.getFieldMedicHealCost()) return null;
 
+        return findWoundedNeighbor(self.getMaximalHitpoints());
+    }
+
+    @Nullable
+    private Direction findWoundedNeighbor(int maximalHitpoints) {
+        Point wounded = findNearestWounded(maximalHitpoints);
+        return wounded != null && me.manhattanDistance(wounded) <= 1 ? me.direction(wounded) : null;
+    }
+
+    @Nullable
+    private Point findNearestWounded(int maximalHitpoints) {
+        Point worst = null;
+        int minDistance = Integer.MAX_VALUE;
         for (Trooper trooper : allies.values()) {
-            if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
+            if (trooper.getHitpoints() < maximalHitpoints) {
                 Point wounded = Point.byUnit(trooper);
-                if (wounded.isNeighbor(me)) {
-                    return me.direction(wounded);
+                int dist = wounded.manhattanDistance(me);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    worst = wounded;
                 }
             }
         }
 
-        if (self.getHitpoints() < self.getMaximalHitpoints()) {
-            return Direction.CURRENT_POINT;
-        }
-
-        return null;
+        return worst;
     }
 
     private boolean eatFieldRation() {
