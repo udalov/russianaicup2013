@@ -2,7 +2,10 @@ import model.Direction;
 import model.Trooper;
 import model.World;
 
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Set;
 
 public class Army {
     private final Point dislocation;
@@ -14,10 +17,18 @@ public class Army {
     @NotNull
     private Point findFreePointNearby(@NotNull World world, @NotNull Point p) {
         Board board = new Board(world);
-        for (Direction direction : Util.DIRECTIONS) {
-            for (int it = 0; it < 10; it++) {
-                if (board.isPassable(p)) return p;
-                p = p.go(direction);
+        Set<Point> visited = new HashSet<>();
+        Queue<Point> queue = new LinkedList<>();
+        queue.offer(p);
+        while (!queue.isEmpty()) {
+            Point cur = queue.poll();
+            if (board.isPassable(cur)) return cur;
+            for (Direction direction : Util.DIRECTIONS) {
+                Point next = cur.go(direction);
+                if (!visited.contains(next)) {
+                    visited.add(next);
+                    queue.offer(next);
+                }
             }
         }
         throw new IllegalStateException("Impossible as it may seem, there are no free points nearby");
