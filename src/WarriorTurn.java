@@ -118,7 +118,7 @@ public class WarriorTurn {
 
     @Nullable
     private Point shoot() {
-        if (self.getActionPoints() < self.getShotCost()) return null;
+        if (self.getActionPoints() < self.getShootCost()) return null;
 
         return findTargetToShoot(self.getShootingRange());
     }
