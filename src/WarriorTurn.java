@@ -5,7 +5,7 @@ import java.util.*;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
-    private final static Random RANDOM = new Random();
+    private final static Random RANDOM = new Random(42);
 
     private final static List<TrooperType> LEADERSHIP_ORDER = Arrays.asList(COMMANDER, SOLDIER, SNIPER, FIELD_MEDIC, SCOUT);
 
