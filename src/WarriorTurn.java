@@ -52,6 +52,10 @@ public class WarriorTurn {
         Direction heal = heal();
         if (heal != null) return Go.heal(heal);
 
+        if (findTargetToShoot(self.getShootingRange()) != null) {
+            if (eatFieldRation()) return Go.eatFieldRation();
+        }
+
         Point grenade = throwGrenade();
         if (grenade != null) return Go.throwGrenade(grenade);
 
@@ -106,26 +110,29 @@ public class WarriorTurn {
         return null;
     }
 
+    private boolean eatFieldRation() {
+        return self.isHoldingFieldRation() && self.getActionPoints() >= game.getFieldRationEatCost();
+    }
+
     @Nullable
     private Point throwGrenade() {
         if (!self.isHoldingGrenade()) return null;
         if (self.getActionPoints() < game.getGrenadeThrowCost()) return null;
 
-        for (Trooper enemy : enemies) {
-            if (isVisible(game.getGrenadeThrowRange(), enemy)) {
-                return Point.byUnit(enemy);
-            }
-        }
-
-        return null;
+        return findTargetToShoot(game.getGrenadeThrowRange());
     }
 
     @Nullable
     private Point shoot() {
         if (self.getActionPoints() < self.getShotCost()) return null;
 
+        return findTargetToShoot(self.getShootingRange());
+    }
+
+    @Nullable
+    private Point findTargetToShoot(double range) {
         for (Trooper enemy : enemies) {
-            if (isVisible(self.getShootingRange(), enemy)) {
+            if (isVisible(range, enemy)) {
                 return Point.byUnit(enemy);
             }
         }
