@@ -26,11 +26,11 @@ public class Board {
                 this.cells[i][j] = cells[i][j] == CellType.FREE ? Cell.FREE : Cell.OBSTACLE;
             }
         }
-        for (Trooper trooper : world.getTroopers()) {
-            this.cells[trooper.getX()][trooper.getY()] = Cell.TROOPER;
-        }
         for (Bonus bonus : world.getBonuses()) {
             this.cells[bonus.getX()][bonus.getY()] = Cell.BONUS;
+        }
+        for (Trooper trooper : world.getTroopers()) {
+            this.cells[trooper.getX()][trooper.getY()] = Cell.TROOPER;
         }
 
         this.n = n;
