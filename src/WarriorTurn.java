@@ -1,5 +1,7 @@
 import model.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class WarriorTurn {
@@ -12,6 +14,8 @@ public class WarriorTurn {
 
     private final Board board;
 
+    private final List<Trooper> enemies;
+
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
         this.self = self;
@@ -19,6 +23,13 @@ public class WarriorTurn {
         this.game = game;
 
         this.board = new Board(world.getCells());
+
+        this.enemies = new ArrayList<>(15);
+        for (Trooper trooper : world.getTroopers()) {
+            if (!trooper.isTeammate()) {
+                this.enemies.add(trooper);
+            }
+        }
     }
 
     public void makeTurn(@NotNull Move move) {
@@ -57,9 +68,9 @@ public class WarriorTurn {
         if (!self.isHoldingGrenade()) return null;
         if (self.getActionPoints() < game.getGrenadeThrowCost()) return null;
 
-        for (Trooper trooper : world.getTroopers()) {
-            if (!trooper.isTeammate() && isVisible(game.getGrenadeThrowRange(), trooper)) {
-                return Point.byUnit(trooper);
+        for (Trooper enemy : enemies) {
+            if (isVisible(game.getGrenadeThrowRange(), enemy)) {
+                return Point.byUnit(enemy);
             }
         }
 
@@ -70,9 +81,9 @@ public class WarriorTurn {
     private Point shoot() {
         if (self.getActionPoints() < self.getShotCost()) return null;
 
-        for (Trooper trooper : world.getTroopers()) {
-            if (!trooper.isTeammate() && isVisible(self.getShootingRange(), trooper)) {
-                return Point.byUnit(trooper);
+        for (Trooper enemy : enemies) {
+            if (isVisible(self.getShootingRange(), enemy)) {
+                return Point.byUnit(enemy);
             }
         }
 
