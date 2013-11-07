@@ -38,55 +38,34 @@ public class WarriorTurn {
         }
     }
 
-    public void makeTurn(@NotNull Move move) {
+    @NotNull
+    public Go makeTurn() {
         if (world.getMoveIndex() >= 1) {
             if (self.getStance() != TrooperStance.KNEELING && self.getActionPoints() >= game.getStanceChangeCost()) {
-                move.setAction(ActionType.LOWER_STANCE);
-                return;
+                return Go.lowerStance();
             }
         }
 
-        Point useMedikit = useMedikit();
-        if (useMedikit != null) {
-            move.setAction(ActionType.USE_MEDIKIT);
-            move.setX(useMedikit.x);
-            move.setY(useMedikit.y);
-            return;
-        }
+        Direction useMedikit = useMedikit();
+        if (useMedikit != null) return Go.useMedikit(useMedikit);
 
-        Point heal = heal();
-        if (heal != null) {
-            move.setAction(ActionType.HEAL);
-            move.setX(heal.x);
-            move.setY(heal.y);
-            return;
-        }
+        Direction heal = heal();
+        if (heal != null) return Go.heal(heal);
 
         Point grenade = throwGrenade();
-        if (grenade != null) {
-            move.setAction(ActionType.THROW_GRENADE);
-            move.setX(grenade.x);
-            move.setY(grenade.y);
-            return;
-        }
+        if (grenade != null) return Go.throwGrenade(grenade);
 
         Point shoot = shoot();
-        if (shoot != null) {
-            move.setAction(ActionType.SHOOT);
-            move.setX(shoot.x);
-            move.setY(shoot.y);
-            return;
-        }
+        if (shoot != null) return Go.shoot(shoot);
 
-        Direction direction = move();
-        if (direction != null) {
-            move.setAction(ActionType.MOVE);
-            move.setDirection(direction);
-        }
+        Direction move = move();
+        if (move != null) return Go.move(move);
+
+        return Go.endTurn();
     }
 
     @Nullable
-    private Point useMedikit() {
+    private Direction useMedikit() {
         if (!self.isHoldingMedikit()) return null;
         if (self.getActionPoints() < game.getMedikitUseCost()) return null;
 
@@ -94,18 +73,20 @@ public class WarriorTurn {
             if (trooper.getHitpoints() < trooper.getMaximalHitpoints() / 2) {
                 Point wounded = Point.byUnit(trooper);
                 if (wounded.isNeighbor(me)) {
-                    return wounded;
+                    return me.direction(wounded);
                 }
             }
         }
 
-        if (self.getHitpoints() < self.getMaximalHitpoints() / 2) return me;
+        if (self.getHitpoints() < self.getMaximalHitpoints() / 2) {
+            return Direction.CURRENT_POINT;
+        }
 
         return null;
     }
 
     @Nullable
-    private Point heal() {
+    private Direction heal() {
         if (self.getType() != FIELD_MEDIC) return null;
         if (self.getActionPoints() < game.getFieldMedicHealCost()) return null;
 
@@ -113,12 +94,14 @@ public class WarriorTurn {
             if (trooper.getHitpoints() < trooper.getMaximalHitpoints()) {
                 Point wounded = Point.byUnit(trooper);
                 if (wounded.isNeighbor(me)) {
-                    return wounded;
+                    return me.direction(wounded);
                 }
             }
         }
 
-        if (self.getHitpoints() < self.getMaximalHitpoints()) return me;
+        if (self.getHitpoints() < self.getMaximalHitpoints()) {
+            return Direction.CURRENT_POINT;
+        }
 
         return null;
     }

@@ -12,6 +12,6 @@ public class MyStrategy implements Strategy {
             ARMY = new Army(self, world);
         }
 
-        new WarriorTurn(ARMY, self, world, game).makeTurn(move);
+        new WarriorTurn(ARMY, self, world, game).makeTurn().execute(move);
     }
 }
