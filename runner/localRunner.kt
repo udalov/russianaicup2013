@@ -56,13 +56,20 @@ fun runMyStrategy() {
     println(File(LOG_FILE).readText())
 }
 
-fun main(args: Array<String>) = time {
-    val p1 = QuickStartGuy
-    val p2 = MyStrategy
-    val p3 = QuickStartGuy
-    val p4 = QuickStartGuy
+fun runGame(lineup: String, args: Array<String>) {
+    fun parse(c: Char) = when (c) {
+        'M' -> MyStrategy
+        'E' -> EmptyPlayer
+        'Q' -> QuickStartGuy
+        'S' -> SmartGuy
+        else -> throw IllegalStateException("Unknown player: $c")
+    }
 
-    Thread(localRunner("-vis" in args.toSet(), 3, p1, p2, p3, p4)).start()
+    Thread(localRunner("-vis" in args.toSet(), 3, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3]))).start()
 
     runMyStrategy()
+}
+
+fun main(args: Array<String>) = time {
+    runGame("QMQQ", args)
 }
