@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="KeyboardRunner" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="keyboardRunner.KeyboardRunnerPackage" />
+    <option name="MAIN_CLASS_NAME" value="runner.keyboard.KeyboardPackage" />
     <option name="VM_PARAMETERS" value="-ea" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />

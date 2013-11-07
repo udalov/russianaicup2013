@@ -1,8 +1,9 @@
-package localRunner
+package runner.local
 
 import org.apache.log4j.Logger
 import java.net.ConnectException
 import java.io.File
+import runner.time
 
 open class Player(val name: String, val classFile: String)
 object MyStrategy : Player("MyStrategy", "#LocalTestPlayer")
@@ -55,7 +56,7 @@ fun runMyStrategy() {
     println(File(LOG_FILE).readText())
 }
 
-fun main(args: Array<String>): Unit {
+fun main(args: Array<String>) = time {
     val p1 = QuickStartGuy
     val p2 = MyStrategy
     val p3 = QuickStartGuy

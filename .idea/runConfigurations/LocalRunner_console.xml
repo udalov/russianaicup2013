@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="LocalRunner console" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="localRunner.LocalRunnerPackage" />
+    <option name="MAIN_CLASS_NAME" value="runner.local.LocalPackage" />
     <option name="VM_PARAMETERS" value="-ea" />
     <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
