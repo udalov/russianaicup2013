@@ -1,7 +1,4 @@
-import model.Game;
-import model.Move;
-import model.Trooper;
-import model.World;
+import model.*;
 
 public class MyStrategy implements Strategy {
     private static Army ARMY;
@@ -11,6 +8,11 @@ public class MyStrategy implements Strategy {
         if (ARMY == null) {
             ARMY = new Army(self, world);
         }
+
+        if (self.getType() == TrooperType.COMMANDER) {
+            ARMY.setCommanderLocation(self);
+        }
+
         new WarriorTurn(ARMY, self, world, game).makeTurn(move);
     }
 }

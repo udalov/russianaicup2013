@@ -23,7 +23,7 @@ public class WarriorTurn {
 
     public void makeTurn(@NotNull Move move) {
         if (world.getMoveIndex() > 2) {
-            if (self.getStance() != TrooperStance.PRONE && self.getActionPoints() >= game.getStanceChangeCost()) {
+            if (self.getStance() != TrooperStance.KNEELING && self.getActionPoints() >= game.getStanceChangeCost()) {
                 move.setAction(ActionType.LOWER_STANCE);
                 return;
             }
@@ -83,7 +83,11 @@ public class WarriorTurn {
     private Direction move() {
         if (self.getActionPoints() < getMoveCost()) return null;
 
-        return new BestPathFinder(board).findFirstMove(Point.byUnit(self), army.getDislocation(board));
+        Point target = self.getType() == TrooperType.COMMANDER
+                ? army.getDislocation(board)
+                : army.getCommanderLocation();
+
+        return new BestPathFinder(board).findFirstMove(Point.byUnit(self), target);
     }
 
     private int getMoveCost() {
