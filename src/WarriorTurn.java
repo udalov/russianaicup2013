@@ -1,11 +1,13 @@
 import model.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+
+import static model.TrooperType.*;
 
 public class WarriorTurn {
     private final static Random RANDOM = new Random();
+
+    private final static List<TrooperType> LEADERSHIP_ORDER = Arrays.asList(COMMANDER, SOLDIER, SNIPER, FIELD_MEDIC, SCOUT);
 
     private final Army army;
     private final Trooper self;
@@ -15,6 +17,7 @@ public class WarriorTurn {
     private final Board board;
 
     private final List<Trooper> enemies;
+    private final Map<TrooperType, Trooper> allies;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -25,15 +28,18 @@ public class WarriorTurn {
         this.board = new Board(world.getCells());
 
         this.enemies = new ArrayList<>(15);
+        this.allies = new EnumMap<>(TrooperType.class);
         for (Trooper trooper : world.getTroopers()) {
-            if (!trooper.isTeammate()) {
+            if (trooper.isTeammate()) {
+                this.allies.put(trooper.getType(), trooper);
+            } else {
                 this.enemies.add(trooper);
             }
         }
     }
 
     public void makeTurn(@NotNull Move move) {
-        if (world.getMoveIndex() > 2) {
+        if (world.getMoveIndex() >= 1) {
             if (self.getStance() != TrooperStance.KNEELING && self.getActionPoints() >= game.getStanceChangeCost()) {
                 move.setAction(ActionType.LOWER_STANCE);
                 return;
@@ -94,11 +100,23 @@ public class WarriorTurn {
     private Direction move() {
         if (self.getActionPoints() < getMoveCost()) return null;
 
-        Point target = self.getType() == TrooperType.COMMANDER
+        Trooper leader = getLeader();
+
+        Point target = self.getType() == leader.getType()
                 ? army.getDislocation(board)
-                : army.getCommanderLocation();
+                : Point.byUnit(leader);
 
         return new BestPathFinder(board).findFirstMove(Point.byUnit(self), target);
+    }
+
+    @NotNull
+    private Trooper getLeader() {
+        for (TrooperType type : LEADERSHIP_ORDER) {
+            Trooper trooper = allies.get(type);
+            if (trooper != null) return trooper;
+        }
+
+        throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
     }
 
     private int getMoveCost() {
