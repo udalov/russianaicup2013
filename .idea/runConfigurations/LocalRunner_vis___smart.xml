@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="LocalRunner vis + smart" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="LocalRunner" />
+    <option name="MAIN_CLASS_NAME" value="localRunner.LocalRunnerPackage" />
     <option name="VM_PARAMETERS" value="-ea" />
-    <option name="PROGRAM_PARAMETERS" value="-vis -sync -smart" />
+    <option name="PROGRAM_PARAMETERS" value="-vis -smart" />
     <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
     <option name="ALTERNATIVE_JRE_PATH" value="" />
