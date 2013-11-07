@@ -146,14 +146,11 @@ public class WarriorTurn {
         }
 
         Point target = Point.byUnit(leader);
-        for (Direction direction : Util.DIRECTIONS) {
-            Point nearLeader = target.go(direction);
-            if (board.isPassable(nearLeader)) {
-                return finder.findFirstMove(me, nearLeader);
-            }
+        if (me.manhattanDistance(target) <= 4) {
+            return finder.findFirstMove(me, army.getDislocation());
         }
 
-        return null;
+        return finder.findFirstMove(me, target);
     }
 
     @NotNull

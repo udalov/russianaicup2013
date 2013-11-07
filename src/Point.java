@@ -41,7 +41,11 @@ public final class Point implements Comparable<Point> {
     }
 
     public boolean isNeighbor(@NotNull Point that) {
-        return Math.abs(x - that.x) + Math.abs(y - that.y) == 1;
+        return manhattanDistance(that) == 1;
+    }
+
+    public int manhattanDistance(@NotNull Point that) {
+        return Math.abs(x - that.x) + Math.abs(y - that.y);
     }
 
     @Override
