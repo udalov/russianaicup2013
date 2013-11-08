@@ -130,25 +130,37 @@ public class WarriorTurn {
         if (!self.isHoldingGrenade()) return null;
         if (self.getActionPoints() < game.getGrenadeThrowCost()) return null;
 
-        return findTargetToShoot(game.getGrenadeThrowRange());
+        List<Trooper> targets = findSortedTargetsToShoot(game.getGrenadeThrowRange());
+        return !targets.isEmpty() ? Point.byUnit(targets.get(targets.size() - 1)) : null;
     }
 
     @Nullable
     private Point shoot() {
         if (self.getActionPoints() < self.getShootCost()) return null;
 
-        return findTargetToShoot(self.getShootingRange());
+        List<Trooper> targets = findSortedTargetsToShoot(self.getShootingRange());
+        return !targets.isEmpty() ? Point.byUnit(targets.get(0)) : null;
     }
 
-    @Nullable
-    private Point findTargetToShoot(double range) {
+    @NotNull
+    private List<Trooper> findSortedTargetsToShoot(double range) {
+        List<Trooper> result = new ArrayList<>(15);
         for (Trooper enemy : enemies) {
             if (isVisible(range, enemy)) {
-                return Point.byUnit(enemy);
+                result.add(enemy);
             }
         }
 
-        return null;
+        if (result.size() <= 1) return result;
+
+        Collections.sort(result, new Comparator<Trooper>() {
+            @Override
+            public int compare(@NotNull Trooper o1, @NotNull Trooper o2) {
+                return o1.getHitpoints() - o2.getHitpoints();
+            }
+        });
+
+        return result;
     }
 
     @Nullable
