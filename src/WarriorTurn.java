@@ -41,33 +41,27 @@ public class WarriorTurn {
     @NotNull
     public Go makeTurn() {
         Direction useMedikit = useMedikit();
-        if (useMedikit != null) return Go.useMedikit(useMedikit);
-
         Direction heal = heal();
-        if (heal != null) return Go.heal(heal);
+        Direction runToWounded = runToWounded();
+        Point grenade = throwGrenade();
+        Point shoot = shoot();
 
-        if (self.getType() == FIELD_MEDIC && self.getActionPoints() >= getMoveCost()) {
-            Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
-            if (wounded != null) {
-                Direction move = board.findBestMove(me, wounded);
-                if (move != null) {
-                    return Go.move(move);
-                }
-            }
+        if (useMedikit != null || heal != null || runToWounded != null || grenade != null || shoot != null) {
+            if (eatFieldRation()) return Go.eatFieldRation();
         }
 
-        if (findTargetToShoot(self.getShootingRange()) != null) {
-            if (eatFieldRation()) return Go.eatFieldRation();
+        if (useMedikit != null) return Go.useMedikit(useMedikit);
+        if (heal != null) return Go.heal(heal);
+        if (runToWounded != null) return Go.move(runToWounded);
+
+        if (grenade != null || shoot != null) {
             if (self.getActionPoints() >= 10 && self.getStance() == KNEELING) return Go.lowerStance();
             if (self.getActionPoints() >= 8 && self.getStance() == STANDING) return Go.lowerStance();
         } else {
             if (self.getActionPoints() >= 8 && self.getStance() != STANDING) return Go.raiseStance();
         }
 
-        Point grenade = throwGrenade();
         if (grenade != null) return Go.throwGrenade(grenade);
-
-        Point shoot = shoot();
         if (shoot != null) return Go.shoot(shoot);
 
         Direction move = move();
@@ -99,6 +93,15 @@ public class WarriorTurn {
     }
 
     @Nullable
+    private Direction runToWounded() {
+        if (self.getType() != FIELD_MEDIC) return null;
+        if (self.getActionPoints() < getMoveCost()) return null;
+
+        Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
+        return wounded != null ? board.findBestMove(me, wounded) : null;
+    }
+
+    @Nullable
     private Point findNearestWounded(int maximalHitpoints) {
         Point worst = null;
         int minDistance = Integer.MAX_VALUE;
@@ -117,7 +120,9 @@ public class WarriorTurn {
     }
 
     private boolean eatFieldRation() {
-        return self.isHoldingFieldRation() && self.getActionPoints() >= game.getFieldRationEatCost();
+        return self.isHoldingFieldRation()
+                && self.getActionPoints() >= game.getFieldRationEatCost()
+                && self.getActionPoints() <= self.getInitialActionPoints() - game.getFieldRationBonusActionPoints() + game.getFieldRationEatCost();
     }
 
     @Nullable

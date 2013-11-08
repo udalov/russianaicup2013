@@ -1,3 +1,4 @@
-- only fire grenades if enemy has a lot of health / several enemies nearby
+- only throw grenades if enemy has a lot of health / several enemies nearby
+- throw grenade in a way that will damage most of enemies (calculate damage for all possible locations)
 - if someone's in trouble and he's nearby, go help him
 
