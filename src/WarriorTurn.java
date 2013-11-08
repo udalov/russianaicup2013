@@ -49,7 +49,7 @@ public class WarriorTurn {
         if (self.getType() == FIELD_MEDIC && self.getActionPoints() >= getMoveCost()) {
             Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
             if (wounded != null) {
-                Direction move = new BestPathFinder(board).findFirstMove(me, wounded);
+                Direction move = board.findBestMove(me, wounded);
                 if (move != null) {
                     return Go.move(move);
                 }
@@ -146,19 +146,18 @@ public class WarriorTurn {
     private Direction move() {
         if (self.getActionPoints() < getMoveCost()) return null;
 
-        BestPathFinder finder = new BestPathFinder(board);
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
-            return finder.findFirstMove(me, army.getDislocation());
+            return board.findBestMove(me, army.getDislocation());
         }
 
         Point target = Point.byUnit(leader);
         if (me.manhattanDistance(target) <= 4) {
-            return finder.findFirstMove(me, army.getDislocation());
+            return board.findBestMove(me, army.getDislocation());
         }
 
-        return finder.findFirstMove(me, target);
+        return board.findBestMove(me, target);
     }
 
     @NotNull
