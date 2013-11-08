@@ -2,12 +2,12 @@ import model.*;
 
 import java.util.*;
 
-import static model.TrooperType.*;
+import static model.TrooperStance.KNEELING;
+import static model.TrooperStance.STANDING;
+import static model.TrooperType.FIELD_MEDIC;
 
 public class WarriorTurn {
     private final static Random RANDOM = new Random(42);
-
-    private final static List<TrooperType> LEADERSHIP_ORDER = Arrays.asList(COMMANDER, SOLDIER, SNIPER, FIELD_MEDIC, SCOUT);
 
     private final Army army;
     private final Trooper self;
@@ -58,6 +58,10 @@ public class WarriorTurn {
 
         if (findTargetToShoot(self.getShootingRange()) != null) {
             if (eatFieldRation()) return Go.eatFieldRation();
+            if (self.getActionPoints() >= 10 && self.getStance() == KNEELING) return Go.lowerStance();
+            if (self.getActionPoints() >= 8 && self.getStance() == STANDING) return Go.lowerStance();
+        } else {
+            if (self.getActionPoints() >= 8 && self.getStance() != STANDING) return Go.raiseStance();
         }
 
         Point grenade = throwGrenade();
@@ -153,16 +157,16 @@ public class WarriorTurn {
         }
 
         Point target = Point.byUnit(leader);
-        if (me.manhattanDistance(target) <= 4) {
-            return board.findBestMove(me, army.getDislocation());
+        if (me.manhattanDistance(target) > 1) {
+            return board.findBestMove(me, target);
         }
 
-        return board.findBestMove(me, target);
+        return null;
     }
 
     @NotNull
     private Trooper findLeader() {
-        for (TrooperType type : LEADERSHIP_ORDER) {
+        for (TrooperType type : army.getOrder()) {
             Trooper trooper = allies.get(type);
             if (trooper != null) return trooper;
         }

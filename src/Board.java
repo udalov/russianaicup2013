@@ -101,7 +101,7 @@ public class Board {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return 20;
+            case TROOPER: return 15;
             default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }

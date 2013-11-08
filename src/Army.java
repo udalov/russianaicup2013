@@ -1,17 +1,16 @@
 import model.Direction;
 import model.Trooper;
+import model.TrooperType;
 import model.World;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 public class Army {
     private final Point dislocation;
+    private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 
-    public Army(@NotNull Trooper someTrooper, @NotNull World world) {
-        this.dislocation = findFreePointNearby(world, new Point(world.getWidth() - someTrooper.getX(), world.getHeight() - someTrooper.getY()));
+    public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
+        this.dislocation = findFreePointNearby(world, new Point(world.getWidth() / 2, world.getHeight() / 2));
     }
 
     @NotNull
@@ -37,5 +36,10 @@ public class Army {
     @NotNull
     public Point getDislocation() {
         return dislocation;
+    }
+
+    @NotNull
+    public List<TrooperType> getOrder() {
+        return order;
     }
 }
