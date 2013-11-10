@@ -62,9 +62,10 @@ fun runGame(vis: Boolean, seed: Long, lineup: String) {
         else -> throw IllegalStateException("Unknown player: $c")
     }
 
-    Thread(localRunner(vis, 3, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3]))).start()
-
+    val thread = Thread(localRunner(vis, 3, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
+    thread.start()
     runMyStrategy()
+    thread.join()
 }
 
 fun time(block: () -> Unit) {
