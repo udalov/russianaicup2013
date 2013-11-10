@@ -1,11 +1,47 @@
-<project name="rac" default="src">
-    <property name="solution" value="solution.zip"/>
+<project name="rac" default="dist">
+    <property name="local.runner" value="lib/local-runner.jar"/>
+    <property name="dist" value="dist"/>
+    <property name="plugin" value="${java.io.tmpdir}/kotlin-plugin"/>
+    <property name="kotlin.home" value="lib/kotlinc"/>
+
+    <taskdef resource="org/jetbrains/jet/buildtools/ant/antlib.xml" classpath="${kotlin.home}/lib/kotlin-ant.jar"/>
 
     <target name="clean">
-        <delete file="${solution}"/>
+        <delete dir="${dist}"/>
     </target>
 
-    <target name="src" depends="clean">
-        <zip basedir="src" destfile="${solution}" excludes="src.iml"/>
+    <target name="mkdir">
+        <mkdir dir="${dist}/classes"/>
+    </target>
+
+    <target name="src" depends="clean,mkdir">
+        <zip basedir="src" destfile="${dist}/solution.zip" excludes="src.iml"/>
+    </target>
+
+    <target name="dist" depends="clean,mkdir">
+        <javac destdir="${dist}/classes" classpath="${local.runner}" debug="true" debuglevel="lines,vars,source" includeantruntime="false"
+               target="1.7">
+            <withKotlin/>
+            <src path="model"/>
+            <src path="runner"/>
+            <src path="src"/>
+        </javac>
+        <jar destfile="${dist}/rac.jar" basedir="${dist}/classes">
+            <zipfileset includes="**/*" src="${kotlin.home}/lib/kotlin-runtime.jar"/>
+            <zipfileset includes="**/*" src="${local.runner}"/>
+            <manifest>
+                <attribute name="Main-Class" value="runner.auto.AutoPackage"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="update">
+        <delete dir="${kotlin.home}"/>
+        <get src="http://teamcity.jetbrains.com/guestAuth/repository/download/bt345/bootstrap.tcbuildtag/kotlin-plugin-{build.number}.zip"
+             dest="${plugin}.zip"/>
+        <unzip src="${plugin}.zip" dest="${plugin}"/>
+        <delete file="${plugin}.zip"/>
+        <move file="${plugin}/Kotlin/kotlinc" tofile="${kotlin.home}"/>
+        <delete dir="${plugin}"/>
     </target>
 </project>

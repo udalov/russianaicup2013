@@ -1,4 +1,6 @@
 - only throw grenades if enemy has a lot of health / several enemies nearby
 - throw grenade in a way that will damage most of enemies (calculate damage for all possible locations)
+  but don't kill myself
 - if someone's in trouble and he's nearby, go help him
+- don't always lower stance while shooting: if we're behind a cover, we won't see the enemy if we lie down
 

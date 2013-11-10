@@ -1,9 +1,8 @@
-package runner.local
+package runner
 
 import org.apache.log4j.Logger
 import java.net.ConnectException
 import java.io.File
-import runner.time
 
 open class Player(val name: String, val classFile: String)
 object MyStrategy : Player("MyStrategy", "#LocalTestPlayer")
@@ -13,7 +12,7 @@ object SmartGuy : Player("SmartGuy", javaClass<com.a.b.a.a.e.a>().getSimpleName(
 
 val LOG_FILE = "out/log.txt"
 
-fun localRunner(vis: Boolean, teamSize: Int, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
+fun localRunner(vis: Boolean, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
     Logger.getRootLogger()?.removeAllAppenders()
 
     return com.a.b.c(array(
@@ -24,7 +23,7 @@ fun localRunner(vis: Boolean, teamSize: Int, p1: Player, p2: Player, p3: Player,
             "-results-file=$LOG_FILE",
             "-debug=true",
             "-base-adapter-port=31000",
-            "-seed=",
+            "-seed=$seed",
             "-p1-name=${p1.name}",
             "-p2-name=${p2.name}",
             "-p3-name=${p3.name}",
@@ -52,11 +51,9 @@ fun runMyStrategy() {
         }
         break
     }
-
-    println(File(LOG_FILE).readText())
 }
 
-fun runGame(lineup: String, args: Array<String>) {
+fun runGame(vis: Boolean, seed: Long, lineup: String) {
     fun parse(c: Char) = when (c) {
         'M' -> MyStrategy
         'E' -> EmptyPlayer
@@ -65,11 +62,18 @@ fun runGame(lineup: String, args: Array<String>) {
         else -> throw IllegalStateException("Unknown player: $c")
     }
 
-    Thread(localRunner("-vis" in args.toSet(), 3, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3]))).start()
+    Thread(localRunner(vis, 3, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3]))).start()
 
     runMyStrategy()
 }
 
-fun main(args: Array<String>) = time {
-    runGame("QMQQ", args)
+fun time(block: () -> Unit) {
+    println("${timer(block)}s")
+}
+
+fun timer(block: () -> Unit): Double {
+    val begin = System.nanoTime()
+    block()
+    val end = System.nanoTime()
+    return (end - begin) / 1e9
 }

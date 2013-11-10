@@ -1,13 +1,16 @@
 package runner.keyboard
 
-import runner.local.*
+import runner.*
+import java.io.File
 
 /**
  * @param args -smart
  */
-public fun main(args: Array<String>) {
+fun main(args: Array<String>) {
     val process = ProcessBuilder("java", "-jar", "lib/local-runner.jar",
             "true", "true", "3", LOG_FILE, "${"-smart" in args.toSet()}", "true")
     process.start()
     runMyStrategy()
+
+    println(File(LOG_FILE).readText())
 }
