@@ -45,7 +45,7 @@ fun runMyStrategy() {
             Runner.main(array<String>())
         } catch (e: ConnectException) {
             if (e.getMessage() == "Connection refused") {
-                Thread.sleep(200)
+                Thread.sleep(40)
                 continue
             } else throw e
         }
