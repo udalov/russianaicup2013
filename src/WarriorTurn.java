@@ -167,6 +167,11 @@ public class WarriorTurn {
     private Direction move() {
         if (self.getActionPoints() < getMoveCost()) return null;
 
+        Point bonus = findClosestRelevantBonus();
+        if (bonus != null && me.manhattanDistance(bonus) <= 4) {
+            return board.findBestMove(me, bonus);
+        }
+
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
@@ -179,6 +184,25 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    @Nullable
+    private Point findClosestRelevantBonus() {
+        Point result = null;
+        int mind = Integer.MAX_VALUE;
+
+        for (Bonus bonus : world.getBonuses()) {
+            if (!isHolding(bonus.getType())) {
+                Point that = Point.byUnit(bonus);
+                int dist = me.manhattanDistance(that);
+                if (dist < mind) {
+                    mind = dist;
+                    result = that;
+                }
+            }
+        }
+
+        return result;
     }
 
     @NotNull
@@ -198,6 +222,15 @@ public class WarriorTurn {
             case KNEELING: return game.getKneelingMoveCost();
             case STANDING: return game.getStandingMoveCost();
             default: throw new IllegalStateException("Unknown stance: " + stance);
+        }
+    }
+
+    private boolean isHolding(@NotNull BonusType type) {
+        switch (type) {
+            case GRENADE: return self.isHoldingGrenade();
+            case MEDIKIT: return self.isHoldingMedikit();
+            case FIELD_RATION: return self.isHoldingFieldRation();
+            default: throw new IllegalStateException("Unknown bonus type: " + type);
         }
     }
 
