@@ -13,14 +13,17 @@ public class Army {
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         Board board = new Board(world);
-        Point p = Point.byUnit(firstTrooper);
+        Point start = Point.byUnit(firstTrooper);
+        Point center = Point.center();
         this.dislocations = new ArrayList<>();
-        dislocations.add(findFreePointNearby(board, p));
-        dislocations.add(findFreePointNearby(board, Point.center()));
-        dislocations.add(findFreePointNearby(board, p.opposite()));
-        dislocations.add(findFreePointNearby(board, p.horizontalOpposite()));
-        dislocations.add(findFreePointNearby(board, Point.center()));
-        dislocations.add(findFreePointNearby(board, p.verticalOpposite()));
+        dislocations.add(findFreePointNearby(board, start));
+        dislocations.add(findFreePointNearby(board, start.halfwayTo(center)));
+        dislocations.add(findFreePointNearby(board, center));
+        dislocations.add(findFreePointNearby(board, center.halfwayTo(start.opposite())));
+        dislocations.add(findFreePointNearby(board, start.opposite()));
+        dislocations.add(findFreePointNearby(board, start.horizontalOpposite()));
+        dislocations.add(findFreePointNearby(board, center));
+        dislocations.add(findFreePointNearby(board, start.verticalOpposite()));
 
         this.curDisIndex = 0;
     }
@@ -32,7 +35,8 @@ public class Army {
         queue.offer(p);
         while (!queue.isEmpty()) {
             Point cur = queue.poll();
-            if (board.isPassable(cur)) return cur;
+            Board.Cell cell = board.get(cur);
+            if (cell != null && cell != Board.Cell.OBSTACLE) return cur;
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = cur.go(direction);
                 if (!visited.contains(next)) {

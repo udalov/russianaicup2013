@@ -73,6 +73,11 @@ public final class Point implements Comparable<Point> {
         return new Point(x, Board.HEIGHT - 1 - y);
     }
 
+    @NotNull
+    public Point halfwayTo(@NotNull Point other) {
+        return new Point((x + other.x) / 2, (y + other.y) / 2);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

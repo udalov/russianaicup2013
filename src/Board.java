@@ -44,11 +44,6 @@ public class Board {
         return 0 <= x && 0 <= y && x < WIDTH && y < HEIGHT ? cells[x][y] : null;
     }
 
-    public boolean isPassable(@NotNull Point point) {
-        Cell cell = get(point);
-        return cell == Cell.FREE || cell == Cell.BONUS;
-    }
-
     @Nullable
     public Direction findBestMove(@NotNull Point from, @NotNull Point to) {
         final Map<Point, Integer> dist = new HashMap<>();
@@ -102,7 +97,7 @@ public class Board {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return 15;
+            case TROOPER: return 100;
             default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }
