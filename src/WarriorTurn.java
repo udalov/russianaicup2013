@@ -175,7 +175,7 @@ public class WarriorTurn {
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
-            return board.findBestMove(me, army.getDislocation());
+            return board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
         }
 
         Point target = Point.byUnit(leader);

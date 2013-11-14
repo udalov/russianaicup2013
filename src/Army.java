@@ -6,11 +6,26 @@ import model.World;
 import java.util.*;
 
 public class Army {
-    private final Point dislocation;
+    private List<Point> dislocations;
+    private int curDisIndex;
+
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
-        this.dislocation = findFreePointNearby(world, new Point(world.getWidth() / 2, world.getHeight() / 2));
+        int w = world.getWidth();
+        int h = world.getHeight();
+        int x = firstTrooper.getX();
+        int y = firstTrooper.getY();
+
+        this.dislocations = new ArrayList<>();
+        dislocations.add(findFreePointNearby(world, Point.byUnit(firstTrooper)));
+        dislocations.add(findFreePointNearby(world, new Point(w / 2, h / 2)));
+        dislocations.add(findFreePointNearby(world, new Point(w - x, h - y)));
+        dislocations.add(findFreePointNearby(world, new Point(w - x, y)));
+        dislocations.add(findFreePointNearby(world, new Point(w / 2, h / 2)));
+        dislocations.add(findFreePointNearby(world, new Point(w, h - y)));
+
+        this.curDisIndex = 0;
     }
 
     @NotNull
@@ -30,11 +45,20 @@ public class Army {
                 }
             }
         }
-        throw new IllegalStateException("Impossible as it may seem, there are no free points nearby");
+        throw new IllegalStateException("Impossible as it may seem, there are no free points nearby: " + p);
     }
 
     @NotNull
-    public Point getDislocation() {
+    public Point getOrUpdateDislocation(@NotNull Collection<Trooper> allies) {
+        Point dislocation = dislocations.get(curDisIndex);
+        int curDist = 0;
+        for (Trooper ally : allies) {
+            curDist += Point.byUnit(ally).manhattanDistance(dislocation);
+        }
+        if (curDist < 4 * allies.size()) {
+            curDisIndex = (curDisIndex + 1) % dislocations.size();
+            dislocation = dislocations.get(curDisIndex);
+        }
         return dislocation;
     }
 
