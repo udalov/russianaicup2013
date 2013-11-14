@@ -12,25 +12,21 @@ public class Army {
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
-        int w = world.getWidth();
-        int h = world.getHeight();
-        int x = firstTrooper.getX();
-        int y = firstTrooper.getY();
-
+        Board board = new Board(world);
+        Point p = Point.byUnit(firstTrooper);
         this.dislocations = new ArrayList<>();
-        dislocations.add(findFreePointNearby(world, Point.byUnit(firstTrooper)));
-        dislocations.add(findFreePointNearby(world, new Point(w / 2, h / 2)));
-        dislocations.add(findFreePointNearby(world, new Point(w - x, h - y)));
-        dislocations.add(findFreePointNearby(world, new Point(w - x, y)));
-        dislocations.add(findFreePointNearby(world, new Point(w / 2, h / 2)));
-        dislocations.add(findFreePointNearby(world, new Point(w, h - y)));
+        dislocations.add(findFreePointNearby(board, p));
+        dislocations.add(findFreePointNearby(board, Point.center()));
+        dislocations.add(findFreePointNearby(board, p.opposite()));
+        dislocations.add(findFreePointNearby(board, p.horizontalOpposite()));
+        dislocations.add(findFreePointNearby(board, Point.center()));
+        dislocations.add(findFreePointNearby(board, p.verticalOpposite()));
 
         this.curDisIndex = 0;
     }
 
     @NotNull
-    private Point findFreePointNearby(@NotNull World world, @NotNull Point p) {
-        Board board = new Board(world);
+    private Point findFreePointNearby(@NotNull Board board, @NotNull Point p) {
         Set<Point> visited = new HashSet<>();
         Queue<Point> queue = new LinkedList<>();
         queue.offer(p);

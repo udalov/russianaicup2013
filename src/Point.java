@@ -48,6 +48,31 @@ public final class Point implements Comparable<Point> {
         return Math.abs(x - that.x) + Math.abs(y - that.y);
     }
 
+    private static Point center;
+
+    @NotNull
+    public static Point center() {
+        if (center == null) {
+            center = new Point(Board.WIDTH / 2, Board.HEIGHT / 2);
+        }
+        return center;
+    }
+
+    @NotNull
+    public Point opposite() {
+        return new Point(Board.WIDTH - 1 - x, Board.HEIGHT - 1 - y);
+    }
+
+    @NotNull
+    public Point horizontalOpposite() {
+        return new Point(Board.WIDTH - 1 - x, y);
+    }
+
+    @NotNull
+    public Point verticalOpposite() {
+        return new Point(x, Board.HEIGHT - 1 - y);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

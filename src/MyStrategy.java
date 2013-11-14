@@ -7,6 +7,12 @@ public class MyStrategy implements Strategy {
 
     @Override
     public void move(@NotNull Trooper self, @NotNull World world, @NotNull Game game, @NotNull Move move) {
+        if (Board.WIDTH == -1) {
+            // Not very great, but hey, they could've exposed these as public static final constants
+            Board.WIDTH = world.getWidth();
+            Board.HEIGHT = world.getHeight();
+        }
+
         if (ARMY == null) {
             ARMY = new Army(self, world);
         }

@@ -3,6 +3,7 @@ import model.*;
 import java.util.*;
 
 public class Board {
+    // Not very accurate: in case when a cell contains both a trooper and a bonus, it's TROOPER
     public enum Cell {
         FREE,
         BONUS,
@@ -10,14 +11,17 @@ public class Board {
         OBSTACLE
     }
 
+    public static int WIDTH = -1;
+    public static int HEIGHT = -1;
+
     private final Cell[][] cells;
-    private final int n;
-    private final int m;
 
     public Board(@NotNull World world) {
         CellType[][] cells = world.getCells();
         int n = cells.length;
         int m = cells[0].length;
+        assert n == WIDTH : "Wrong width: " + n + " != " + WIDTH;
+        assert m == HEIGHT : "Wrong height: " + m + " != " + HEIGHT;
 
         this.cells = new Cell[n][m];
         for (int i = 0; i < n; i++) {
@@ -31,16 +35,13 @@ public class Board {
         for (Trooper trooper : world.getTroopers()) {
             this.cells[trooper.getX()][trooper.getY()] = Cell.TROOPER;
         }
-
-        this.n = n;
-        this.m = m;
     }
 
     @Nullable
     public Cell get(@NotNull Point point) {
         int x = point.x;
         int y = point.y;
-        return 0 <= x && 0 <= y && x < n && y < m ? cells[x][y] : null;
+        return 0 <= x && 0 <= y && x < WIDTH && y < HEIGHT ? cells[x][y] : null;
     }
 
     public boolean isPassable(@NotNull Point point) {
