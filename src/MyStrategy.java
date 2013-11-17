@@ -23,6 +23,9 @@ public class MyStrategy implements Strategy {
             order.add(myType);
         }
 
-        new WarriorTurn(ARMY, self, world, game).makeTurn().execute(move);
+        Go go = new WarriorTurn(ARMY, self, world, game).makeTurn();
+        // TODO: only validate locally, do nothing or end turn on the server
+        go.validate(self, world, game);
+        go.execute(move);
     }
 }

@@ -63,10 +63,10 @@ public class WarriorTurn {
         if (runToWounded != null) return Go.move(runToWounded);
 
         if (grenade != null || shoot != null) {
-            if (self.getActionPoints() >= 10 && self.getStance() == KNEELING) return Go.lowerStance();
-            if (self.getActionPoints() >= 8 && self.getStance() == STANDING) return Go.lowerStance();
+            if (can(10) && self.getStance() == KNEELING) return Go.lowerStance();
+            if (can(8) && self.getStance() == STANDING) return Go.lowerStance();
         } else {
-            if (self.getActionPoints() >= 8 && self.getStance() != STANDING) return Go.raiseStance();
+            if (can(8) && self.getStance() != STANDING) return Go.raiseStance();
         }
 
         if (grenade != null) return Go.throwGrenade(grenade);
@@ -81,7 +81,7 @@ public class WarriorTurn {
     @Nullable
     private Go readMessages() {
         for (Message message : army.getMessages(self)) {
-            if (self.getActionPoints() < getMoveCost()) continue;
+            if (!can(getMoveCost())) continue;
 
             if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
                 Point whereFrom = message.getData();
@@ -117,7 +117,7 @@ public class WarriorTurn {
     @Nullable
     private Direction useMedikit() {
         if (!self.isHoldingMedikit()) return null;
-        if (self.getActionPoints() < game.getMedikitUseCost()) return null;
+        if (!can(game.getMedikitUseCost())) return null;
 
         return findWoundedNeighbor(self.getMaximalHitpoints() / 2);
     }
@@ -125,7 +125,7 @@ public class WarriorTurn {
     @Nullable
     private Direction heal() {
         if (self.getType() != FIELD_MEDIC) return null;
-        if (self.getActionPoints() < game.getFieldMedicHealCost()) return null;
+        if (!can(game.getFieldMedicHealCost())) return null;
 
         return findWoundedNeighbor(self.getMaximalHitpoints());
     }
@@ -139,7 +139,7 @@ public class WarriorTurn {
     @Nullable
     private Direction runToWounded() {
         if (self.getType() != FIELD_MEDIC) return null;
-        if (self.getActionPoints() < getMoveCost()) return null;
+        if (!can(getMoveCost())) return null;
 
         Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
         return wounded != null ? board.findBestMove(me, wounded) : null;
@@ -164,15 +164,14 @@ public class WarriorTurn {
     }
 
     private boolean eatFieldRation() {
-        return self.isHoldingFieldRation()
-                && self.getActionPoints() >= game.getFieldRationEatCost()
+        return self.isHoldingFieldRation() && can(game.getFieldRationEatCost())
                 && self.getActionPoints() <= self.getInitialActionPoints() - game.getFieldRationBonusActionPoints() + game.getFieldRationEatCost();
     }
 
     @Nullable
     private Point throwGrenade() {
         if (!self.isHoldingGrenade()) return null;
-        if (self.getActionPoints() < game.getGrenadeThrowCost()) return null;
+        if (!can(game.getGrenadeThrowCost())) return null;
 
         List<Trooper> targets = findSortedTargetsToShoot(game.getGrenadeThrowRange());
         return !targets.isEmpty() ? Point.byUnit(targets.get(targets.size() - 1)) : null;
@@ -180,7 +179,7 @@ public class WarriorTurn {
 
     @Nullable
     private Point shoot() {
-        if (self.getActionPoints() < self.getShootCost()) return null;
+        if (!can(self.getShootCost())) return null;
 
         List<Trooper> targets = findSortedTargetsToShoot(self.getShootingRange());
         return !targets.isEmpty() ? Point.byUnit(targets.get(0)) : null;
@@ -195,21 +194,21 @@ public class WarriorTurn {
             }
         }
 
-        if (result.size() <= 1) return result;
-
-        Collections.sort(result, new Comparator<Trooper>() {
-            @Override
-            public int compare(@NotNull Trooper o1, @NotNull Trooper o2) {
-                return o1.getHitpoints() - o2.getHitpoints();
-            }
-        });
+        if (result.size() > 1) {
+            Collections.sort(result, new Comparator<Trooper>() {
+                @Override
+                public int compare(@NotNull Trooper o1, @NotNull Trooper o2) {
+                    return o1.getHitpoints() - o2.getHitpoints();
+                }
+            });
+        }
 
         return result;
     }
 
     @Nullable
     private Direction move() {
-        if (self.getActionPoints() < getMoveCost()) return null;
+        if (!can(getMoveCost())) return null;
 
         Point bonus = findClosestRelevantBonus();
         if (bonus != null && me.manhattanDistance(bonus) <= 4) {
@@ -266,6 +265,10 @@ public class WarriorTurn {
         }
 
         throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
+    }
+
+    private boolean can(int cost) {
+        return self.getActionPoints() >= cost;
     }
 
     private int getMoveCost() {
