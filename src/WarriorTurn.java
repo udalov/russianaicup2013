@@ -146,7 +146,7 @@ public class WarriorTurn {
         if (self.getType() != FIELD_MEDIC) return null;
         if (!can(game.getFieldMedicHealCost())) return null;
 
-        return findWoundedNeighbor(self.getMaximalHitpoints());
+        return findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10);
     }
 
     @Nullable
