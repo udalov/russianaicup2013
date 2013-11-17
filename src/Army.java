@@ -6,16 +6,16 @@ import model.World;
 import java.util.*;
 
 public class Army {
-    private List<Point> dislocations;
+    private final List<Point> dislocations = new ArrayList<>();
     private int curDisIndex;
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
+    private final Map<TrooperType, Inbox> inboxes = new HashMap<>();
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         Board board = new Board(world);
         Point start = Point.byUnit(firstTrooper);
         Point center = Point.center();
-        this.dislocations = new ArrayList<>();
         dislocations.add(findFreePointNearby(board, start));
         dislocations.add(findFreePointNearby(board, start.halfwayTo(center)));
         dislocations.add(findFreePointNearby(board, center));
@@ -25,7 +25,11 @@ public class Army {
         dislocations.add(findFreePointNearby(board, center));
         dislocations.add(findFreePointNearby(board, start.verticalOpposite()));
 
-        this.curDisIndex = 0;
+        curDisIndex = 0;
+
+        for (Trooper trooper : world.getTroopers()) {
+            inboxes.put(trooper.getType(), new Inbox());
+        }
     }
 
     @NotNull
@@ -65,5 +69,14 @@ public class Army {
     @NotNull
     public List<TrooperType> getOrder() {
         return order;
+    }
+
+    public void sendMessage(@NotNull Trooper ally, @NotNull Message message, int timeToLive) {
+        inboxes.get(ally.getType()).add(message, timeToLive);
+    }
+
+    @NotNull
+    public Inbox getMessages(@NotNull Trooper ally) {
+        return inboxes.get(ally.getType());
     }
 }

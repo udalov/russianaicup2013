@@ -40,6 +40,25 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
+        for (Message message : army.getMessages(self)) {
+            if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
+                Point whereFrom = message.getData();
+                Point best = null;
+                for (Direction direction : Util.DIRECTIONS) {
+                    Point cur = me.go(direction);
+                    Board.Cell cell = board.get(cur);
+                    if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
+                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
+                            best = cur;
+                        }
+                    }
+                }
+                if (best != null) {
+                    return Go.move(me.direction(best));
+                }
+            }
+        }
+
         Direction useMedikit = useMedikit();
         Direction heal = heal();
         Direction runToWounded = runToWounded();
@@ -175,7 +194,16 @@ public class WarriorTurn {
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
-            return board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
+            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
+            if (move == null) return null;
+
+            for (Trooper ally : allies.values()) {
+                if (Point.byUnit(ally).equals(me.go(move))) {
+                    army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
+                }
+            }
+
+            return move;
         }
 
         Point target = Point.byUnit(leader);
@@ -192,6 +220,10 @@ public class WarriorTurn {
         int mind = Integer.MAX_VALUE;
 
         for (Bonus bonus : world.getBonuses()) {
+            if (Point.byUnit(bonus).equals(me)) {
+                // TODO: this is a workaround for a bug in local-runner. Remove upon update
+                continue;
+            }
             if (!isHolding(bonus.getType())) {
                 Point that = Point.byUnit(bonus);
                 int dist = me.manhattanDistance(that);
