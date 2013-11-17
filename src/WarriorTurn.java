@@ -245,10 +245,6 @@ public class WarriorTurn {
         int mind = Integer.MAX_VALUE;
 
         for (Bonus bonus : world.getBonuses()) {
-            if (Point.byUnit(bonus).equals(me)) {
-                // TODO: this is a workaround for a bug in local-runner. Remove upon update
-                continue;
-            }
             if (!isHolding(bonus.getType())) {
                 Point that = Point.byUnit(bonus);
                 int dist = me.manhattanDistance(that);
