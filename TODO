@@ -1,3 +1,4 @@
+- (!) validation of actions
 - only throw grenades if enemy has a lot of health / several enemies nearby
 - throw grenade in a way that will damage most of enemies (calculate damage for all possible locations)
   but don't kill myself
@@ -7,3 +8,4 @@
   maybe also shoot medics first? 1) they're too powerful to be alive 2) they will bring more points, if they heal themselves
     maybe even not shoot them to the death, since they'll heal themselves and will bring even more points
 - if low health, high action points, and am attacked, run
+- medic should not heal himself up to 100%, he should take others more seriously

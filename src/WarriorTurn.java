@@ -7,8 +7,6 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.FIELD_MEDIC;
 
 public class WarriorTurn {
-    private final static Random RANDOM = new Random(42);
-
     private final Army army;
     private final Trooper self;
     private final World world;
@@ -40,22 +38,13 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        for (Message message : army.getMessages(self)) {
-            if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
-                Point whereFrom = message.getData();
-                Point best = null;
-                for (Direction direction : Util.DIRECTIONS) {
-                    Point cur = me.go(direction);
-                    Board.Cell cell = board.get(cur);
-                    if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
-                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
-                            best = cur;
-                        }
-                    }
-                }
-                if (best != null) {
-                    return Go.move(me.direction(best));
-                }
+        // TODO: field ration also matters here
+        Go messageBased = readMessages();
+        if (messageBased != null) return messageBased;
+
+        for (Trooper enemy : enemies) {
+            if (isVisible(enemy.getVisionRange(), enemy, self)) {
+                army.requestHelp(self, allies.values(), 10);
             }
         }
 
@@ -87,6 +76,42 @@ public class WarriorTurn {
         if (move != null) return Go.move(move);
 
         return Go.endTurn();
+    }
+
+    @Nullable
+    private Go readMessages() {
+        for (Message message : army.getMessages(self)) {
+            if (self.getActionPoints() < getMoveCost()) continue;
+
+            if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
+                Point whereFrom = message.getData();
+                Point best = null;
+                for (Direction direction : Util.DIRECTIONS) {
+                    Point cur = me.go(direction);
+                    Board.Cell cell = board.get(cur);
+                    if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
+                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
+                            best = cur;
+                        }
+                    }
+                }
+                if (best != null) {
+                    return Go.move(me.direction(best));
+                }
+            } else if (message.getKind() == Message.Kind.NEED_HELP) {
+                Point caller = message.getData();
+                if (me.manhattanDistance(caller) > 2) {
+                    Direction direction = board.findBestMove(me, caller);
+                    if (direction != null) {
+                        return Go.move(direction);
+                    }
+                }
+            } else {
+                throw new UnsupportedOperationException("What's that supposed to mean: " + message);
+            }
+        }
+
+        return null;
     }
 
     @Nullable
@@ -267,6 +292,10 @@ public class WarriorTurn {
     }
 
     private boolean isVisible(double maxRange, @NotNull Trooper enemy) {
-        return world.isVisible(maxRange, self.getX(), self.getY(), self.getStance(), enemy.getX(), enemy.getY(), enemy.getStance());
+        return isVisible(maxRange, self, enemy);
+    }
+
+    private boolean isVisible(double maxRange, @NotNull Trooper viewer, @NotNull Trooper trooper) {
+        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), trooper.getX(), trooper.getY(), trooper.getStance());
     }
 }
