@@ -118,7 +118,7 @@ public class WarriorTurn {
                 if (me.manhattanDistance(caller) <= 3) {
                     // If we're already close: if there's an enemy we can shoot, shoot this enemy instead
                     for (Trooper enemy : enemies) {
-                        if (isVisible(self.getShootingRange(), enemy)) return null;
+                        if (isReachable(self.getShootingRange(), enemy)) return null;
                     }
                 }
                 Direction direction = board.findBestMove(me, caller);
@@ -243,9 +243,9 @@ public class WarriorTurn {
 
     @NotNull
     private List<Trooper> findSortedTargetsToShoot(double range) {
-        List<Trooper> result = new ArrayList<>(15);
+        List<Trooper> result = new ArrayList<>(enemies.size());
         for (Trooper enemy : enemies) {
-            if (isVisible(range, enemy)) {
+            if (isReachable(range, enemy)) {
                 result.add(enemy);
             }
         }
@@ -347,11 +347,7 @@ public class WarriorTurn {
         }
     }
 
-    private boolean isVisible(double maxRange, @NotNull Trooper enemy) {
-        return isVisible(maxRange, self, enemy);
-    }
-
-    private boolean isVisible(double maxRange, @NotNull Trooper viewer, @NotNull Trooper trooper) {
-        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), trooper.getX(), trooper.getY(), trooper.getStance());
+    private boolean isReachable(double maxRange, @NotNull Trooper enemy) {
+        return world.isVisible(maxRange, self.getX(), self.getY(), self.getStance(), enemy.getX(), enemy.getY(), enemy.getStance());
     }
 }
