@@ -83,11 +83,14 @@ public class WarriorTurn {
     }
 
     private void maybeRequestHelp() {
+        // TODO: enable this
+/*
         for (Trooper enemy : enemies) {
             if (isVisible(enemy.getVisionRange(), enemy, self)) {
                 army.requestHelp(me, self.getType(), alliesWithoutMe, 10);
             }
         }
+*/
     }
 
     @Nullable

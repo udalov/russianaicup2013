@@ -1,8 +1,6 @@
-- (!) validation of actions
 - only throw grenades if enemy has a lot of health / several enemies nearby
 - throw grenade in a way that will damage most of enemies (calculate damage for all possible locations)
   but don't kill myself
-- if someone's in trouble and he's nearby, go help him
 - don't always lower stance while shooting: if we're behind a cover, we won't see the enemy if we lie down
 - if a medic was shot 4 or 5 times in a row, RUN! or kill oneself... it's probably a smart enemy who wants to score a lot of points
   maybe also shoot medics first? 1) they're too powerful to be alive 2) they will bring more points, if they heal themselves
