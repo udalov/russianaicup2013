@@ -16,6 +16,7 @@ public class WarriorTurn {
     private final Board board;
     private final List<Trooper> enemies;
     private final Map<TrooperType, Trooper> allies;
+    private final List<Trooper> alliesWithoutMe;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -23,17 +24,24 @@ public class WarriorTurn {
         this.world = world;
         this.game = game;
 
-        this.me = Point.byUnit(self);
-        this.board = new Board(world);
-        this.enemies = new ArrayList<>(15);
-        this.allies = new EnumMap<>(TrooperType.class);
+        me = Point.byUnit(self);
+        board = new Board(world);
+        List<Trooper> enemies = null;
+        allies = new EnumMap<>(TrooperType.class);
+        alliesWithoutMe = new ArrayList<>(4);
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
-                this.allies.put(trooper.getType(), trooper);
+                allies.put(trooper.getType(), trooper);
+                if (trooper.getType() != self.getType()) {
+                    alliesWithoutMe.add(trooper);
+                }
             } else {
-                this.enemies.add(trooper);
+                if (enemies == null) enemies = new ArrayList<>(15);
+                enemies.add(trooper);
             }
         }
+
+        this.enemies = enemies == null ? Collections.<Trooper>emptyList() : enemies;
     }
 
     @NotNull
@@ -44,7 +52,7 @@ public class WarriorTurn {
 
         for (Trooper enemy : enemies) {
             if (isVisible(enemy.getVisionRange(), enemy, self)) {
-                army.requestHelp(self, allies.values(), 10);
+                army.requestHelp(me, self.getType(), alliesWithoutMe, 10);
             }
         }
 
@@ -80,9 +88,9 @@ public class WarriorTurn {
 
     @Nullable
     private Go readMessages() {
-        for (Message message : army.getMessages(self)) {
-            if (!can(getMoveCost())) continue;
+        if (!can(getMoveCost())) return null;
 
+        for (Message message : army.getMessages(self)) {
             if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
                 Point whereFrom = message.getData();
                 Point best = null;
@@ -100,11 +108,15 @@ public class WarriorTurn {
                 }
             } else if (message.getKind() == Message.Kind.NEED_HELP) {
                 Point caller = message.getData();
-                if (me.manhattanDistance(caller) > 2) {
-                    Direction direction = board.findBestMove(me, caller);
-                    if (direction != null) {
-                        return Go.move(direction);
+                if (me.manhattanDistance(caller) <= 3) {
+                    // If we're already close: if there's an enemy we can shoot, shoot this enemy instead
+                    for (Trooper enemy : enemies) {
+                        if (isVisible(self.getShootingRange(), enemy)) return null;
                     }
+                }
+                Direction direction = board.findBestMove(me, caller);
+                if (direction != null) {
+                    return Go.move(direction);
                 }
             } else {
                 throw new UnsupportedOperationException("What's that supposed to mean: " + message);
@@ -221,8 +233,9 @@ public class WarriorTurn {
             Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
             if (move == null) return null;
 
-            for (Trooper ally : allies.values()) {
-                if (Point.byUnit(ally).equals(me.go(move))) {
+            Point destination = me.go(move);
+            for (Trooper ally : alliesWithoutMe) {
+                if (Point.byUnit(ally).equals(destination)) {
                     army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
                 }
             }

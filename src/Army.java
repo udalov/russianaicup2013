@@ -82,14 +82,12 @@ public class Army {
         return inboxes.get(ally.getType());
     }
 
-    public void requestHelp(@NotNull Trooper self, @NotNull Collection<Trooper> allies, int timeToLive) {
+    public void requestHelp(@NotNull Point whereTo, @NotNull TrooperType selfType, @NotNull Iterable<Trooper> alliesWithoutMe, int timeToLive) {
         // A trooper may request help only once
-        if (!requestedHelp.add(self.getType())) return;
+        if (!requestedHelp.add(selfType)) return;
 
-        for (Trooper ally : allies) {
-            if (ally.getType() != self.getType()) {
-                sendMessage(ally, new Message(Message.Kind.NEED_HELP, Point.byUnit(self)), 10);
-            }
+        for (Trooper ally : alliesWithoutMe) {
+            sendMessage(ally, new Message(Message.Kind.NEED_HELP, whereTo), timeToLive);
         }
     }
 }
