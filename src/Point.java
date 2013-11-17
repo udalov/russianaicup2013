@@ -48,6 +48,10 @@ public final class Point implements Comparable<Point> {
         return Math.abs(x - that.x) + Math.abs(y - that.y);
     }
 
+    public boolean withinEuclidean(@NotNull Point that, double distance) {
+        return (x - that.x) * (x - that.x) + (y - that.y) * (y - that.y) <= distance * distance;
+    }
+
     private static Point center;
 
     @NotNull

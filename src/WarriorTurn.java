@@ -192,8 +192,45 @@ public class WarriorTurn {
         if (!self.isHoldingGrenade()) return null;
         if (!can(game.getGrenadeThrowCost())) return null;
 
-        List<Trooper> targets = findSortedTargetsToShoot(game.getGrenadeThrowRange());
-        return !targets.isEmpty() ? Point.create(targets.get(targets.size() - 1)) : null;
+        Point bestTarget = null;
+        int bestDamage = Integer.MIN_VALUE;
+        for (Trooper enemy : enemies) {
+            Point enemyPoint = Point.create(enemy);
+            for (Direction direction : Direction.values()) {
+                Point target = enemyPoint.go(direction);
+                if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) continue;
+
+                int cur = grenadeDamage(target);
+                if (cur > bestDamage) {
+                    bestDamage = cur;
+                    bestTarget = target;
+                }
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private int grenadeDamage(@NotNull Point target) {
+        int result = 0;
+        for (Trooper enemy : enemies) {
+            result += grenadeDamageToTrooper(target, enemy);
+        }
+        // 1 hitpoint of an ally = 4 (?) hitpoints of an enemy
+        for (Trooper ally : allies.values()) {
+            result -= 4 * grenadeDamageToTrooper(target, ally);
+        }
+        return result;
+    }
+
+    private int grenadeDamageToTrooper(@NotNull Point grenade, @NotNull Trooper trooper) {
+        Point point = Point.create(trooper);
+        if (point.equals(grenade)) {
+            return Math.min(game.getGrenadeDirectDamage(), trooper.getHitpoints());
+        } else if (point.isNeighbor(grenade)) {
+            return Math.min(game.getGrenadeCollateralDamage(), trooper.getHitpoints());
+        }
+        return 0;
     }
 
     @Nullable
