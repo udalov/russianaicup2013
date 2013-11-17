@@ -46,15 +46,7 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        // TODO: field ration also matters here
         Go messageBased = readMessages();
-        if (messageBased != null) return messageBased;
-
-        for (Trooper enemy : enemies) {
-            if (isVisible(enemy.getVisionRange(), enemy, self)) {
-                army.requestHelp(me, self.getType(), alliesWithoutMe, 10);
-            }
-        }
 
         Direction useMedikit = useMedikit();
         Direction heal = heal();
@@ -62,9 +54,13 @@ public class WarriorTurn {
         Point grenade = throwGrenade();
         Point shoot = shoot();
 
-        if (useMedikit != null || heal != null || runToWounded != null || grenade != null || shoot != null) {
+        if (Util.anything(useMedikit, heal, runToWounded, grenade, shoot, messageBased)) {
             if (eatFieldRation()) return Go.eatFieldRation();
         }
+
+        if (messageBased != null) return messageBased;
+
+        maybeRequestHelp();
 
         if (useMedikit != null) return Go.useMedikit(useMedikit);
         if (heal != null) return Go.heal(heal);
@@ -84,6 +80,14 @@ public class WarriorTurn {
         if (move != null) return Go.move(move);
 
         return Go.endTurn();
+    }
+
+    private void maybeRequestHelp() {
+        for (Trooper enemy : enemies) {
+            if (isVisible(enemy.getVisionRange(), enemy, self)) {
+                army.requestHelp(me, self.getType(), alliesWithoutMe, 10);
+            }
+        }
     }
 
     @Nullable

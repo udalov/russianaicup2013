@@ -22,4 +22,11 @@ public class Util {
             default: throw new IllegalStateException("Oh please: " + direction);
         }
     }
+
+    public static boolean anything(@NotNull Object... objects) {
+        for (Object object : objects) {
+            if (object != null) return true;
+        }
+        return false;
+    }
 }
