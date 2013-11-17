@@ -17,7 +17,7 @@ public final class RemoteProcessClient implements Closeable {
     private final ByteArrayOutputStream outputStreamBuffer;
 
     private CellType[][] cells;
-    private boolean[][][][][] cellVisibilities;
+    private boolean[] cellVisibilities;
 
     public RemoteProcessClient(String host, int port) throws IOException {
         socket = new Socket(host, port);
@@ -208,7 +208,7 @@ public final class RemoteProcessClient implements Closeable {
         return cells;
     }
 
-    private boolean[][][][][] readCellVisibilities() throws IOException {
+    private boolean[] readCellVisibilities() throws IOException {
         if (cellVisibilities != null) {
             return cellVisibilities;
         }
@@ -228,25 +228,7 @@ public final class RemoteProcessClient implements Closeable {
             return null;
         }
 
-        byte[] rawVisibilities = readBytes(worldWidth * worldHeight * worldWidth * worldHeight * stanceCount);
-        cellVisibilities = new boolean[worldWidth][worldHeight][worldWidth][worldHeight][stanceCount];
-
-        int rawVisibilityIndex = 0;
-
-        for (int viewerX = 0; viewerX < worldWidth; ++viewerX) {
-            for (int viewerY = 0; viewerY < worldHeight; ++viewerY) {
-                for (int objectX = 0; objectX < worldWidth; ++objectX) {
-                    for (int objectY = 0; objectY < worldHeight; ++objectY) {
-                        for (int stanceIndex = 0; stanceIndex < stanceCount; ++stanceIndex) {
-                            cellVisibilities[viewerX][viewerY][objectX][objectY][stanceIndex]
-                                    = rawVisibilities[rawVisibilityIndex++] != 0;
-                        }
-                    }
-                }
-            }
-        }
-
-        return cellVisibilities;
+        return cellVisibilities = readBooleanArray(worldWidth * worldHeight * worldWidth * worldHeight * stanceCount);
     }
 
     private static void ensureMessageType(MessageType actualType, MessageType expectedType) {
