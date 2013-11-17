@@ -24,7 +24,7 @@ public class WarriorTurn {
         this.world = world;
         this.game = game;
 
-        me = Point.byUnit(self);
+        me = Point.create(self);
         board = new Board(world);
         List<Trooper> enemies = null;
         allies = new EnumMap<>(TrooperType.class);
@@ -170,7 +170,7 @@ public class WarriorTurn {
         int minDistance = Integer.MAX_VALUE;
         for (Trooper trooper : allies.values()) {
             if (trooper.getHitpoints() < maximalHitpoints) {
-                Point wounded = Point.byUnit(trooper);
+                Point wounded = Point.create(trooper);
                 int dist = wounded.manhattanDistance(me);
                 if (dist < minDistance) {
                     minDistance = dist;
@@ -193,7 +193,7 @@ public class WarriorTurn {
         if (!can(game.getGrenadeThrowCost())) return null;
 
         List<Trooper> targets = findSortedTargetsToShoot(game.getGrenadeThrowRange());
-        return !targets.isEmpty() ? Point.byUnit(targets.get(targets.size() - 1)) : null;
+        return !targets.isEmpty() ? Point.create(targets.get(targets.size() - 1)) : null;
     }
 
     @Nullable
@@ -201,7 +201,7 @@ public class WarriorTurn {
         if (!can(self.getShootCost())) return null;
 
         List<Trooper> targets = findSortedTargetsToShoot(self.getShootingRange());
-        return !targets.isEmpty() ? Point.byUnit(targets.get(0)) : null;
+        return !targets.isEmpty() ? Point.create(targets.get(0)) : null;
     }
 
     @NotNull
@@ -242,7 +242,7 @@ public class WarriorTurn {
 
             Point destination = me.go(move);
             for (Trooper ally : alliesWithoutMe) {
-                if (Point.byUnit(ally).equals(destination)) {
+                if (Point.create(ally).equals(destination)) {
                     army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
                 }
             }
@@ -250,7 +250,7 @@ public class WarriorTurn {
             return move;
         }
 
-        Point target = Point.byUnit(leader);
+        Point target = Point.create(leader);
         if (me.manhattanDistance(target) > 1) {
             return board.findBestMove(me, target);
         }
@@ -265,7 +265,7 @@ public class WarriorTurn {
 
         for (Bonus bonus : world.getBonuses()) {
             if (!isHolding(bonus.getType())) {
-                Point that = Point.byUnit(bonus);
+                Point that = Point.create(bonus);
                 int dist = me.manhattanDistance(that);
                 if (dist < mind) {
                     mind = dist;

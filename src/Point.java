@@ -25,7 +25,7 @@ public final class Point implements Comparable<Point> {
     }
 
     @NotNull
-    public static Point byUnit(@NotNull Unit unit) {
+    public static Point create(@NotNull Unit unit) {
         return new Point(unit.getX(), unit.getY());
     }
 

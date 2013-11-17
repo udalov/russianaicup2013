@@ -16,7 +16,7 @@ public class Army {
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         Board board = new Board(world);
-        Point start = Point.byUnit(firstTrooper);
+        Point start = Point.create(firstTrooper);
         Point center = Point.center();
         dislocations.add(findFreePointNearby(board, start));
         dislocations.add(findFreePointNearby(board, start.halfwayTo(center)));
@@ -59,7 +59,7 @@ public class Army {
         Point dislocation = dislocations.get(curDisIndex);
         int curDist = 0;
         for (Trooper ally : allies) {
-            curDist += Point.byUnit(ally).manhattanDistance(dislocation);
+            curDist += Point.create(ally).manhattanDistance(dislocation);
         }
         if (curDist < 4 * allies.size()) {
             curDisIndex = (curDisIndex + 1) % dislocations.size();
