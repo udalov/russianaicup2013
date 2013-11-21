@@ -4,7 +4,7 @@ import java.util.*;
 
 import static model.TrooperStance.KNEELING;
 import static model.TrooperStance.STANDING;
-import static model.TrooperType.FIELD_MEDIC;
+import static model.TrooperType.*;
 
 public class WarriorTurn {
     private final Army army;
@@ -329,7 +329,7 @@ public class WarriorTurn {
 
     @NotNull
     private Trooper findLeader() {
-        for (TrooperType type : army.getOrder()) {
+        for (TrooperType type : Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER)) {
             Trooper trooper = allies.get(type);
             if (trooper != null) return trooper;
         }
