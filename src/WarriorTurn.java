@@ -266,25 +266,21 @@ public class WarriorTurn {
     private Direction move() {
         if (!can(getMoveCost())) return null;
 
-        Point bonus = findClosestRelevantBonus();
-        if (bonus != null && me.manhattanDistance(bonus) <= 4) {
-            return board.findBestMove(me, bonus);
-        }
-
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
+            Direction toBonus = moveToClosestRelevantBonus();
+            if (toBonus != null) return clearPath(toBonus);
+
             Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
-            if (move == null) return null;
+            if (move != null) return clearPath(move);
 
-            Point destination = me.go(move);
-            for (Trooper ally : alliesWithoutMe) {
-                if (Point.create(ally).equals(destination)) {
-                    army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
-                }
-            }
+            return null;
+        }
 
-            return move;
+        Direction toBonus = moveToClosestRelevantBonus();
+        if (toBonus != null) {
+            return toBonus;
         }
 
         Point target = Point.create(leader);
@@ -293,6 +289,23 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    @NotNull
+    private Direction clearPath(@NotNull Direction direction) {
+        Point destination = me.go(direction);
+        for (Trooper ally : alliesWithoutMe) {
+            if (Point.create(ally).equals(destination)) {
+                army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
+            }
+        }
+        return direction;
+    }
+
+    @Nullable
+    private Direction moveToClosestRelevantBonus() {
+        Point bonus = findClosestRelevantBonus();
+        return bonus != null && me.manhattanDistance(bonus) <= 4 ? board.findBestMove(me, bonus) : null;
     }
 
     @Nullable
