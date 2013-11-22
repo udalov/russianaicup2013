@@ -43,6 +43,12 @@ public class Inbox implements Iterable<Message> {
     }
 
     public void add(@NotNull Message message, int timeToLive) {
+        for (Iterator<MessageTTL> iterator = messages.iterator(); iterator.hasNext(); ) {
+            MessageTTL messageTTL = iterator.next();
+            if (messageTTL.message.getKind() == message.getKind()) {
+                iterator.remove();
+            }
+        }
         messages.addLast(new MessageTTL(message, timeToLive));
     }
 

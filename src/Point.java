@@ -25,7 +25,7 @@ public final class Point implements Comparable<Point> {
     }
 
     @Nullable
-    private static Point create(int x, int y) {
+    public static Point create(int x, int y) {
         return 0 <= x && x < Board.WIDTH && 0 <= y && y < Board.HEIGHT ? new Point(x, y) : null;
     }
 

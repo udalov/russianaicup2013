@@ -75,7 +75,7 @@ public class WarriorTurn {
 
         if (grenade != null) return eatFieldRationOr(Go.throwGrenade(grenade));
         if (shoot != null) return eatFieldRationOr(Go.shoot(shoot));
-        
+
         if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
 
         Direction runToFight = runToFight();
