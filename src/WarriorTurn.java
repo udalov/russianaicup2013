@@ -13,6 +13,7 @@ public class WarriorTurn {
     private final Game game;
 
     private final Point me;
+    private final TrooperStance stance;
     private final Board board;
     private final List<Trooper> enemies;
     private final Map<TrooperType, Trooper> allies;
@@ -25,6 +26,7 @@ public class WarriorTurn {
         this.game = game;
 
         me = Point.create(self);
+        stance = self.getStance();
         board = new Board(world);
         List<Trooper> enemies = null;
         allies = new EnumMap<>(TrooperType.class);
@@ -71,7 +73,6 @@ public class WarriorTurn {
         if (heal != null) return Go.heal(heal);
         if (runToWounded != null) return Go.move(runToWounded);
 
-        TrooperStance stance = self.getStance();
         if (grenade != null || shoot != null) {
             if (can(10) && stance == KNEELING) return Go.lowerStance();
             if (can(8) && stance == STANDING) return Go.lowerStance();
@@ -148,19 +149,19 @@ public class WarriorTurn {
         // TODO: less HP -> more willing to hide
 
         if (can(game.getStanceChangeCost()) && self.getActionPoints() <= game.getStanceChangeCost() + 1) {
-            TrooperStance lower = Util.lower(self.getStance());
-            if (lower != null && howManyEnemiesCanShotMeThere(me, lower) < howManyEnemiesCanShotMeThere(me, self.getStance())) {
+            TrooperStance lowered = Util.lower(stance);
+            if (lowered != null && howManyEnemiesCanShotMeThere(me, lowered) < howManyEnemiesCanShotMeThere(me, stance)) {
                 return Go.lowerStance();
             }
         }
 
         if (can(getMoveCost()) && self.getActionPoints() <= getMoveCost() + 1) {
-            int bestValue = howManyEnemiesCanShotMeThere(me, self.getStance());
+            int bestValue = howManyEnemiesCanShotMeThere(me, stance);
             Direction best = null;
             for (Direction direction : Util.DIRECTIONS) {
                 Point there = me.go(direction);
                 if (there != null) {
-                    int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(there, self.getStance());
+                    int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(there, stance);
                     if (enemiesWillSeeMe < bestValue) {
                         best = direction;
                         bestValue = enemiesWillSeeMe;
@@ -243,7 +244,7 @@ public class WarriorTurn {
         Point runTo = board.launchDijkstra(me, new Board.Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
-                return world.isVisible(self.getShootingRange(), point.x, point.y, self.getStance(), enemy.getX(), enemy.getY(), enemy.getStance());
+                return world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
             }
         });
         if (runTo == null) return null;
@@ -456,7 +457,6 @@ public class WarriorTurn {
     }
 
     private int getMoveCost() {
-        TrooperStance stance = self.getStance();
         switch (stance) {
             case PRONE: return game.getProneMoveCost();
             case KNEELING: return game.getKneelingMoveCost();
