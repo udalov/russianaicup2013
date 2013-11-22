@@ -71,11 +71,12 @@ public class WarriorTurn {
         if (heal != null) return Go.heal(heal);
         if (runToWounded != null) return Go.move(runToWounded);
 
+        TrooperStance stance = self.getStance();
         if (grenade != null || shoot != null) {
-            if (can(10) && self.getStance() == KNEELING) return Go.lowerStance();
-            if (can(8) && self.getStance() == STANDING) return Go.lowerStance();
+            if (can(10) && stance == KNEELING) return Go.lowerStance();
+            if (can(8) && stance == STANDING) return Go.lowerStance();
         } else {
-            if (can(8) && self.getStance() != STANDING) return Go.raiseStance();
+            if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
         }
 
         if (grenade != null) return Go.throwGrenade(grenade);
@@ -146,10 +147,10 @@ public class WarriorTurn {
         // TODO: little HP -> be more willing to hide
         if (self.getActionPoints() < getMoveCost() || getMoveCost() + 1 < self.getActionPoints()) return null;
 
-        int bestValue = howManyEnemiesCanShotMeThere(me);
+        int bestValue = howManyEnemiesCanShotMeThere(me, self.getStance());
         Direction best = null;
         for (Direction direction : Util.DIRECTIONS) {
-            int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction));
+            int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction), self.getStance());
             if (enemiesWillSeeMe < bestValue) {
                 best = direction;
                 bestValue = enemiesWillSeeMe;
@@ -159,10 +160,10 @@ public class WarriorTurn {
         return best;
     }
 
-    private int howManyEnemiesCanShotMeThere(@NotNull Point point) {
+    private int howManyEnemiesCanShotMeThere(@NotNull Point point, @NotNull TrooperStance stance) {
         int result = 0;
         for (Trooper enemy : enemies) {
-            if (world.isVisible(enemy.getShootingRange(), enemy.getX(), enemy.getY(), enemy.getStance(), point.x, point.y, self.getStance())) {
+            if (world.isVisible(enemy.getShootingRange(), enemy.getX(), enemy.getY(), enemy.getStance(), point.x, point.y, stance)) {
                 result++;
             }
         }
