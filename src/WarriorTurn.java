@@ -46,8 +46,8 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        Direction hideBehindCover = hideBehindCover();
-        if (hideBehindCover != null) return Go.move(hideBehindCover);
+        Go hideBehindCover = hideBehindCover();
+        if (hideBehindCover != null) return hideBehindCover;
 
         Go messageBased = readMessages();
 
@@ -142,22 +142,31 @@ public class WarriorTurn {
     }
 
     @Nullable
-    private Direction hideBehindCover() {
-        // TODO: lower stance maybe
-        // TODO: little HP -> be more willing to hide
-        if (self.getActionPoints() < getMoveCost() || getMoveCost() + 1 < self.getActionPoints()) return null;
+    private Go hideBehindCover() {
+        // TODO: less HP -> more willing to hide
 
-        int bestValue = howManyEnemiesCanShotMeThere(me, self.getStance());
-        Direction best = null;
-        for (Direction direction : Util.DIRECTIONS) {
-            int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction), self.getStance());
-            if (enemiesWillSeeMe < bestValue) {
-                best = direction;
-                bestValue = enemiesWillSeeMe;
+        if (can(game.getStanceChangeCost()) && self.getActionPoints() <= game.getStanceChangeCost() + 1) {
+            TrooperStance lower = Util.lower(self.getStance());
+            if (lower != null && howManyEnemiesCanShotMeThere(me, lower) < howManyEnemiesCanShotMeThere(me, self.getStance())) {
+                return Go.lowerStance();
             }
         }
 
-        return best;
+        if (can(getMoveCost()) && self.getActionPoints() <= getMoveCost() + 1) {
+            int bestValue = howManyEnemiesCanShotMeThere(me, self.getStance());
+            Direction best = null;
+            for (Direction direction : Util.DIRECTIONS) {
+                int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction), self.getStance());
+                if (enemiesWillSeeMe < bestValue) {
+                    best = direction;
+                    bestValue = enemiesWillSeeMe;
+                }
+            }
+
+            if (best != null) return Go.move(best);
+        }
+
+        return null;
     }
 
     private int howManyEnemiesCanShotMeThere(@NotNull Point point, @NotNull TrooperStance stance) {
@@ -462,5 +471,11 @@ public class WarriorTurn {
 
     private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Trooper object) {
         return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.getX(), object.getY(), object.getStance());
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return self.getActionPoints() + " " + self.getType() + " at " + me + ", turn #" + world.getMoveIndex();
     }
 }

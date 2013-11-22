@@ -1,6 +1,8 @@
 import model.*;
 
 import static model.ActionType.*;
+import static model.TrooperStance.PRONE;
+import static model.TrooperStance.STANDING;
 import static model.TrooperType.COMMANDER;
 import static model.TrooperType.FIELD_MEDIC;
 
@@ -114,8 +116,10 @@ public class Go {
                     validateShoot();
                     break;
                 case RAISE_STANCE:
+                    validateRaiseStance();
+                    break;
                 case LOWER_STANCE:
-                    assert can(game.getStanceChangeCost());
+                    validateLowerStance();
                     break;
                 case THROW_GRENADE:
                     validateThrowGrenade();
@@ -154,6 +158,16 @@ public class Go {
 
         private void validateShoot() {
             assert can(self.getShootCost());
+        }
+
+        private void validateRaiseStance() {
+            assert can(game.getStanceChangeCost());
+            assert self.getStance() != STANDING;
+        }
+
+        private void validateLowerStance() {
+            assert can(game.getStanceChangeCost());
+            assert self.getStance() != PRONE;
         }
 
         private void validateThrowGrenade() {

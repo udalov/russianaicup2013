@@ -1,9 +1,12 @@
 import model.Direction;
+import model.TrooperStance;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static model.Direction.*;
+import static model.TrooperStance.KNEELING;
+import static model.TrooperStance.PRONE;
 
 public class Util {
     public static final List<Direction> DIRECTIONS = Arrays.asList(NORTH, EAST, SOUTH, WEST);
@@ -28,5 +31,15 @@ public class Util {
             if (object != null) return true;
         }
         return false;
+    }
+
+    @Nullable
+    public static TrooperStance lower(@NotNull TrooperStance stance) {
+        switch (stance) {
+            case PRONE: return null;
+            case KNEELING: return PRONE;
+            case STANDING: return KNEELING;
+            default: throw new IllegalStateException("You mean, you're flying? " + stance);
+        }
     }
 }
