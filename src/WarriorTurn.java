@@ -142,6 +142,7 @@ public class WarriorTurn {
 
     @Nullable
     private Direction hideBehindCover() {
+        // TODO: lower stance maybe
         // TODO: little HP -> be more willing to hide
         if (self.getActionPoints() < getMoveCost() || getMoveCost() + 1 < self.getActionPoints()) return null;
 
@@ -329,15 +330,17 @@ public class WarriorTurn {
     private Point shoot() {
         if (!can(self.getShootCost())) return null;
 
-        List<Trooper> targets = findSortedTargetsToShoot(self.getShootingRange());
+        if (enemies.isEmpty()) return null;
+
+        List<Trooper> targets = findSortedTargetsToShoot();
         return !targets.isEmpty() ? Point.create(targets.get(0)) : null;
     }
 
     @NotNull
-    private List<Trooper> findSortedTargetsToShoot(double range) {
+    private List<Trooper> findSortedTargetsToShoot() {
         List<Trooper> result = new ArrayList<>(enemies.size());
         for (Trooper enemy : enemies) {
-            if (isReachable(range, enemy)) {
+            if (isReachable(self.getShootingRange(), enemy)) {
                 result.add(enemy);
             }
         }
