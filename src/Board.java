@@ -11,6 +11,11 @@ public class Board {
         OBSTACLE
     }
 
+    public abstract static class Controller {
+        public abstract boolean isEndingPoint(@NotNull Point point);
+        public void savePrevious(@NotNull Point from, @NotNull Point to) {}
+    }
+
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
@@ -45,40 +50,21 @@ public class Board {
     }
 
     @Nullable
-    public Direction findBestMove(@NotNull Point from, @NotNull Point to) {
-        final Map<Point, Integer> dist = new HashMap<>();
-        SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
+    public Direction findBestMove(@NotNull Point from, @NotNull final Point to) {
+        // TODO: optimize Map<Point, *>
+        final Map<Point, Point> prev = new HashMap<>();
+
+        launchDijkstra(from, new Controller() {
             @Override
-            public int compare(@NotNull Point o1, @NotNull Point o2) {
-                int d = dist.get(o1) - dist.get(o2);
-                return d != 0 ? d : o1.compareTo(o2);
+            public boolean isEndingPoint(@NotNull Point point) {
+                return point.equals(to);
+            }
+
+            @Override
+            public void savePrevious(@NotNull Point from, @NotNull Point to) {
+                prev.put(from, to);
             }
         });
-        dist.put(from, 0);
-        set.add(from);
-
-        Map<Point, Point> prev = new HashMap<>();
-
-        while (!set.isEmpty()) {
-            Point point = set.first();
-            if (point.equals(to)) break;
-            set.remove(point);
-            int curd = dist.get(point);
-
-            for (Direction direction : Util.DIRECTIONS) {
-                Point next = point.go(direction);
-                Board.Cell cell = get(next);
-                if (cell != null && cell != Board.Cell.OBSTACLE) {
-                    Integer curDist = dist.get(next);
-                    int newDist = curd + cellWeight(cell);
-                    if (curDist == null || curDist > newDist) {
-                        dist.put(next, newDist);
-                        prev.put(next, point);
-                        set.add(next);
-                    }
-                }
-            }
-        }
 
         Point cur = to;
         while (true) {
@@ -91,6 +77,45 @@ public class Board {
             }
             cur = back;
         }
+    }
+
+    @Nullable
+    public Point launchDijkstra(@NotNull Point from, @NotNull Controller controller) {
+        final Map<Point, Integer> dist = new HashMap<>();
+        SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
+            @Override
+            public int compare(@NotNull Point o1, @NotNull Point o2) {
+                int d = dist.get(o1) - dist.get(o2);
+                return d != 0 ? d : o1.compareTo(o2);
+            }
+        });
+        dist.put(from, 0);
+        set.add(from);
+
+        while (!set.isEmpty()) {
+            Point point = set.first();
+            if (controller.isEndingPoint(point)) {
+                return point;
+            }
+            set.remove(point);
+            int curd = dist.get(point);
+
+            for (Direction direction : Util.DIRECTIONS) {
+                Point next = point.go(direction);
+                Cell cell = get(next);
+                if (cell != null && cell != Cell.OBSTACLE) {
+                    Integer curDist = dist.get(next);
+                    int newDist = curd + cellWeight(cell);
+                    if (curDist == null || curDist > newDist) {
+                        dist.put(next, newDist);
+                        controller.savePrevious(next, point);
+                        set.add(next);
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private int cellWeight(@NotNull Board.Cell cell) {

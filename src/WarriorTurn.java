@@ -54,7 +54,9 @@ public class WarriorTurn {
         Point grenade = throwGrenade();
         Point shoot = shoot();
 
-        if (Util.anything(useMedikit, heal, runToWounded, grenade, shoot, messageBased)) {
+        Direction runToFight = runToFight();
+
+        if (Util.anything(useMedikit, heal, runToWounded, grenade, shoot, messageBased, runToFight)) {
             if (eatFieldRation()) return Go.eatFieldRation();
         }
 
@@ -75,6 +77,8 @@ public class WarriorTurn {
 
         if (grenade != null) return Go.throwGrenade(grenade);
         if (shoot != null) return Go.shoot(shoot);
+
+        if (runToFight != null) return Go.move(runToFight);
 
         Direction move = move();
         if (move != null) return Go.move(move);
@@ -180,6 +184,63 @@ public class WarriorTurn {
         }
 
         return worst;
+    }
+
+    @Nullable
+    private Direction runToFight() {
+        if (!can(getMoveCost())) return null;
+
+        final Trooper enemy = findMostDangerousEnemyTrooper();
+        if (enemy == null) return null;
+
+        Point runTo = board.launchDijkstra(me, new Board.Controller() {
+            @Override
+            public boolean isEndingPoint(@NotNull Point point) {
+                return world.isVisible(self.getShootingRange(), point.x, point.y, self.getStance(), enemy.getX(), enemy.getY(), enemy.getStance());
+            }
+        });
+        if (runTo == null) return null;
+
+        return board.findBestMove(me, runTo);
+    }
+
+    @Nullable
+    private Trooper findMostDangerousEnemyTrooper() {
+        if (enemies.isEmpty()) return null;
+        if (enemies.size() == 1) return enemies.get(0);
+
+        final SmallLongIntMap visibleTroopers = new SmallLongIntMap();
+        for (Trooper enemy : enemies) {
+            visibleTroopers.inc(enemy.getPlayerId());
+        }
+
+        final SmallLongIntMap alliesSeenBy = new SmallLongIntMap();
+        for (Trooper ally : allies.values()) {
+            for (Trooper enemy : enemies) {
+                if (isReachable(enemy.getShootingRange(), enemy, ally)) {
+                    alliesSeenBy.inc(enemy.getPlayerId());
+                }
+            }
+        }
+
+        List<Trooper> enemies = new ArrayList<>(this.enemies);
+        Collections.sort(enemies, new Comparator<Trooper>() {
+            @Override
+            public int compare(@NotNull Trooper a, @NotNull Trooper b) {
+                long idA = a.getPlayerId(), idB = b.getPlayerId();
+
+                int army = visibleTroopers.get(idA) - visibleTroopers.get(idB);
+                if (army != 0) return army;
+
+                int alliesSeen = alliesSeenBy.get(idA) - alliesSeenBy.get(idB);
+                if (alliesSeen != 0) return alliesSeen;
+
+                // TODO
+                return a.getType().ordinal() - b.getType().ordinal();
+            }
+        });
+
+        return enemies.get(enemies.size() - 1);
     }
 
     private boolean eatFieldRation() {
@@ -361,6 +422,10 @@ public class WarriorTurn {
     }
 
     private boolean isReachable(double maxRange, @NotNull Trooper enemy) {
-        return world.isVisible(maxRange, self.getX(), self.getY(), self.getStance(), enemy.getX(), enemy.getY(), enemy.getStance());
+        return isReachable(maxRange, self, enemy);
+    }
+
+    private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Trooper object) {
+        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.getX(), object.getY(), object.getStance());
     }
 }

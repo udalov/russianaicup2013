@@ -6,3 +6,4 @@
 - if low health, high action points, and am attacked, run
 - medic should not heal himself up to 100%, he should take others more seriously
 - if we see an enemy far away, maybe it makes more sense to get closer to him to throw a grenade at him
+(!) - if we can spend 4 points to hide when enemy sees us, hide
