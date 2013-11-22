@@ -52,38 +52,34 @@ public class WarriorTurn {
         if (hideBehindCover != null) return hideBehindCover;
 
         Go messageBased = readMessages();
-
-        Direction useMedikit = useMedikit();
-        Direction heal = heal();
-        Direction runToWounded = runToWounded();
-        Point grenade = throwGrenade();
-        Point shoot = shoot();
-
-        Direction runToFight = runToFight();
-
-        if (Util.anything(useMedikit, heal, runToWounded, grenade, shoot, messageBased, runToFight)) {
-            if (eatFieldRation()) return Go.eatFieldRation();
-        }
-
-        if (messageBased != null) return messageBased;
+        if (messageBased != null) return eatFieldRationOr(messageBased);
 
         maybeRequestHelp();
 
-        if (useMedikit != null) return Go.useMedikit(useMedikit);
-        if (heal != null) return Go.heal(heal);
-        if (runToWounded != null) return Go.move(runToWounded);
+        Direction useMedikit = useMedikit();
+        if (useMedikit != null) return eatFieldRationOr(Go.useMedikit(useMedikit));
+
+        Direction heal = heal();
+        if (heal != null) return eatFieldRationOr(Go.heal(heal));
+
+        Direction runToWounded = runToWounded();
+        if (runToWounded != null) return eatFieldRationOr(Go.move(runToWounded));
+
+        Point grenade = throwGrenade();
+        Point shoot = shoot();
 
         if (grenade != null || shoot != null) {
             if (can(10) && stance == KNEELING) return Go.lowerStance();
             if (can(8) && stance == STANDING) return Go.lowerStance();
-        } else {
-            if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
         }
 
-        if (grenade != null) return Go.throwGrenade(grenade);
-        if (shoot != null) return Go.shoot(shoot);
+        if (grenade != null) return eatFieldRationOr(Go.throwGrenade(grenade));
+        if (shoot != null) return eatFieldRationOr(Go.shoot(shoot));
+        
+        if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
 
-        if (runToFight != null) return Go.move(runToFight);
+        Direction runToFight = runToFight();
+        if (runToFight != null) return eatFieldRationOr(Go.move(runToFight));
 
         Direction move = move();
         if (move != null) return Go.move(move);
@@ -289,6 +285,11 @@ public class WarriorTurn {
         });
 
         return enemies.get(enemies.size() - 1);
+    }
+
+    @NotNull
+    private Go eatFieldRationOr(@NotNull Go action) {
+        return eatFieldRation() ? Go.eatFieldRation() : action;
     }
 
     private boolean eatFieldRation() {
