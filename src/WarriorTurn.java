@@ -128,7 +128,7 @@ public class WarriorTurn {
                         if (isReachable(self.getShootingRange(), enemy)) return null;
                     }
                 }
-                Direction direction = board.findBestMove(me, caller);
+                Direction direction = board.findBestMove(me, caller, false);
                 if (direction != null) {
                     return Go.move(direction);
                 }
@@ -209,7 +209,7 @@ public class WarriorTurn {
         if (!can(getMoveCost())) return null;
 
         Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3);
-        return wounded != null ? board.findBestMove(me, wounded) : null;
+        return wounded != null ? board.findBestMove(me, wounded, false) : null;
     }
 
     @Nullable
@@ -239,13 +239,18 @@ public class WarriorTurn {
 
         Point runTo = board.launchDijkstra(me, new Board.Controller() {
             @Override
+            public boolean moveThroughPeople() {
+                return true;
+            }
+
+            @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
             }
         });
         if (runTo == null) return null;
 
-        return board.findBestMove(me, runTo);
+        return board.findBestMove(me, runTo, true);
     }
 
     @Nullable
@@ -388,7 +393,7 @@ public class WarriorTurn {
             Direction toBonus = moveToClosestRelevantBonus();
             if (toBonus != null) return clearPath(toBonus);
 
-            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()));
+            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()), false);
             if (move != null) return clearPath(move);
 
             return null;
@@ -401,7 +406,7 @@ public class WarriorTurn {
 
         Point target = Point.create(leader);
         if (me.manhattanDistance(target) > 1) {
-            return board.findBestMove(me, target);
+            return board.findBestMove(me, target, false);
         }
 
         return null;
@@ -421,7 +426,7 @@ public class WarriorTurn {
     @Nullable
     private Direction moveToClosestRelevantBonus() {
         Point bonus = findClosestRelevantBonus();
-        return bonus != null && me.manhattanDistance(bonus) <= 4 ? board.findBestMove(me, bonus) : null;
+        return bonus != null && me.manhattanDistance(bonus) <= 4 ? board.findBestMove(me, bonus, false) : null;
     }
 
     @Nullable
@@ -486,6 +491,6 @@ public class WarriorTurn {
     @NotNull
     @Override
     public String toString() {
-        return self.getActionPoints() + " " + self.getType() + " at " + me + ", turn #" + world.getMoveIndex();
+        return self.getActionPoints() + " " + stance + " " + self.getType() + " at " + me + ", turn #" + world.getMoveIndex();
     }
 }

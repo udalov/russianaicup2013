@@ -12,7 +12,12 @@ public class Board {
     }
 
     public abstract static class Controller {
+        public boolean moveThroughPeople() {
+            return false;
+        }
+
         public abstract boolean isEndingPoint(@NotNull Point point);
+
         public void savePrevious(@NotNull Point from, @NotNull Point to) {}
     }
 
@@ -48,11 +53,16 @@ public class Board {
     }
 
     @Nullable
-    public Direction findBestMove(@NotNull Point from, @NotNull final Point to) {
+    public Direction findBestMove(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
         // TODO: optimize Map<Point, *>
         final Map<Point, Point> prev = new HashMap<>();
 
         launchDijkstra(from, new Controller() {
+            @Override
+            public boolean moveThroughPeople() {
+                return moveThroughPeople;
+            }
+
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return point.equals(to);
@@ -90,6 +100,8 @@ public class Board {
         dist.put(from, 0);
         set.add(from);
 
+        boolean moveThroughPeople = controller.moveThroughPeople();
+
         while (!set.isEmpty()) {
             Point point = set.first();
             if (controller.isEndingPoint(point)) {
@@ -105,7 +117,7 @@ public class Board {
                 Cell cell = get(next);
                 if (cell != Cell.OBSTACLE) {
                     Integer curDist = dist.get(next);
-                    int newDist = curd + cellWeight(cell);
+                    int newDist = curd + cellWeight(cell, moveThroughPeople);
                     if (curDist == null || curDist > newDist) {
                         dist.put(next, newDist);
                         controller.savePrevious(next, point);
@@ -118,11 +130,11 @@ public class Board {
         return null;
     }
 
-    private int cellWeight(@NotNull Board.Cell cell) {
+    private int cellWeight(@NotNull Cell cell, boolean moveThroughPeople) {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return 100;
+            case TROOPER: return moveThroughPeople ? 5 : 100;
             default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }
