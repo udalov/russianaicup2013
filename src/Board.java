@@ -19,7 +19,7 @@ public class Board {
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
-    private final Cell[][] cells;
+    private final Cell[] cells;
 
     public Board(@NotNull World world) {
         CellType[][] cells = world.getCells();
@@ -28,17 +28,17 @@ public class Board {
         assert n == WIDTH : "Wrong width: " + n + " != " + WIDTH;
         assert m == HEIGHT : "Wrong height: " + m + " != " + HEIGHT;
 
-        this.cells = new Cell[n][m];
+        this.cells = new Cell[n * m];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                this.cells[i][j] = cells[i][j] == CellType.FREE ? Cell.FREE : Cell.OBSTACLE;
+                this.cells[i * m + j] = cells[i][j] == CellType.FREE ? Cell.FREE : Cell.OBSTACLE;
             }
         }
         for (Bonus bonus : world.getBonuses()) {
-            this.cells[bonus.getX()][bonus.getY()] = Cell.BONUS;
+            this.cells[bonus.getX() * m + bonus.getY()] = Cell.BONUS;
         }
         for (Trooper trooper : world.getTroopers()) {
-            this.cells[trooper.getX()][trooper.getY()] = Cell.TROOPER;
+            this.cells[trooper.getX() * m + trooper.getY()] = Cell.TROOPER;
         }
     }
 
@@ -46,7 +46,7 @@ public class Board {
     public Cell get(@NotNull Point point) {
         int x = point.x;
         int y = point.y;
-        return 0 <= x && 0 <= y && x < WIDTH && y < HEIGHT ? cells[x][y] : null;
+        return 0 <= x && 0 <= y && x < WIDTH && y < HEIGHT ? cells[x * HEIGHT + y] : null;
     }
 
     @Nullable
