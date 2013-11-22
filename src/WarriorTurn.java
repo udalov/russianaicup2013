@@ -111,10 +111,12 @@ public class WarriorTurn {
                 Point best = null;
                 for (Direction direction : Util.DIRECTIONS) {
                     Point cur = me.go(direction);
-                    Board.Cell cell = board.get(cur);
-                    if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
-                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
-                            best = cur;
+                    if (cur != null) {
+                        Board.Cell cell = board.get(cur);
+                        if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
+                            if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
+                                best = cur;
+                            }
                         }
                     }
                 }
@@ -156,10 +158,13 @@ public class WarriorTurn {
             int bestValue = howManyEnemiesCanShotMeThere(me, self.getStance());
             Direction best = null;
             for (Direction direction : Util.DIRECTIONS) {
-                int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction), self.getStance());
-                if (enemiesWillSeeMe < bestValue) {
-                    best = direction;
-                    bestValue = enemiesWillSeeMe;
+                Point there = me.go(direction);
+                if (there != null) {
+                    int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(there, self.getStance());
+                    if (enemiesWillSeeMe < bestValue) {
+                        best = direction;
+                        bestValue = enemiesWillSeeMe;
+                    }
                 }
             }
 
@@ -301,7 +306,7 @@ public class WarriorTurn {
             Point enemyPoint = Point.create(enemy);
             for (Direction direction : Direction.values()) {
                 Point target = enemyPoint.go(direction);
-                if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) continue;
+                if (target == null || !me.withinEuclidean(target, game.getGrenadeThrowRange())) continue;
 
                 int cur = grenadeDamage(target);
                 if (cur > bestDamage) {

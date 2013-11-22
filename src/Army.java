@@ -41,11 +41,10 @@ public class Army {
         queue.offer(p);
         while (!queue.isEmpty()) {
             Point cur = queue.poll();
-            Board.Cell cell = board.get(cur);
-            if (cell != null && cell != Board.Cell.OBSTACLE) return cur;
+            if (board.get(cur) != Board.Cell.OBSTACLE) return cur;
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = cur.go(direction);
-                if (!visited.contains(next)) {
+                if (next != null && !visited.contains(next)) {
                     visited.add(next);
                     queue.offer(next);
                 }

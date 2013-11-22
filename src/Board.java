@@ -42,11 +42,9 @@ public class Board {
         }
     }
 
-    @Nullable
+    @NotNull
     public Cell get(@NotNull Point point) {
-        int x = point.x;
-        int y = point.y;
-        return 0 <= x && 0 <= y && x < WIDTH && y < HEIGHT ? cells[x * HEIGHT + y] : null;
+        return cells[point.x * HEIGHT + point.y];
     }
 
     @Nullable
@@ -102,8 +100,10 @@ public class Board {
 
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = point.go(direction);
+                if (next == null) continue;
+
                 Cell cell = get(next);
-                if (cell != null && cell != Cell.OBSTACLE) {
+                if (cell != Cell.OBSTACLE) {
                     Integer curDist = dist.get(next);
                     int newDist = curd + cellWeight(cell);
                     if (curDist == null || curDist > newDist) {

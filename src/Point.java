@@ -7,21 +7,26 @@ public final class Point implements Comparable<Point> {
     public final int x;
     public final int y;
 
-    public Point(int x, int y) {
+    private Point(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
-    @NotNull
+    @Nullable
     public Point go(@NotNull Direction direction) {
         switch (direction) {
             case CURRENT_POINT: return this;
-            case NORTH: return new Point(x, y - 1);
-            case EAST: return new Point(x + 1, y);
-            case SOUTH: return new Point(x, y + 1);
-            case WEST: return new Point(x - 1, y);
+            case NORTH: return create(x, y - 1);
+            case EAST: return create(x + 1, y);
+            case SOUTH: return create(x, y + 1);
+            case WEST: return create(x - 1, y);
             default: throw new IllegalStateException("Unknown direction: " + direction);
         }
+    }
+
+    @Nullable
+    private static Point create(int x, int y) {
+        return 0 <= x && x < Board.WIDTH && 0 <= y && y < Board.HEIGHT ? new Point(x, y) : null;
     }
 
     @NotNull
