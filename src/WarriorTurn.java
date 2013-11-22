@@ -46,6 +46,9 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
+        Direction hideBehindCover = hideBehindCover();
+        if (hideBehindCover != null) return Go.move(hideBehindCover);
+
         Go messageBased = readMessages();
 
         Direction useMedikit = useMedikit();
@@ -135,6 +138,34 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    @Nullable
+    private Direction hideBehindCover() {
+        // TODO: little HP -> be more willing to hide
+        if (self.getActionPoints() < getMoveCost() || getMoveCost() + 1 < self.getActionPoints()) return null;
+
+        int bestValue = howManyEnemiesCanShotMeThere(me);
+        Direction best = null;
+        for (Direction direction : Util.DIRECTIONS) {
+            int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(me.go(direction));
+            if (enemiesWillSeeMe < bestValue) {
+                best = direction;
+                bestValue = enemiesWillSeeMe;
+            }
+        }
+
+        return best;
+    }
+
+    private int howManyEnemiesCanShotMeThere(@NotNull Point point) {
+        int result = 0;
+        for (Trooper enemy : enemies) {
+            if (world.isVisible(enemy.getShootingRange(), enemy.getX(), enemy.getY(), enemy.getStance(), point.x, point.y, self.getStance())) {
+                result++;
+            }
+        }
+        return result;
     }
 
     @Nullable
