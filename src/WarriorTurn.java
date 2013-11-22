@@ -322,7 +322,11 @@ public class WarriorTurn {
     private int grenadeDamage(@NotNull Point target) {
         int result = 0;
         for (Trooper enemy : enemies) {
-            result += grenadeDamageToTrooper(target, enemy);
+            int damage = grenadeDamageToTrooper(target, enemy);
+            result += damage;
+            if (damage == enemy.getHitpoints()) {
+                result += 25;
+            }
         }
         // 1 hitpoint of an ally = 4 (?) hitpoints of an enemy
         for (Trooper ally : allies.values()) {
