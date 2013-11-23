@@ -237,15 +237,19 @@ public class WarriorTurn {
         final Trooper enemy = findMostDangerousEnemyTrooper();
         if (enemy == null) return null;
 
-        Point runTo = board.launchDijkstra(me, true, new Board.Controller() {
+        Point runTo = board.launchDijkstra(me, false, new Board.Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
-                return world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
+                if (world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance())) {
+                    Board.Cell cell = board.get(point);
+                    return cell == Board.Cell.FREE || cell == Board.Cell.BONUS;
+                }
+                return false;
             }
         });
         if (runTo == null) return null;
 
-        return board.findBestMove(me, runTo, true);
+        return board.findBestMove(me, runTo, false);
     }
 
     @Nullable
