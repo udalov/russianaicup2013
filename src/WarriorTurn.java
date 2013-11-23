@@ -54,8 +54,6 @@ public class WarriorTurn {
         Go messageBased = readMessages();
         if (messageBased != null) return eatFieldRationOr(messageBased);
 
-        maybeRequestHelp();
-
         Direction useMedikit = useMedikit();
         if (useMedikit != null) return eatFieldRationOr(Go.useMedikit(useMedikit));
 
@@ -87,17 +85,6 @@ public class WarriorTurn {
         return Go.endTurn();
     }
 
-    private void maybeRequestHelp() {
-        // TODO: enable this
-/*
-        for (Trooper enemy : enemies) {
-            if (isVisible(enemy.getVisionRange(), enemy, self)) {
-                army.requestHelp(me, self.getType(), alliesWithoutMe, 10);
-            }
-        }
-*/
-    }
-
     @Nullable
     private Go readMessages() {
         if (!can(getMoveCost())) return null;
@@ -116,18 +103,6 @@ public class WarriorTurn {
                 }
                 if (best != null) {
                     return Go.move(me.direction(best));
-                }
-            } else if (message.getKind() == Message.Kind.NEED_HELP) {
-                Point caller = message.getData();
-                if (me.manhattanDistance(caller) <= 3) {
-                    // If we're already close: if there's an enemy we can shoot, shoot this enemy instead
-                    for (Trooper enemy : enemies) {
-                        if (isReachable(self.getShootingRange(), enemy)) return null;
-                    }
-                }
-                Direction direction = board.findBestMove(me, caller, false);
-                if (direction != null) {
-                    return Go.move(direction);
                 }
             } else {
                 throw new UnsupportedOperationException("What's that supposed to mean: " + message);

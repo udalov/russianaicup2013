@@ -1,7 +1,6 @@
 public class Message {
     public enum Kind {
-        OUT_OF_THE_WAY,
-        NEED_HELP
+        OUT_OF_THE_WAY
     }
 
     private final Kind kind;

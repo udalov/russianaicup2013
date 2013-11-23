@@ -12,8 +12,6 @@ public class Army {
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
     private final Map<TrooperType, Inbox> inboxes = new HashMap<>();
 
-    private final Set<TrooperType> requestedHelp = new HashSet<>();
-
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         Board board = new Board(world);
         Point start = Point.create(firstTrooper);
@@ -79,14 +77,5 @@ public class Army {
     @NotNull
     public Inbox getMessages(@NotNull Trooper ally) {
         return inboxes.get(ally.getType());
-    }
-
-    public void requestHelp(@NotNull Point whereTo, @NotNull TrooperType selfType, @NotNull Iterable<Trooper> alliesWithoutMe, int timeToLive) {
-        // A trooper may request help only once
-        if (!requestedHelp.add(selfType)) return;
-
-        for (Trooper ally : alliesWithoutMe) {
-            sendMessage(ally, new Message(Message.Kind.NEED_HELP, whereTo), timeToLive);
-        }
     }
 }
