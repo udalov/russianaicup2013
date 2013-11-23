@@ -249,15 +249,25 @@ public class WarriorTurn {
         final Trooper enemy = findMostDangerousEnemyTrooper();
         if (enemy == null) return null;
 
-        Point runTo = board.launchDijkstra(me, false, new Board.Controller() {
+        class CanSeeEnemy extends Board.Controller {
+            private final int maxDistanceFromCurrentLocation;
+            public CanSeeEnemy(int maxDist) { this.maxDistanceFromCurrentLocation = maxDist; }
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
-                return board.isPassable(point) && world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
+                return board.isPassable(point) &&
+                        world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance()) &&
+                        point.manhattanDistance(me) <= maxDistanceFromCurrentLocation;
             }
-        });
-        if (runTo == null) return null;
+        }
 
-        return board.findBestMove(me, runTo, false);
+        // Points within walking distance should be considered without bumping into allies
+        Point close = board.launchDijkstra(me, false, new CanSeeEnemy(5));
+        if (close != null) return board.findBestMove(me, close, false);
+
+        Point runTo = board.launchDijkstra(me, true, new CanSeeEnemy(Integer.MAX_VALUE));
+        if (runTo != null) return board.findBestMove(me, runTo, true);
+
+        return null;
     }
 
     @Nullable
