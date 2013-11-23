@@ -146,7 +146,7 @@ public class WarriorTurn {
             }
         }
 
-        if (self.getActionPoints() == 2 * getMoveCost() && self.getHitpoints() < self.getMaximalHitpoints() / 2 && alliesWithoutMe.isEmpty()) {
+        if (self.getActionPoints() == 2 * getMoveCost() && alliesWithoutMe.isEmpty()) {
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
             Direction bestFirstStep = null;
             for (Direction firstStep : Util.DIRECTIONS) {
@@ -449,7 +449,7 @@ public class WarriorTurn {
             if (distToBonus == null) continue;
 
             int totalDistance = distToBonus;
-            if (totalDistance > mind) continue;
+            if (totalDistance >= mind) continue;
 
             if (leader.getType() != self.getType()) {
                 Integer backToLeader = board.findDistanceTo(bonusPoint, Point.create(leader), true);
