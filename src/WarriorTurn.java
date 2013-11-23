@@ -152,20 +152,18 @@ public class WarriorTurn {
         }
 
         if (can(getMoveCost()) && self.getActionPoints() <= getMoveCost() + 1) {
-            int bestValue = howManyEnemiesCanShotMeThere(me, stance);
-            Direction best = null;
+            Point best = null;
             for (Direction direction : Util.DIRECTIONS) {
                 Point there = me.go(direction);
-                if (there != null) {
-                    int enemiesWillSeeMe = howManyEnemiesCanShotMeThere(there, stance);
-                    if (enemiesWillSeeMe < bestValue) {
-                        best = direction;
-                        bestValue = enemiesWillSeeMe;
-                    }
+                if (there == null) continue;
+                Board.Cell cell = board.get(there);
+                if (cell != Board.Cell.BONUS && cell != Board.Cell.FREE) continue;
+                if (best == null || howManyEnemiesCanShotMeThere(there, stance) < howManyEnemiesCanShotMeThere(best, stance)) {
+                    best = there;
                 }
             }
 
-            if (best != null) return Go.move(best);
+            if (best != null) return Go.move(me.direction(best));
         }
 
         return null;
