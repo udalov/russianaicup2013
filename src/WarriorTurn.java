@@ -146,7 +146,7 @@ public class WarriorTurn {
             }
         }
 
-        if (self.getActionPoints() == 2 * getMoveCost() && self.getHitpoints() < 50) {
+        if (self.getActionPoints() == 2 * getMoveCost() && self.getHitpoints() < self.getMaximalHitpoints() / 2 && alliesWithoutMe.isEmpty()) {
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
             Direction bestFirstStep = null;
             for (Direction firstStep : Util.DIRECTIONS) {
