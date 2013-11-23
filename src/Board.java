@@ -50,6 +50,11 @@ public class Board {
         return cells[point.x * HEIGHT + point.y];
     }
 
+    public boolean isPassable(@NotNull Point point) {
+        Cell cell = get(point);
+        return cell == Cell.FREE || cell == Cell.BONUS;
+    }
+
     @Nullable
     public Direction findBestMove(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
         // TODO: optimize Map<Point, *>
@@ -162,7 +167,7 @@ public class Board {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return moveThroughPeople ? 5 : 100;
+            case TROOPER: return moveThroughPeople ? 5 : 40;
             default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }

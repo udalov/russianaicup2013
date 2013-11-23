@@ -108,12 +108,9 @@ public class WarriorTurn {
                 Point best = null;
                 for (Direction direction : Util.DIRECTIONS) {
                     Point cur = me.go(direction);
-                    if (cur != null) {
-                        Board.Cell cell = board.get(cur);
-                        if (cell == Board.Cell.FREE || cell == Board.Cell.BONUS) {
-                            if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
-                                best = cur;
-                            }
+                    if (cur != null && board.isPassable(cur)) {
+                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
+                            best = cur;
                         }
                     }
                 }
@@ -142,8 +139,6 @@ public class WarriorTurn {
 
     @Nullable
     private Go hideBehindCover() {
-        // TODO: less HP -> more willing to hide
-
         if (can(game.getStanceChangeCost()) && self.getActionPoints() <= game.getStanceChangeCost() + 1) {
             TrooperStance lowered = Util.lower(stance);
             if (lowered != null && howManyEnemiesCanShotMeThere(me, lowered) < howManyEnemiesCanShotMeThere(me, stance)) {
@@ -151,13 +146,32 @@ public class WarriorTurn {
             }
         }
 
+        if (self.getActionPoints() == 2 * getMoveCost() && self.getHitpoints() < 50) {
+            int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
+            Direction bestFirstStep = null;
+            for (Direction firstStep : Util.DIRECTIONS) {
+                Point there = me.go(firstStep);
+                if (there == null || !board.isPassable(there)) continue;
+                int vulnerability = Integer.MAX_VALUE;
+                for (Direction secondStep : Util.DIRECTIONS) {
+                    Point destination = there.go(secondStep);
+                    if (destination == null || !board.isPassable(destination)) continue;
+                    vulnerability = Math.min(vulnerability, howManyEnemiesCanShotMeThere(destination, stance));
+                }
+                if (vulnerability < bestVulnerability) {
+                    bestVulnerability = vulnerability;
+                    bestFirstStep = firstStep;
+                }
+            }
+
+            if (bestFirstStep != null) return Go.move(bestFirstStep);
+        }
+
         if (can(getMoveCost()) && self.getActionPoints() <= getMoveCost() + 1) {
             Point best = null;
             for (Direction direction : Util.DIRECTIONS) {
                 Point there = me.go(direction);
-                if (there == null) continue;
-                Board.Cell cell = board.get(there);
-                if (cell != Board.Cell.BONUS && cell != Board.Cell.FREE) continue;
+                if (there == null || !board.isPassable(there)) continue;
                 if (best == null || howManyEnemiesCanShotMeThere(there, stance) < howManyEnemiesCanShotMeThere(best, stance)) {
                     best = there;
                 }
@@ -238,11 +252,7 @@ public class WarriorTurn {
         Point runTo = board.launchDijkstra(me, false, new Board.Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
-                if (world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance())) {
-                    Board.Cell cell = board.get(point);
-                    return cell == Board.Cell.FREE || cell == Board.Cell.BONUS;
-                }
-                return false;
+                return board.isPassable(point) && world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
             }
         });
         if (runTo == null) return null;
