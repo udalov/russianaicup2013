@@ -237,12 +237,7 @@ public class WarriorTurn {
         final Trooper enemy = findMostDangerousEnemyTrooper();
         if (enemy == null) return null;
 
-        Point runTo = board.launchDijkstra(me, new Board.Controller() {
-            @Override
-            public boolean moveThroughPeople() {
-                return true;
-            }
-
+        Point runTo = board.launchDijkstra(me, true, new Board.Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return world.isVisible(self.getShootingRange(), point.x, point.y, stance, enemy.getX(), enemy.getY(), enemy.getStance());
@@ -390,8 +385,11 @@ public class WarriorTurn {
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
-            Direction toBonus = moveToClosestRelevantBonus();
-            if (toBonus != null) return clearPath(toBonus);
+            Pair<Point, Integer> bonusDist = findClosestRelevantBonus();
+            if (bonusDist != null && bonusDist.second <= 4) {
+                Direction move = board.findBestMove(me, bonusDist.first, false);
+                if (move != null) return clearPath(move);
+            }
 
             Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()), false);
             if (move != null) return clearPath(move);
@@ -399,9 +397,10 @@ public class WarriorTurn {
             return null;
         }
 
-        Direction toBonus = moveToClosestRelevantBonus();
-        if (toBonus != null) {
-            return toBonus;
+        Pair<Point, Integer> bonusDist = findClosestRelevantBonus();
+        if (bonusDist != null && bonusDist.second <= 10) {
+            Direction move = board.findBestMove(me, bonusDist.first, false);
+            if (move != null) return move;
         }
 
         Point target = Point.create(leader);
@@ -424,28 +423,35 @@ public class WarriorTurn {
     }
 
     @Nullable
-    private Direction moveToClosestRelevantBonus() {
-        Point bonus = findClosestRelevantBonus();
-        return bonus != null && me.manhattanDistance(bonus) <= 4 ? board.findBestMove(me, bonus, false) : null;
-    }
-
-    @Nullable
-    private Point findClosestRelevantBonus() {
+    private Pair<Point, Integer> findClosestRelevantBonus() {
         Point result = null;
         int mind = Integer.MAX_VALUE;
 
+        Map<Point, Integer> dist = board.findDistances(me, true);
+        Trooper leader = findLeader();
+
         for (Bonus bonus : world.getBonuses()) {
-            if (!isHolding(bonus.getType())) {
-                Point that = Point.create(bonus);
-                int dist = me.manhattanDistance(that);
-                if (dist < mind) {
-                    mind = dist;
-                    result = that;
-                }
+            if (isHolding(bonus.getType())) continue;
+            Point bonusPoint = Point.create(bonus);
+            Integer distToBonus = dist.get(bonusPoint);
+            if (distToBonus == null) continue;
+
+            int totalDistance = distToBonus;
+            if (totalDistance > mind) continue;
+
+            if (leader.getType() != self.getType()) {
+                Integer backToLeader = board.findDistanceTo(bonusPoint, Point.create(leader), true);
+                if (backToLeader == null) continue;
+                totalDistance += backToLeader;
+            }
+
+            if (totalDistance < mind) {
+                mind = totalDistance;
+                result = bonusPoint;
             }
         }
 
-        return result;
+        return result == null ? null : new Pair<>(result, mind);
     }
 
     @NotNull

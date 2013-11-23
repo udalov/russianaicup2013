@@ -12,13 +12,11 @@ public class Board {
     }
 
     public abstract static class Controller {
-        public boolean moveThroughPeople() {
-            return false;
-        }
-
         public abstract boolean isEndingPoint(@NotNull Point point);
 
         public void savePrevious(@NotNull Point from, @NotNull Point to) {}
+
+        public void saveDistanceMap(@NotNull Map<Point, Integer> dist) {}
     }
 
     public static int WIDTH = -1;
@@ -57,12 +55,7 @@ public class Board {
         // TODO: optimize Map<Point, *>
         final Map<Point, Point> prev = new HashMap<>();
 
-        launchDijkstra(from, new Controller() {
-            @Override
-            public boolean moveThroughPeople() {
-                return moveThroughPeople;
-            }
-
+        launchDijkstra(from, moveThroughPeople, new Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return point.equals(to);
@@ -87,9 +80,46 @@ public class Board {
         }
     }
 
+    @NotNull
+    @SuppressWarnings("unchecked")
+    public Map<Point, Integer> findDistances(@NotNull Point from, boolean moveThroughPeople) {
+        final Map[] result = new Map[1];
+        launchDijkstra(from, moveThroughPeople, new Controller() {
+            @Override
+            public boolean isEndingPoint(@NotNull Point point) {
+                return false;
+            }
+
+            @Override
+            public void saveDistanceMap(@NotNull Map<Point, Integer> dist) {
+                result[0] = dist;
+            }
+        });
+        return result[0];
+    }
+
     @Nullable
-    public Point launchDijkstra(@NotNull Point from, @NotNull Controller controller) {
+    public Integer findDistanceTo(@NotNull Point from, @NotNull final Point to, boolean moveThroughPeople) {
+        final Map[] result = new Map[1];
+        launchDijkstra(from, moveThroughPeople, new Controller() {
+            @Override
+            public boolean isEndingPoint(@NotNull Point point) {
+                return point.equals(to);
+            }
+
+            @Override
+            public void saveDistanceMap(@NotNull Map<Point, Integer> dist) {
+                result[0] = dist;
+            }
+        });
+        return (Integer) result[0].get(from);
+    }
+
+    @Nullable
+    public Point launchDijkstra(@NotNull Point from, boolean moveThroughPeople, @NotNull Controller controller) {
         final Map<Point, Integer> dist = new HashMap<>();
+        controller.saveDistanceMap(dist);
+
         SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
             @Override
             public int compare(@NotNull Point o1, @NotNull Point o2) {
@@ -99,8 +129,6 @@ public class Board {
         });
         dist.put(from, 0);
         set.add(from);
-
-        boolean moveThroughPeople = controller.moveThroughPeople();
 
         while (!set.isEmpty()) {
             Point point = set.first();
