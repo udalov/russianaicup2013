@@ -12,6 +12,8 @@ public class Army {
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
     private final Map<TrooperType, Inbox> inboxes = new HashMap<>();
 
+    private int medicSelfHealed;
+
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         Board board = new Board(world);
         Point start = Point.create(firstTrooper);
@@ -77,5 +79,10 @@ public class Army {
     @NotNull
     public Inbox getMessages(@NotNull Trooper ally) {
         return inboxes.get(ally.getType());
+    }
+
+    public boolean allowMedicSelfHealing() {
+        medicSelfHealed++;
+        return medicSelfHealed < 10;
     }
 }
