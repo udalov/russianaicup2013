@@ -130,7 +130,7 @@ public class WarriorTurn {
                                 2 * game.getStanceChangeCost() + 2 * game.getStandingMoveCost()
         );
 
-        if (canMakeTwoMoveHide && (alliesWithoutMe.isEmpty() || self.getType() == FIELD_MEDIC)) {
+        if (canMakeTwoMoveHide && allAlliesAreTooFarAway()) {
             if (stance != STANDING) return Go.raiseStance();
 
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
@@ -167,6 +167,17 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    private boolean allAlliesAreTooFarAway() {
+        if (alliesWithoutMe.isEmpty()) return true;
+
+        Map<Point, Integer> dist = board.findDistances(me, true);
+        for (Trooper ally : alliesWithoutMe) {
+            Integer d = dist.get(Point.create(ally));
+            if (d != null && d <= 5) return false;
+        }
+        return true;
     }
 
     private boolean apEqualOrSlightlyGreater(int value) {
