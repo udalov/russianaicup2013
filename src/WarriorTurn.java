@@ -3,8 +3,7 @@ import model.*;
 import java.util.*;
 
 import static model.Direction.CURRENT_POINT;
-import static model.TrooperStance.KNEELING;
-import static model.TrooperStance.STANDING;
+import static model.TrooperStance.*;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
@@ -75,7 +74,8 @@ public class WarriorTurn {
         if (grenade != null) return eatFieldRationOr(Go.throwGrenade(grenade));
         if (shoot != null) return eatFieldRationOr(Go.shoot(shoot));
 
-        if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
+        // if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
+        if (can(8) && stance == PRONE && howManyEnemiesCanShotMeThere(me, KNEELING) == 0) return Go.raiseStance();
 
         Direction runToFight = runToFight();
         if (runToFight != null) return eatFieldRationOr(Go.move(runToFight));
@@ -161,17 +161,6 @@ public class WarriorTurn {
         }
 
         return null;
-    }
-
-    private boolean allAlliesAreTooFarAway() {
-        if (alliesWithoutMe.isEmpty()) return true;
-
-        Map<Point, Integer> dist = board.findDistances(me, true);
-        for (Trooper ally : alliesWithoutMe) {
-            Integer d = dist.get(Point.create(ally));
-            if (d != null && d <= 5) return false;
-        }
-        return true;
     }
 
     private boolean apEqualOrSlightlyGreater(int value) {
