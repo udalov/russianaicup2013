@@ -206,16 +206,15 @@ public class WarriorTurn {
         if (self.getType() != FIELD_MEDIC) return null;
         if (!can(game.getFieldMedicHealCost())) return null;
 
-        Direction wounded = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10);
-        if (wounded != CURRENT_POINT) return wounded;
+        Point wounded = findNearestWounded(self.getMaximalHitpoints() * 9 / 10, army.allowMedicSelfHealing());
+        if (wounded == null || me.manhattanDistance(wounded) > 1) return null;
 
-        return army.allowMedicSelfHealing() ? CURRENT_POINT : null;
-    }
+        if (wounded.equals(me)) {
+            army.medicSelfHealed();
+            return CURRENT_POINT;
+        }
 
-    @Nullable
-    private Direction findWoundedNeighbor(int maximalHitpoints) {
-        Point wounded = findNearestWounded(maximalHitpoints, true);
-        return wounded != null && me.manhattanDistance(wounded) <= 1 ? me.direction(wounded) : null;
+        return me.direction(wounded);
     }
 
     @Nullable
