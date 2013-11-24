@@ -122,15 +122,7 @@ public class WarriorTurn {
             }
         }
 
-        boolean canMakeTwoMoveHide = apEqualOrSlightlyGreater(
-                stance == STANDING ?
-                        2 * game.getStandingMoveCost() :
-                        stance == KNEELING ?
-                                game.getStanceChangeCost() + 2 * game.getStandingMoveCost() :
-                                2 * game.getStanceChangeCost() + 2 * game.getStandingMoveCost()
-        );
-
-        if (canMakeTwoMoveHide && allAlliesAreTooFarAway()) {
+        if (apEqualOrSlightlyGreater(2 * getMoveCost()) && allAlliesAreTooFarAway()) {
             // TODO: Util.findMin
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
             Direction bestFirstStep = null;
@@ -150,7 +142,6 @@ public class WarriorTurn {
             }
 
             if (bestFirstStep != null) {
-                if (stance != STANDING) return Go.raiseStance();
                 return Go.move(bestFirstStep);
             }
         }
