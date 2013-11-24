@@ -230,7 +230,7 @@ public class WarriorTurn {
         int minDistance = Integer.MAX_VALUE;
         for (Trooper trooper : allies.values()) {
             if (trooper.getHitpoints() >= maximalHitpoints) continue;
-            if ((trooper.getType() == self.getType()) && includeSelf) continue;
+            if ((trooper.getType() == self.getType()) && !includeSelf) continue;
 
             Point wounded = Point.create(trooper);
             Integer dist = board.findDistanceTo(me, wounded, false);
