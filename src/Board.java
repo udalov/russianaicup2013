@@ -122,18 +122,18 @@ public class Board {
 
     @Nullable
     public Point launchDijkstra(@NotNull Point from, boolean moveThroughPeople, @NotNull Controller controller) {
-        final Map<Point, Integer> weightedDist = new HashMap<>();
+        final Map<Point, Integer> wd = new HashMap<>();
         final Map<Point, Integer> dist = new HashMap<>();
         controller.saveDistanceMap(dist);
 
         SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
             @Override
             public int compare(@NotNull Point o1, @NotNull Point o2) {
-                int d = weightedDist.get(o1) - weightedDist.get(o2);
+                int d = wd.get(o1) - wd.get(o2);
                 return d != 0 ? d : o1.compareTo(o2);
             }
         });
-        weightedDist.put(from, 0);
+        wd.put(from, 0);
         dist.put(from, 0);
         set.add(from);
 
@@ -143,7 +143,6 @@ public class Board {
                 return point;
             }
             set.remove(point);
-            int curd = weightedDist.get(point);
 
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = point.go(direction);
@@ -151,11 +150,11 @@ public class Board {
 
                 Cell cell = get(next);
                 if (cell != Cell.OBSTACLE) {
-                    Integer curDist = weightedDist.get(next);
-                    int newDist = curd + cellWeight(cell, moveThroughPeople);
+                    Integer curDist = wd.get(next);
+                    int newDist = wd.get(point) + cellWeight(cell, moveThroughPeople);
                     if (curDist == null || curDist > newDist) {
-                        weightedDist.put(next, newDist);
-                        dist.put(next, curd + 1);
+                        wd.put(next, newDist);
+                        dist.put(next, dist.get(point) + 1);
                         controller.savePrevious(next, point);
                         set.add(next);
                     }
