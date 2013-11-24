@@ -3,7 +3,8 @@ import model.*;
 import java.util.*;
 
 import static model.Direction.CURRENT_POINT;
-import static model.TrooperStance.*;
+import static model.TrooperStance.KNEELING;
+import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
@@ -411,14 +412,22 @@ public class WarriorTurn {
         Trooper leader = findLeader();
 
         if (self.getType() == leader.getType()) {
+            List<Direction> possibleMoves = new ArrayList<>(2);
+
             Pair<Point, Integer> bonusDist = findClosestRelevantBonus();
             if (bonusDist != null && bonusDist.second <= 4) {
                 Direction move = board.findBestMove(me, bonusDist.first, false);
-                if (move != null) return clearPath(move);
+                if (move != null) possibleMoves.add(move);
             }
 
             Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()), false);
-            if (move != null) return clearPath(move);
+            if (move != null) possibleMoves.add(move);
+
+            for (Direction direction : possibleMoves) {
+                //noinspection ConstantConditions
+                if (farAwayFromAllAllies(me.go(direction))) continue;
+                return clearPath(direction);
+            }
 
             return null;
         }
@@ -435,6 +444,14 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    private boolean farAwayFromAllAllies(@NotNull Point point) {
+        if (alliesWithoutMe.isEmpty()) return false;
+        for (Trooper ally : alliesWithoutMe) {
+            if (Point.create(ally).manhattanDistance(point) <= 4) return false;
+        }
+        return true;
     }
 
     @NotNull
