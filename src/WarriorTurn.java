@@ -449,7 +449,8 @@ public class WarriorTurn {
     private boolean farAwayFromAllAllies(@NotNull Point point) {
         if (alliesWithoutMe.isEmpty()) return false;
         for (Trooper ally : alliesWithoutMe) {
-            if (Point.create(ally).manhattanDistance(point) <= 4) return false;
+            Integer d = board.findDistanceTo(Point.create(ally), (point), true);
+            if (d == null || d <= 4) return false;
         }
         return true;
     }
