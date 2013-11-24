@@ -156,7 +156,7 @@ public class WarriorTurn {
         }
 
         if (apEqualOrSlightlyGreater(getMoveCost())) {
-            Direction best = Util.findMin(Arrays.asList(Direction.values()), new Util.Evaluator<Direction>() {
+            Direction best = Util.findMin(Util.DIRECTIONS, new Util.Evaluator<Direction>() {
                 @Override
                 @Nullable
                 public Integer evaluate(@NotNull Direction direction) {
@@ -165,7 +165,8 @@ public class WarriorTurn {
                     return howManyEnemiesCanShotMeThere(there, stance);
                 }
             });
-            if (best != null && best != CURRENT_POINT) return Go.move(best);
+            //noinspection ConstantConditions
+            if (best != null && howManyEnemiesCanShotMeThere(me.go(best), stance) < howManyEnemiesCanShotMeThere(me, stance)) return Go.move(best);
         }
 
         return null;
@@ -209,18 +210,10 @@ public class WarriorTurn {
         if (self.getType() != FIELD_MEDIC) return null;
         if (!can(game.getFieldMedicHealCost())) return null;
 
-        Direction wounded = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10, false);
-        if (wounded != null) return wounded;
+        Direction wounded = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10, true);
+        if (wounded != CURRENT_POINT) return wounded;
 
-        if (army.allowMedicSelfHealing()) {
-            Direction nop = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10, true);
-            if (nop != null) {
-                assert nop == CURRENT_POINT : nop;
-                return nop;
-            }
-        }
-
-        return null;
+        return army.allowMedicSelfHealing() ? CURRENT_POINT : null;
     }
 
     @Nullable
