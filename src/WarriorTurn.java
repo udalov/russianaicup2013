@@ -122,9 +122,15 @@ public class WarriorTurn {
             }
         }
 
-        if (can(2 * getMoveCost()) &&
-                self.getActionPoints() <= 2 * getMoveCost() + 1 &&
-                (alliesWithoutMe.isEmpty() || self.getType() == FIELD_MEDIC)) {
+        boolean canMakeTwoMoveHide = apEqualOrSlightlyGreater(
+                stance == STANDING ?
+                        2 * game.getStandingMoveCost() :
+                        stance == KNEELING ?
+                                game.getStanceChangeCost() + 2 * game.getStandingMoveCost() :
+                                2 * game.getStanceChangeCost() + 2 * game.getStandingMoveCost()
+        );
+
+        if (canMakeTwoMoveHide && (alliesWithoutMe.isEmpty() || self.getType() == FIELD_MEDIC)) {
             if (stance != STANDING) return Go.raiseStance();
 
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
@@ -147,7 +153,7 @@ public class WarriorTurn {
             if (bestFirstStep != null) return Go.move(bestFirstStep);
         }
 
-        if (can(getMoveCost()) && self.getActionPoints() <= getMoveCost() + 1) {
+        if (apEqualOrSlightlyGreater(getMoveCost())) {
             Point best = me;
             for (Direction direction : Util.DIRECTIONS) {
                 Point there = me.go(direction);
@@ -161,6 +167,10 @@ public class WarriorTurn {
         }
 
         return null;
+    }
+
+    private boolean apEqualOrSlightlyGreater(int value) {
+        return self.getActionPoints() == value || self.getActionPoints() == value + 1;
     }
 
     private int howManyEnemiesCanShotMeThere(@NotNull Point point, @NotNull TrooperStance stance) {
