@@ -62,6 +62,20 @@ public class Util {
         return best;
     }
 
+    @Nullable
+    public static <T> T findMax(@NotNull Collection<? extends T> elements, @NotNull final Evaluator<? super T> evaluator) {
+        return findMin(elements, new Evaluator<T>() {
+            @Nullable
+            @Override
+            public Integer evaluate(@NotNull T t) {
+                Integer result = evaluator.evaluate(t);
+                if (result == null) return null;
+                if (result == Integer.MIN_VALUE) return Integer.MAX_VALUE;
+                return -result;
+            }
+        });
+    }
+
     public interface Evaluator<Element> {
         @Nullable
         Integer evaluate(@NotNull Element element);

@@ -83,6 +83,6 @@ public class Army {
 
     public boolean allowMedicSelfHealing() {
         medicSelfHealed++;
-        return medicSelfHealed < 10;
+        return medicSelfHealed < 30;
     }
 }

@@ -193,7 +193,23 @@ public class WarriorTurn {
         if (!self.isHoldingMedikit()) return null;
         if (!can(game.getMedikitUseCost())) return null;
 
-        return findWoundedNeighbor(self.getMaximalHitpoints() / 2, true);
+        Trooper ally = Util.findMax(allies.values(), new Util.Evaluator<Trooper>() {
+            @Nullable
+            @Override
+            public Integer evaluate(@NotNull Trooper ally) {
+                Point point = Point.create(ally);
+                int heal;
+                if (point.isNeighbor(me)) {
+                    heal = game.getMedikitBonusHitpoints();
+                } else if (point.equals(me)) {
+                    heal = game.getMedikitHealSelfBonusHitpoints();
+                } else return null;
+                int result = Math.min(ally.getMaximalHitpoints() - ally.getHitpoints(), heal);
+                return result < 30 ? null : result;
+            }
+        });
+
+        return ally != null ? me.direction(Point.create(ally)) : null;
     }
 
     @Nullable
@@ -201,15 +217,15 @@ public class WarriorTurn {
         if (self.getType() != FIELD_MEDIC) return null;
         if (!can(game.getFieldMedicHealCost())) return null;
 
-        Direction wounded = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10, true);
+        Direction wounded = findWoundedNeighbor(self.getMaximalHitpoints() * 9 / 10);
         if (wounded != CURRENT_POINT) return wounded;
 
         return army.allowMedicSelfHealing() ? CURRENT_POINT : null;
     }
 
     @Nullable
-    private Direction findWoundedNeighbor(int maximalHitpoints, boolean includeSelf) {
-        Point wounded = findNearestWounded(maximalHitpoints, includeSelf);
+    private Direction findWoundedNeighbor(int maximalHitpoints) {
+        Point wounded = findNearestWounded(maximalHitpoints, true);
         return wounded != null && me.manhattanDistance(wounded) <= 1 ? me.direction(wounded) : null;
     }
 
