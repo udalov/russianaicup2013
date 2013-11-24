@@ -2,6 +2,7 @@ import model.Direction;
 import model.TrooperStance;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import static model.Direction.*;
@@ -41,5 +42,28 @@ public class Util {
             case STANDING: return KNEELING;
             default: throw new IllegalStateException("You mean, you're flying? " + stance);
         }
+    }
+
+    @Nullable
+    public static <T> T findMin(@NotNull Collection<? extends T> elements, @NotNull Evaluator<? super T> evaluator) {
+        if (elements.isEmpty()) return null;
+        if (elements.size() == 1) return elements.iterator().next();
+
+        T best = null;
+        int bestValue = Integer.MAX_VALUE;
+        for (T element : elements) {
+            Integer cur = evaluator.evaluate(element);
+            if (cur != null && (best == null || cur < bestValue)) {
+                best = element;
+                bestValue = cur;
+            }
+        }
+
+        return best;
+    }
+
+    public interface Evaluator<Element> {
+        @Nullable
+        Integer evaluate(@NotNull Element element);
     }
 }

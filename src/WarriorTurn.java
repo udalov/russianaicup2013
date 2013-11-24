@@ -131,6 +131,7 @@ public class WarriorTurn {
         );
 
         if (canMakeTwoMoveHide && allAlliesAreTooFarAway()) {
+            // TODO: Util.findMin
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
             Direction bestFirstStep = null;
             for (Direction firstStep : Util.DIRECTIONS) {
@@ -155,16 +156,16 @@ public class WarriorTurn {
         }
 
         if (apEqualOrSlightlyGreater(getMoveCost())) {
-            Point best = me;
-            for (Direction direction : Util.DIRECTIONS) {
-                Point there = me.go(direction);
-                if (there == null || !board.isPassable(there)) continue;
-                if (howManyEnemiesCanShotMeThere(there, stance) < howManyEnemiesCanShotMeThere(best, stance)) {
-                    best = there;
+            Direction best = Util.findMin(Arrays.asList(Direction.values()), new Util.Evaluator<Direction>() {
+                @Override
+                @Nullable
+                public Integer evaluate(@NotNull Direction direction) {
+                    Point there = me.go(direction);
+                    if (there == null || !board.isPassable(there)) return null;
+                    return howManyEnemiesCanShotMeThere(there, stance);
                 }
-            }
-
-            if (best != me) return Go.move(me.direction(best));
+            });
+            if (best != null && best != CURRENT_POINT) return Go.move(best);
         }
 
         return null;
