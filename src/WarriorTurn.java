@@ -122,7 +122,7 @@ public class WarriorTurn {
             }
         }
 
-        if (apEqualOrSlightlyGreater(2 * getMoveCost()) && allAlliesAreTooFarAway()) {
+        if (apEqualOrSlightlyGreater(2 * getMoveCost()) && alliesWithoutMe.isEmpty()) {
             // TODO: Util.findMin
             int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
             Direction bestFirstStep = null;
