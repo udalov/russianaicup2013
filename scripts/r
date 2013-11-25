@@ -1,3 +1,8 @@
 #!/bin/bash
 
-time `dirname $0`/ttt 100 100 | tee out/history/`git rev-parse --short HEAD`.txt
+mkdir -p out/history
+OUT=out/history/`git rev-parse --short HEAD`.txt
+
+time `dirname $0`/ttt 10000 50 | tee $OUT
+
+awk <$OUT '{ sum += 8*$1 + 4*$2 + 2*$3 + 1*$4; } END { print "total", sum; }'

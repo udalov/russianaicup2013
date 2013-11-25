@@ -10,7 +10,7 @@ rm -rf $out
 mkdir -p $out
 
 seed=$BEGIN
-for lineup in MQQQ QMQQ QQMQ QQQM MSSS SMSS SSMS SSSM
+for lineup in MSSS SMSS SSMS SSSM MQQQ QMQQ QQMQ QQQM
 do
     end=`expr $seed + $STEP - 1`
     $CWD/mt $seed $end $lineup >$out/$lineup.out
