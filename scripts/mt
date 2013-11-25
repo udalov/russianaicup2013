@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Usage: ./mt 123 456 QMQQ
+
+from=$1
+to=$2
+lineup=$3
+
+for seed in `seq $from $to`
+do
+    # echo -n "$seed: "
+    java -ea -jar dist/rac.jar $seed $lineup
+done

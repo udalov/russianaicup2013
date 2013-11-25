@@ -1,0 +1,5 @@
+#!/bin/bash
+
+pushd `dirname $0` >/dev/null
+java -jar ../../lib/kotlinc/lib/kotlin-compiler.jar -output . -src main.kt
+popd >/dev/null

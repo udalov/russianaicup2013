@@ -1,0 +1,20 @@
+#!/bin/bash
+
+BEGIN=$1
+STEP=$2
+
+CWD=`dirname $0`
+
+out=out/results
+rm -rf $out
+mkdir -p $out
+
+seed=$BEGIN
+for lineup in MQQQ QMQQ QQMQ QQQM MSSS SMSS SSMS SSSM
+do
+    end=`expr $seed + $STEP - 1`
+    $CWD/mt $seed $end $lineup >$out/$lineup.out
+    echo $lineup
+    java -ea -cp lib/kotlinc/lib/kotlin-runtime.jar:$CWD/kt-analyzer analyzer.AnalyzerPackage $out/$lineup.out
+    seed=`expr $end + 1`
+done

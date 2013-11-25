@@ -3,3 +3,4 @@ out
 lib/kotlinc
 dist
 info.txt
+*.class
