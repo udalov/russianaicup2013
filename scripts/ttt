@@ -1,20 +1,22 @@
 #!/bin/bash
 
-BEGIN=$1
-STEP=$2
-
 CWD=`dirname $0`
+
+begin=$1
+step=$2
+lineup=MSSS
 
 out=out/results
 rm -rf $out
 mkdir -p $out
 
-seed=$BEGIN
-for lineup in MSSS SMSS SSMS SSSM MQQQ QMQQ QQMQ QQQM
+seed=$begin
+for map in DEFAULT CHEESER MAP01 MAP02 MAP03
 do
-    end=`expr $seed + $STEP - 1`
-    $CWD/mt $seed $end $lineup >$out/$lineup.out
-    echo $lineup
-    java -ea -cp lib/kotlinc/lib/kotlin-runtime.jar:$CWD/kt-analyzer analyzer.AnalyzerPackage $out/$lineup.out
+    file=$out/$map-$lineup.out
+    end=`expr $seed + $step - 1`
+    $CWD/mt $seed $end $map $lineup >$file
+    echo "$map $lineup"
+    java -ea -cp lib/kotlinc/lib/kotlin-runtime.jar:$CWD/kt-analyzer analyzer.AnalyzerPackage $file
     seed=`expr $end + 1`
 done

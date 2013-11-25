@@ -2,6 +2,7 @@ package analyzer
 
 import java.io.*
 
+// TODO: use awk instead
 fun main(args: Array<String>) {
     val pl = IntArray(4)
 
