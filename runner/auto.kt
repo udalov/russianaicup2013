@@ -1,6 +1,7 @@
 package runner.auto
 
 import runner.*
+import runner.WorldMap.*
 import java.io.File
 
 fun findMyPlace(index: Int): Int {
@@ -16,7 +17,7 @@ fun findMyPlace(index: Int): Int {
 fun main(args: Array<String>) {
     val seed = args[0].toLong()
     val lineup = args[1]
-    runGame(false, seed, lineup)
+    runGame(false, DEFAULT, seed, lineup)
 
     val index = lineup.indexOf('M')
     assert(index >= 0, "M not found in $lineup")

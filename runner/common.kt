@@ -2,7 +2,6 @@ package runner
 
 import org.apache.log4j.Logger
 import java.net.ConnectException
-import java.io.File
 
 open class Player(val name: String, val classFile: String)
 object MyStrategy : Player("MyStrategy", "#LocalTestPlayer")
@@ -10,9 +9,18 @@ object EmptyPlayer : Player("EmptyPlayer", javaClass<com.a.b.a.a.e.b>().getSimpl
 object QuickStartGuy : Player("QuickStartGuy", javaClass<com.a.b.a.a.e.c>().getSimpleName() + ".class")
 object SmartGuy : Player("SmartGuy", javaClass<com.a.b.a.a.e.a>().getSimpleName() + ".class")
 
+enum class WorldMap {
+    DEFAULT
+    EMPTY
+    CHEESER
+    MAP01
+    MAP02
+    MAP03
+}
+
 val LOG_FILE = "out/log.txt"
 
-fun localRunner(vis: Boolean, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
+fun localRunner(vis: Boolean, map: WorldMap, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
     Logger.getRootLogger()?.removeAllAppenders()
 
     return com.a.b.c(array(
@@ -22,6 +30,7 @@ fun localRunner(vis: Boolean, teamSize: Int, seed: Long, p1: Player, p2: Player,
             "-render-to-screen-sync=true",
             "-results-file=$LOG_FILE",
             "-debug=true",
+            "-map=${map.toString().toLowerCase()}",
             "-base-adapter-port=31001",
             "-seed=$seed",
             "-p1-name=${p1.name}",
@@ -53,7 +62,7 @@ fun runMyStrategy() {
     }
 }
 
-fun runGame(vis: Boolean, seed: Long, lineup: String) {
+fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String) {
     fun parse(c: Char) = when (c) {
         'M' -> MyStrategy
         'E' -> EmptyPlayer
@@ -62,7 +71,7 @@ fun runGame(vis: Boolean, seed: Long, lineup: String) {
         else -> throw IllegalStateException("Unknown player: $c")
     }
 
-    val thread = Thread(localRunner(vis, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
+    val thread = Thread(localRunner(vis, map, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
     thread.start()
     runMyStrategy()
     thread.join()
