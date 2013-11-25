@@ -23,6 +23,7 @@ public final class RemoteProcessClient implements Closeable {
         socket = new Socket(host, port);
         socket.setSendBufferSize(BUFFER_SIZE_BYTES);
         socket.setReceiveBufferSize(BUFFER_SIZE_BYTES);
+        socket.setTcpNoDelay(true);
 
         inputStream = socket.getInputStream();
         outputStream = socket.getOutputStream();
