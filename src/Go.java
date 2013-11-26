@@ -75,6 +75,24 @@ public final class Go {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Go)) return false;
+        Go that = (Go) o;
+
+        return action == that.action &&
+                direction == that.direction &&
+                (point == null ? that.point == null : point.equals(that.point));
+    }
+
+    @Override
+    public int hashCode() {
+        int result = action.hashCode();
+        result = 31 * result + (direction != null ? direction.hashCode() : 0);
+        result = 31 * result + (point != null ? point.hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(action.toString());
         if (direction != null) {
