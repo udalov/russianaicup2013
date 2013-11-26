@@ -294,10 +294,13 @@ public class WarriorTurn {
 
         @NotNull
         private int[] medikitEffect(int ally, @NotNull Point point) {
-            int heal = point.equals(me) ? game.getMedikitHealSelfBonusHitpoints() : game.getMedikitBonusHitpoints();
             // Relies on the fact that maximal hitpoints are the same for every trooper
-            int newHp = Math.min(allyHp[ally] + heal, self.getMaximalHitpoints());
-            return IntArrays.replace(allyHp, ally, newHp);
+            int maxHp = self.getMaximalHitpoints();
+            int hp = allyHp[ally];
+            if (hp >= maxHp) return allyHp;
+
+            int heal = point.equals(me) ? game.getMedikitHealSelfBonusHitpoints() : game.getMedikitBonusHitpoints();
+            return IntArrays.replace(allyHp, ally, Math.min(hp + heal, maxHp));
         }
 
         @Nullable
