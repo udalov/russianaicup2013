@@ -381,9 +381,9 @@ public class WarriorTurn {
     @NotNull
     public Position startingPosition() {
         int bonuses = 0;
-        if (self.isHoldingGrenade()) bonuses += 1;
-        if (self.isHoldingMedikit()) bonuses += 2;
-        if (self.isHoldingFieldRation()) bonuses += 4;
+        for (BonusType bonus : BonusType.values()) {
+            if (isHolding(bonus)) bonuses |= 1 << bonus.ordinal();
+        }
         return new Position(
                 me,
                 self.getStance(),
