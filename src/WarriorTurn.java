@@ -8,7 +8,7 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
-    private static final boolean LOCAL = System.getenv("LOCAL") != null;
+    private static final boolean LOCAL = System.getProperty("LOCAL") != null;
 
     private final Army army;
     private final Trooper self;
