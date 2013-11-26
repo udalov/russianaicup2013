@@ -7,7 +7,7 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
-    private static final boolean LOCAL = System.getProperty("LOCAL") != null;
+    private static final boolean LOCAL = Arrays.toString(Thread.currentThread().getStackTrace()).contains("LocalPackage");
 
     private final Army army;
     private final Trooper self;
