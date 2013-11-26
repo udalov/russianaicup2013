@@ -208,4 +208,9 @@ public final class Trooper extends Unit {
     public boolean isHoldingFieldRation() {
         return holdingFieldRation;
     }
+
+    @Override
+    public String toString() {
+        return actionPoints + " " + stance + " " + type + " at (" + getX() + ", " + getY() + ")";
+    }
 }

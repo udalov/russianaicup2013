@@ -157,4 +157,9 @@ public final class World {
             throw new UnsupportedOperationException();
         }
     }
+
+    @Override
+    public String toString() {
+        return "Turn #" + moveIndex;
+    }
 }

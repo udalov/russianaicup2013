@@ -17,4 +17,9 @@ public final class Bonus extends Unit {
     public BonusType getType() {
         return type;
     }
+
+    @Override
+    public String toString() {
+        return type + " at (" + getX() + ", " + getY() + ")";
+    }
 }
