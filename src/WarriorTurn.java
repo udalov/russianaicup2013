@@ -17,6 +17,7 @@ public class WarriorTurn {
 
     private final Point me;
     private final TrooperStance stance;
+    private final List<Bonus> worldBonuses;
     private final Board board;
     private final List<Trooper> enemies;
     private final List<Trooper> allies;
@@ -31,6 +32,7 @@ public class WarriorTurn {
 
         me = Point.create(self);
         stance = self.getStance();
+        worldBonuses = Arrays.asList(world.getBonuses());
         board = new Board(world);
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
@@ -188,6 +190,8 @@ public class WarriorTurn {
         public final int[] enemyHp;
         // Indexed by WarriorTurn.allies
         public final int[] allyHp;
+        // id of collected bonuses
+        public final int[] collected;
 
         private final int hashCode;
 
@@ -201,13 +205,15 @@ public class WarriorTurn {
             return result;
         }
 
-        public Position(@NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp, @NotNull int[] allyHp) {
+        public Position(@NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp, @NotNull int[] allyHp,
+                        @NotNull int[] collected) {
             this.me = me;
             this.stance = stance;
             this.actionPoints = actionPoints;
             this.bonuses = bonuses;
             this.enemyHp = enemyHp;
             this.allyHp = allyHp;
+            this.collected = collected;
 
             int hash = me.hashCode();
             hash = 31 * hash + stance.hashCode();
@@ -215,16 +221,33 @@ public class WarriorTurn {
             hash = 31 * hash + bonuses;
             hash = 31 * hash + Arrays.hashCode(enemyHp);
             hash = 31 * hash + Arrays.hashCode(allyHp);
+            hash = 31 * hash + Arrays.hashCode(collected);
             this.hashCode = hash;
         }
 
         private boolean hasGrenade() { return (bonuses & 1) != 0; }
-        // private boolean hasMedikit() { return (bonuses & 2) != 0; }
-        // private boolean hasFieldRation() { return (bonuses & 4) != 0; }
+        private boolean hasMedikit() { return (bonuses & 2) != 0; }
+        private boolean hasFieldRation() { return (bonuses & 4) != 0; }
+        private boolean has(@NotNull BonusType bonus) {
+            switch (bonus) {
+                case GRENADE: return hasGrenade();
+                case MEDIKIT: return hasMedikit();
+                case FIELD_RATION: return hasFieldRation();
+                default: throw new IllegalStateException("You've got to be kidding me: " + bonus);
+            }
+        }
 
         private int withoutGrenade() { return bonuses & 6; }
         // private int withoutMedikit() { return bonuses & 5; }
         // private int withoutFieldRation() { return bonuses & 3; }
+        private int with(@NotNull BonusType bonus) {
+            switch (bonus) {
+                case GRENADE: return bonuses | 1;
+                case MEDIKIT: return bonuses | 2;
+                case FIELD_RATION: return bonuses | 4;
+                default: throw new IllegalStateException("You've got to be kidding me: " + bonus);
+            }
+        }
 
         @NotNull
         private int[] grenadeEffect(@NotNull Point target, @NotNull int[] hp, @NotNull List<Trooper> troopers) {
@@ -242,6 +265,20 @@ public class WarriorTurn {
             return result;
         }
 
+        @Nullable
+        private Bonus maybeCollectBonus(@NotNull Point point) {
+            for (Bonus bonus : worldBonuses) {
+                if (has(bonus.getType())) continue;
+
+                // TODO: avoid these useless creations and add Point.isEqualTo(Unit)?
+                if (!Point.create(bonus).equals(point)) continue;
+
+                int id = (int) bonus.getId();
+                return IntArrays.contains(collected, id) ? null : bonus;
+            }
+            return null;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -251,10 +288,11 @@ public class WarriorTurn {
             return hashCode == that.hashCode &&
                     actionPoints == that.actionPoints &&
                     bonuses == that.bonuses &&
+                    stance == that.stance &&
+                    me.equals(that.me) &&
                     Arrays.equals(allyHp, that.allyHp) &&
                     Arrays.equals(enemyHp, that.enemyHp) &&
-                    me.equals(that.me) &&
-                    stance == that.stance;
+                    Arrays.equals(collected, that.collected);
         }
 
         @Override
@@ -271,12 +309,14 @@ public class WarriorTurn {
 
         @Nullable
         public Position move(@NotNull Direction direction) {
-            // TODO: collect bonuses
             int ap = actionPoints - getMoveCost(stance);
             if (ap < 0) return null;
             Point point = me.go(direction);
             if (point == null || !board.isPassable(point)) return null;
-            return new Position(point, stance, ap, bonuses, enemyHp, allyHp);
+            Bonus bonus = maybeCollectBonus(point);
+            int newBonuses = bonus == null ? bonuses : with(bonus.getType());
+            int[] newCollected = bonus == null ? collected : IntArrays.add(collected, (int) bonus.getId());
+            return new Position(point, stance, ap, newBonuses, enemyHp, allyHp, newCollected);
         }
 
         @Nullable
@@ -287,8 +327,8 @@ public class WarriorTurn {
             if (!isReachable(self.getShootingRange(), me, stance, trooper)) return null;
             int hp = enemyHp[enemy];
             if (hp == 0) return null;
-            int[] newEnemyHp = IntArrays.replaceElement(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
-            return new Position(me, stance, ap, bonuses, newEnemyHp, allyHp);
+            int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
+            return new Position(me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
         }
 
         @Nullable
@@ -297,7 +337,7 @@ public class WarriorTurn {
             if (ap < 0) return null;
             TrooperStance newStance = Util.higher(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp);
+            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp, collected);
         }
 
         @Nullable
@@ -306,7 +346,7 @@ public class WarriorTurn {
             if (ap < 0) return null;
             TrooperStance newStance = Util.lower(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp);
+            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp, collected);
         }
 
         @Nullable
@@ -318,7 +358,7 @@ public class WarriorTurn {
             int[] newEnemyHp = grenadeEffect(target, enemyHp, enemies);
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffect(target, allyHp, allies);
-            return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp);
+            return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp, collected);
         }
     }
 
@@ -334,7 +374,8 @@ public class WarriorTurn {
                 self.getActionPoints(),
                 bonuses,
                 IntArrays.hitpointsOf(enemies),
-                IntArrays.hitpointsOf(allies)
+                IntArrays.hitpointsOf(allies),
+                IntArrays.EMPTY
         );
     }
 

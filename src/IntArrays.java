@@ -20,13 +20,26 @@ public class IntArrays {
         return result;
     }
 
+    public static boolean contains(@NotNull int[] a, int needle) {
+        for (int x : a) if (x == needle) return true;
+        return false;
+    }
+
     @NotNull
     public static int[] copy(@NotNull int[] a) {
         return Arrays.copyOf(a, a.length);
     }
 
     @NotNull
-    public static int[] replaceElement(@NotNull int[] a, int index, int value) {
+    public static int[] add(@NotNull int[] a, int value) {
+        int len = a.length;
+        int[] result = Arrays.copyOf(a, len + 1);
+        result[len] = value;
+        return result;
+    }
+
+    @NotNull
+    public static int[] replace(@NotNull int[] a, int index, int value) {
         int[] result = copy(a);
         result[index] = value;
         return result;
