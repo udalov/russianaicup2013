@@ -7,6 +7,7 @@ public final class Point implements Comparable<Point> {
     public final int x;
     public final int y;
 
+    // TODO: create 30x20 points in the beginning and reuse them?
     private Point(int x, int y) {
         this.x = x;
         this.y = y;

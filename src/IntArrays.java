@@ -21,8 +21,13 @@ public class IntArrays {
     }
 
     @NotNull
+    public static int[] copy(@NotNull int[] a) {
+        return Arrays.copyOf(a, a.length);
+    }
+
+    @NotNull
     public static int[] replaceElement(@NotNull int[] a, int index, int value) {
-        int[] result = Arrays.copyOf(a, a.length);
+        int[] result = copy(a);
         result[index] = value;
         return result;
     }

@@ -137,6 +137,18 @@ public class WarriorTurn {
                     Position lower = cur.lowerStance();
                     if (lower != null) add(lower, Go.lowerStance());
                 }
+
+                // Throw grenade
+                for (Trooper enemy : enemies) {
+                    Point point = Point.create(enemy);
+                    for (Direction direction : Direction.values()) {
+                        Point target = point.go(direction);
+                        if (target != null) {
+                            Position next = cur.throwGrenade(target);
+                            if (next != null) add(next, Go.throwGrenade(target));
+                        }
+                    }
+                }
             }
         }
 
@@ -172,6 +184,7 @@ public class WarriorTurn {
         // Indexed by BonusType.ordinal()
         public final int bonuses;
         // Indexed by WarriorTurn.enemies
+        // TODO: create and save list of points of troopers?
         public final int[] enemyHp;
         // Indexed by WarriorTurn.allies
         public final int[] allyHp;
@@ -203,6 +216,30 @@ public class WarriorTurn {
             hash = 31 * hash + Arrays.hashCode(enemyHp);
             hash = 31 * hash + Arrays.hashCode(allyHp);
             this.hashCode = hash;
+        }
+
+        private boolean hasGrenade() { return (bonuses & 1) != 0; }
+        // private boolean hasMedikit() { return (bonuses & 2) != 0; }
+        // private boolean hasFieldRation() { return (bonuses & 4) != 0; }
+
+        private int withoutGrenade() { return bonuses & 6; }
+        // private int withoutMedikit() { return bonuses & 5; }
+        // private int withoutFieldRation() { return bonuses & 3; }
+
+        @NotNull
+        private int[] grenadeEffect(@NotNull Point target, @NotNull int[] hp, @NotNull List<Trooper> troopers) {
+            int[] result = IntArrays.copy(hp);
+            for (int i = 0, size = troopers.size(); i < size; i++) {
+                Point point = Point.create(troopers.get(i));
+                if (point.equals(target)) {
+                    result[i] = Math.max(hp[i] - game.getGrenadeDirectDamage(), 0);
+                } else if (point.isNeighbor(target)) {
+                    result[i] = Math.max(hp[i] - game.getGrenadeCollateralDamage(), 0);
+                } else {
+                    result[i] = hp[i];
+                }
+            }
+            return result;
         }
 
         @Override
@@ -270,6 +307,18 @@ public class WarriorTurn {
             TrooperStance newStance = Util.lower(stance);
             if (newStance == null) return null;
             return new Position(me, newStance, actionPoints - cost, bonuses, enemyHp, allyHp);
+        }
+
+        @Nullable
+        public Position throwGrenade(@NotNull Point target) {
+            if (!hasGrenade()) return null;
+            int cost = game.getGrenadeThrowCost();
+            if (cost > actionPoints) return null;
+            if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) return null;
+            int[] newEnemyHp = grenadeEffect(target, enemyHp, enemies);
+            if (Arrays.equals(enemyHp, newEnemyHp)) return null;
+            int[] newAllyHp = grenadeEffect(target, allyHp, allies);
+            return new Position(me, stance, actionPoints - cost, withoutGrenade(), newEnemyHp, newAllyHp);
         }
     }
 
