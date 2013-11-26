@@ -165,7 +165,14 @@ public class WarriorTurn {
                     if (next != null) add(next, Go.eatFieldRation());
                 }
 
-                // TODO: heal
+                // Heal
+                if (self.getType() == FIELD_MEDIC) {
+                    for (int i = 0, size = allies.size(); i < size; i++) {
+                        Point point = Point.create(allies.get(i));
+                        Position next = cur.heal(i, point);
+                        if (next != null) add(next, Go.heal(me.direction(point)));
+                    }
+                }
             }
         }
 
@@ -293,14 +300,13 @@ public class WarriorTurn {
         }
 
         @NotNull
-        private int[] medikitEffect(int ally, @NotNull Point point) {
+        private int[] healEffect(int ally, int healingBonus) {
             // Relies on the fact that maximal hitpoints are the same for every trooper
             int maxHp = self.getMaximalHitpoints();
             int hp = allyHp[ally];
             if (hp >= maxHp) return allyHp;
 
-            int heal = point.equals(me) ? game.getMedikitHealSelfBonusHitpoints() : game.getMedikitBonusHitpoints();
-            return IntArrays.replace(allyHp, ally, Math.min(hp + heal, maxHp));
+            return IntArrays.replace(allyHp, ally, Math.min(hp + healingBonus, maxHp));
         }
 
         @Nullable
@@ -404,8 +410,10 @@ public class WarriorTurn {
             if (!hasMedikit()) return null;
             int ap = actionPoints - game.getMedikitUseCost();
             if (ap < 0) return null;
-            if (!point.equals(me) && !point.isNeighbor(me)) return null;
-            int[] newAllyHp = medikitEffect(ally, point);
+            int[] newAllyHp;
+            if (point.equals(me)) newAllyHp = healEffect(ally, game.getMedikitHealSelfBonusHitpoints());
+            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getMedikitBonusHitpoints());
+            else return null;
             if (Arrays.equals(allyHp, newAllyHp)) return null;
             return new Position(me, stance, ap, withoutMedikit(), enemyHp, newAllyHp, collected);
         }
@@ -417,6 +425,19 @@ public class WarriorTurn {
             int ap = actionPoints - game.getFieldRationEatCost();
             if (ap < 0) return null;
             return new Position(me, stance, ap, withoutFieldRation(), enemyHp, allyHp, collected);
+        }
+
+        @Nullable
+        public Position heal(int ally, @NotNull Point point) {
+            int ap = actionPoints - game.getFieldMedicHealCost();
+            if (ap < 0) return null;
+            if (!point.equals(me) && !point.isNeighbor(me)) return null;
+            int[] newAllyHp;
+            if (point.equals(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealSelfBonusHitpoints());
+            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealBonusHitpoints());
+            else return null;
+            if (Arrays.equals(allyHp, newAllyHp)) return null;
+            return new Position(me, stance, ap, withoutMedikit(), enemyHp, newAllyHp, collected);
         }
     }
 
