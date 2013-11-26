@@ -161,12 +161,14 @@ public class WarriorTurn {
             }
         }
 
+        Scorer scorer = new Scorer();
+
         Position best = null;
         double bestValue = -1e100;
         while (!queue.isEmpty()) {
             Position cur = queue.poll();
 
-            double curValue = cur.evaluate();
+            double curValue = scorer.evaluate(cur);
             if (curValue > bestValue) {
                 bestValue = curValue;
                 best = cur;
@@ -201,27 +203,6 @@ public class WarriorTurn {
         public final int[] collected;
 
         private final int hashCode;
-
-        public double evaluate() {
-            // TODO: this is the main method of the algorithm
-            double result = 0;
-            result -= IntArrays.sum(enemyHp);
-            result += 30 * IntArrays.numberOfZeros(enemyHp);
-
-            int allies = hpOfAlliesUnderThreshold();
-            result += 2 * allies + 0.2 * (IntArrays.sum(allyHp) - allies);
-
-            result += 0.1 * Integer.bitCount(bonuses);
-            return result;
-        }
-
-        private int hpOfAlliesUnderThreshold() {
-            int result = 0;
-            for (int hp : allyHp) {
-                if (hp <= 85) result += hp;
-            }
-            return result;
-        }
 
         public Position(@NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp, @NotNull int[] allyHp,
                         @NotNull int[] collected) {
@@ -437,6 +418,29 @@ public class WarriorTurn {
                 IntArrays.hitpointsOf(allies),
                 IntArrays.EMPTY
         );
+    }
+
+    private class Scorer {
+        public double evaluate(@NotNull Position x) {
+            double result = 0;
+
+            result -= IntArrays.sum(x.enemyHp);
+            result += 30 * IntArrays.numberOfZeros(x.enemyHp);
+
+            int allies = hpOfAlliesUnderThreshold(x.allyHp);
+            result += 2 * allies + 0.2 * (IntArrays.sum(x.allyHp) - allies);
+
+            result += 0.1 * Integer.bitCount(x.bonuses);
+            return result;
+        }
+
+        private int hpOfAlliesUnderThreshold(@NotNull int[] allyHp) {
+            int result = 0;
+            for (int hp : allyHp) {
+                if (hp <= 85) result += hp;
+            }
+            return result;
+        }
     }
 
     @Nullable
