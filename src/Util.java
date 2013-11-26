@@ -6,8 +6,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static model.Direction.*;
-import static model.TrooperStance.KNEELING;
-import static model.TrooperStance.PRONE;
+import static model.TrooperStance.*;
 
 public class Util {
     public static final List<Direction> DIRECTIONS = Arrays.asList(NORTH, EAST, SOUTH, WEST);
@@ -40,6 +39,16 @@ public class Util {
             case PRONE: return null;
             case KNEELING: return PRONE;
             case STANDING: return KNEELING;
+            default: throw new IllegalStateException("You mean, you're flying? " + stance);
+        }
+    }
+
+    @Nullable
+    public static TrooperStance higher(@NotNull TrooperStance stance) {
+        switch (stance) {
+            case PRONE: return KNEELING;
+            case KNEELING: return STANDING;
+            case STANDING: return null;
             default: throw new IllegalStateException("You mean, you're flying? " + stance);
         }
     }

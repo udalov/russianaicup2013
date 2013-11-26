@@ -50,7 +50,9 @@ public class WarriorTurn {
     @NotNull
     public Go makeTurn() {
         if (!enemies.isEmpty()) {
-            return best();
+            Go best = best();
+            // System.out.println(self + " -> " + best);
+            return best;
         }
 
         Go hideBehindCover = hideBehindCover();
@@ -113,17 +115,22 @@ public class WarriorTurn {
                 // Move
                 for (Direction direction : Util.DIRECTIONS) {
                     Position next = cur.move(direction);
-                    if (next != null) {
-                        add(next, Go.move(direction));
-                    }
+                    if (next != null) add(next, Go.move(direction));
                 }
 
                 // Shoot
                 for (int i = 0, size = enemies.size(); i < size; i++) {
                     Position next = cur.shoot(i);
-                    if (next != null) {
-                        add(next, Go.shoot(Point.create(enemies.get(i))));
-                    }
+                    if (next != null) add(next, Go.shoot(Point.create(enemies.get(i))));
+                }
+
+                // Change stance
+                {
+                    Position higher = cur.raiseStance();
+                    if (higher != null) add(higher, Go.raiseStance());
+
+                    Position lower = cur.lowerStance();
+                    if (lower != null) add(lower, Go.lowerStance());
                 }
             }
         }
@@ -240,6 +247,24 @@ public class WarriorTurn {
             if (hp == 0) return null;
             int[] newEnemyHp = IntArrays.replaceElement(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
             return new Position(me, stance, actionPoints - cost, bonuses, newEnemyHp, allyHp);
+        }
+
+        @Nullable
+        public Position raiseStance() {
+            int cost = game.getStanceChangeCost();
+            if (cost > actionPoints) return null;
+            TrooperStance newStance = Util.higher(stance);
+            if (newStance == null) return null;
+            return new Position(me, newStance, actionPoints - cost, bonuses, enemyHp, allyHp);
+        }
+
+        @Nullable
+        public Position lowerStance() {
+            int cost = game.getStanceChangeCost();
+            if (cost > actionPoints) return null;
+            TrooperStance newStance = Util.lower(stance);
+            if (newStance == null) return null;
+            return new Position(me, newStance, actionPoints - cost, bonuses, enemyHp, allyHp);
         }
     }
 
