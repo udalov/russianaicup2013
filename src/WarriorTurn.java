@@ -275,7 +275,7 @@ public class WarriorTurn {
             int cost = getMoveCost(stance);
             if (cost > actionPoints) return null;
             Point point = me.go(direction);
-            if (point == null) return null;
+            if (point == null || !board.isPassable(point)) return null;
             return new Position(point, stance, actionPoints - cost, bonuses, enemyHp, allyHp);
         }
 
