@@ -49,6 +49,10 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
+        if (!enemies.isEmpty()) {
+            return best();
+        }
+
         Go hideBehindCover = hideBehindCover();
         if (hideBehindCover != null) return hideBehindCover;
 
@@ -84,6 +88,175 @@ public class WarriorTurn {
         if (move != null) return Go.move(move);
 
         return Go.endTurn();
+    }
+
+    @NotNull
+    private Go best() {
+        Position start = startingPosition();
+        final Queue<Position> queue = new LinkedList<>();
+        queue.add(start);
+        final Map<Position, Pair<Go, Position>> prev = new HashMap<>();
+        prev.put(start, null);
+
+        class QueueUpdater {
+            private final Position cur;
+            public QueueUpdater(@NotNull Position cur) { this.cur = cur; }
+
+            private void add(@NotNull Position next, @NotNull Go edge) {
+                if (!prev.containsKey(next)) {
+                    prev.put(next, new Pair<>(edge, cur));
+                    queue.add(next);
+                }
+            }
+
+            public void run() {
+                // Move
+                for (Direction direction : Util.DIRECTIONS) {
+                    Position next = cur.move(direction);
+                    if (next != null) {
+                        add(next, Go.move(direction));
+                    }
+                }
+
+                // Shoot
+                for (int i = 0, size = enemies.size(); i < size; i++) {
+                    Position next = cur.shoot(i);
+                    if (next != null) {
+                        add(next, Go.shoot(Point.create(enemies.get(i))));
+                    }
+                }
+            }
+        }
+
+        Position best = null;
+        double bestValue = -1e100;
+        while (!queue.isEmpty()) {
+            Position cur = queue.poll();
+
+            double curValue = cur.evaluate();
+            if (curValue > bestValue) {
+                bestValue = curValue;
+                best = cur;
+            }
+
+            new QueueUpdater(cur).run();
+        }
+
+        if (best == start) return Go.endTurn();
+
+        Position cur = best;
+        while (true) {
+            Pair<Go, Position> before = prev.get(cur);
+            assert before != null : "Nothing before " + cur;
+            if (before.second == start) return before.first;
+            cur = before.second;
+        }
+    }
+
+    public final class Position {
+        public final Point me;
+        public final TrooperStance stance;
+        public final int actionPoints;
+        // Indexed by BonusType.ordinal()
+        public final int bonuses;
+        // Indexed by WarriorTurn.enemies
+        public final int[] enemyHp;
+        // Indexed by WarriorTurn.allies
+        public final int[] allyHp;
+
+        private final int hashCode;
+
+        public double evaluate() {
+            // TODO: this is the main method of the algorithm
+            double result = 0;
+            result -= IntArrays.sum(enemyHp);
+            result += 30 * IntArrays.numberOfZeros(enemyHp);
+            result += 2 * IntArrays.sum(allyHp);
+            result += 0.1 * Integer.bitCount(bonuses);
+            return result;
+        }
+
+        public Position(@NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp, @NotNull int[] allyHp) {
+            this.me = me;
+            this.stance = stance;
+            this.actionPoints = actionPoints;
+            this.bonuses = bonuses;
+            this.enemyHp = enemyHp;
+            this.allyHp = allyHp;
+
+            int hash = me.hashCode();
+            hash = 31 * hash + stance.hashCode();
+            hash = 31 * hash + actionPoints;
+            hash = 31 * hash + bonuses;
+            hash = 31 * hash + Arrays.hashCode(enemyHp);
+            hash = 31 * hash + Arrays.hashCode(allyHp);
+            this.hashCode = hash;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof Position)) return false;
+            Position that = (Position) o;
+
+            return hashCode == that.hashCode &&
+                    actionPoints == that.actionPoints &&
+                    bonuses == that.bonuses &&
+                    Arrays.equals(allyHp, that.allyHp) &&
+                    Arrays.equals(enemyHp, that.enemyHp) &&
+                    me.equals(that.me) &&
+                    stance == that.stance;
+        }
+
+        @Override
+        public int hashCode() {
+            return hashCode;
+        }
+
+        @Override
+        public String toString() {
+            return actionPoints + " " + stance + " at " + me;
+        }
+
+        // -------------------------------------------------------------------------
+
+        @Nullable
+        public Position move(@NotNull Direction direction) {
+            // TODO: collect bonuses
+            int cost = getMoveCost(stance);
+            if (cost > actionPoints) return null;
+            Point point = me.go(direction);
+            if (point == null) return null;
+            return new Position(point, stance, actionPoints - cost, bonuses, enemyHp, allyHp);
+        }
+
+        @Nullable
+        public Position shoot(int enemy) {
+            int cost = self.getShootCost();
+            if (cost > actionPoints) return null;
+            Trooper trooper = enemies.get(enemy);
+            if (!isReachable(self.getShootingRange(), me, stance, trooper)) return null;
+            int hp = enemyHp[enemy];
+            if (hp == 0) return null;
+            int[] newEnemyHp = IntArrays.replaceElement(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
+            return new Position(me, stance, actionPoints - cost, bonuses, newEnemyHp, allyHp);
+        }
+    }
+
+    @NotNull
+    public Position startingPosition() {
+        int bonuses = 0;
+        if (self.isHoldingGrenade()) bonuses += 1;
+        if (self.isHoldingMedikit()) bonuses += 2;
+        if (self.isHoldingFieldRation()) bonuses += 4;
+        return new Position(
+                me,
+                self.getStance(),
+                self.getActionPoints(),
+                bonuses,
+                IntArrays.hitpointsOf(enemies),
+                IntArrays.hitpointsOf(allies.values())
+        );
     }
 
     @Nullable
@@ -513,6 +686,10 @@ public class WarriorTurn {
     }
 
     private int getMoveCost() {
+        return getMoveCost(stance);
+    }
+
+    private int getMoveCost(@NotNull TrooperStance stance) {
         switch (stance) {
             case PRONE: return game.getProneMoveCost();
             case KNEELING: return game.getKneelingMoveCost();
@@ -538,9 +715,13 @@ public class WarriorTurn {
         return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.getX(), object.getY(), object.getStance());
     }
 
+    private boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance, @NotNull Trooper object) {
+        return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.getX(), object.getY(), object.getStance());
+    }
+
     @NotNull
     @Override
     public String toString() {
-        return self.getActionPoints() + " " + stance + " " + self.getType() + " at " + me + ", turn #" + world.getMoveIndex();
+        return self + ", turn #" + world.getMoveIndex();
     }
 }

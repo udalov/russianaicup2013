@@ -6,7 +6,7 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.COMMANDER;
 import static model.TrooperType.FIELD_MEDIC;
 
-public class Go {
+public final class Go {
     private final ActionType action;
     private final Direction direction;
     private final Point point;
