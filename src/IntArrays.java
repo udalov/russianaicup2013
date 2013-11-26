@@ -40,6 +40,7 @@ public class IntArrays {
 
     @NotNull
     public static int[] replace(@NotNull int[] a, int index, int value) {
+        if (a[index] == value) return a;
         int[] result = copy(a);
         result[index] = value;
         return result;

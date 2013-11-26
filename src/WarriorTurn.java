@@ -152,11 +152,20 @@ public class WarriorTurn {
                     }
                 }
 
+                // Use medikit
+                for (int i = 0, size = allies.size(); i < size; i++) {
+                    Point point = Point.create(allies.get(i));
+                    Position next = cur.useMedikit(i, point);
+                    if (next != null) add(next, Go.useMedikit(me.direction(point)));
+                }
+
                 // Field ration
                 {
                     Position next = cur.eatFieldRation();
                     if (next != null) add(next, Go.eatFieldRation());
                 }
+
+                // TODO: heal
             }
         }
 
@@ -244,7 +253,7 @@ public class WarriorTurn {
         }
 
         private int withoutGrenade() { return bonuses & 6; }
-        // private int withoutMedikit() { return bonuses & 5; }
+        private int withoutMedikit() { return bonuses & 5; }
         private int withoutFieldRation() { return bonuses & 3; }
 
         private int with(@NotNull BonusType bonus) {
@@ -270,6 +279,14 @@ public class WarriorTurn {
                 }
             }
             return result;
+        }
+
+        @NotNull
+        private int[] medikitEffect(int ally, @NotNull Point point) {
+            int heal = point.equals(me) ? game.getMedikitHealSelfBonusHitpoints() : game.getMedikitBonusHitpoints();
+            // Relies on the fact that maximal hitpoints are the same for every trooper
+            int newHp = Math.min(allyHp[ally] + heal, self.getMaximalHitpoints());
+            return IntArrays.replace(allyHp, ally, newHp);
         }
 
         @Nullable
@@ -366,6 +383,17 @@ public class WarriorTurn {
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffect(target, allyHp, allies);
             return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp, collected);
+        }
+
+        @Nullable
+        public Position useMedikit(int ally, @NotNull Point point) {
+            if (!hasMedikit()) return null;
+            int ap = actionPoints - game.getMedikitUseCost();
+            if (ap < 0) return null;
+            if (!point.equals(me) && !point.isNeighbor(me)) return null;
+            int[] newAllyHp = medikitEffect(ally, point);
+            if (Arrays.equals(allyHp, newAllyHp)) return null;
+            return new Position(me, stance, ap, withoutMedikit(), enemyHp, newAllyHp, collected);
         }
 
         @Nullable
