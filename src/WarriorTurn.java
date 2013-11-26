@@ -8,6 +8,8 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
+    private static final boolean LOCAL = System.getenv("LOCAL") != null;
+
     private final Army army;
     private final Trooper self;
     private final World world;
@@ -54,7 +56,7 @@ public class WarriorTurn {
     public Go makeTurn() {
         if (!enemies.isEmpty()) {
             Go best = best();
-            // System.out.println(self + " -> " + best);
+            debug(self + " -> " + best);
             return best;
         }
 
@@ -751,5 +753,11 @@ public class WarriorTurn {
     @Override
     public String toString() {
         return self + ", turn #" + world.getMoveIndex();
+    }
+
+    private void debug(@Nullable Object o) {
+        if (LOCAL) {
+            System.out.println(o);
+        }
     }
 }
