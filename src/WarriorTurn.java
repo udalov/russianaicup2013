@@ -272,53 +272,53 @@ public class WarriorTurn {
         @Nullable
         public Position move(@NotNull Direction direction) {
             // TODO: collect bonuses
-            int cost = getMoveCost(stance);
-            if (cost > actionPoints) return null;
+            int ap = actionPoints - getMoveCost(stance);
+            if (ap < 0) return null;
             Point point = me.go(direction);
             if (point == null || !board.isPassable(point)) return null;
-            return new Position(point, stance, actionPoints - cost, bonuses, enemyHp, allyHp);
+            return new Position(point, stance, ap, bonuses, enemyHp, allyHp);
         }
 
         @Nullable
         public Position shoot(int enemy) {
-            int cost = self.getShootCost();
-            if (cost > actionPoints) return null;
+            int ap = actionPoints - self.getShootCost();
+            if (ap < 0) return null;
             Trooper trooper = enemies.get(enemy);
             if (!isReachable(self.getShootingRange(), me, stance, trooper)) return null;
             int hp = enemyHp[enemy];
             if (hp == 0) return null;
             int[] newEnemyHp = IntArrays.replaceElement(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
-            return new Position(me, stance, actionPoints - cost, bonuses, newEnemyHp, allyHp);
+            return new Position(me, stance, ap, bonuses, newEnemyHp, allyHp);
         }
 
         @Nullable
         public Position raiseStance() {
-            int cost = game.getStanceChangeCost();
-            if (cost > actionPoints) return null;
+            int ap = actionPoints - game.getStanceChangeCost();
+            if (ap < 0) return null;
             TrooperStance newStance = Util.higher(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, actionPoints - cost, bonuses, enemyHp, allyHp);
+            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp);
         }
 
         @Nullable
         public Position lowerStance() {
-            int cost = game.getStanceChangeCost();
-            if (cost > actionPoints) return null;
+            int ap = actionPoints - game.getStanceChangeCost();
+            if (ap < 0) return null;
             TrooperStance newStance = Util.lower(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, actionPoints - cost, bonuses, enemyHp, allyHp);
+            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp);
         }
 
         @Nullable
         public Position throwGrenade(@NotNull Point target) {
             if (!hasGrenade()) return null;
-            int cost = game.getGrenadeThrowCost();
-            if (cost > actionPoints) return null;
+            int ap = actionPoints - game.getGrenadeThrowCost();
+            if (ap < 0) return null;
             if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) return null;
             int[] newEnemyHp = grenadeEffect(target, enemyHp, enemies);
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffect(target, allyHp, allies);
-            return new Position(me, stance, actionPoints - cost, withoutGrenade(), newEnemyHp, newAllyHp);
+            return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp);
         }
     }
 
