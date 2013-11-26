@@ -297,11 +297,8 @@ public class WarriorTurn {
         @Nullable
         private Bonus maybeCollectBonus(@NotNull Point point) {
             for (Bonus bonus : worldBonuses) {
+                if (!point.isEqualTo(bonus)) continue;
                 if (has(bonus.getType())) continue;
-
-                // TODO: avoid these useless creations and add Point.isEqualTo(Unit)?
-                if (!Point.create(bonus).equals(point)) continue;
-
                 int id = (int) bonus.getId();
                 return IntArrays.contains(collected, id) ? null : bonus;
             }
@@ -416,7 +413,6 @@ public class WarriorTurn {
         public Position heal(int ally, @NotNull Point point) {
             int ap = actionPoints - game.getFieldMedicHealCost();
             if (ap < 0) return null;
-            if (!point.equals(me) && !point.isNeighbor(me)) return null;
             int[] newAllyHp;
             if (point.equals(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealSelfBonusHitpoints());
             else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealBonusHitpoints());
@@ -668,7 +664,8 @@ public class WarriorTurn {
     private Direction clearPath(@NotNull Direction direction) {
         Point destination = me.go(direction);
         for (Trooper ally : alliesWithoutMe) {
-            if (Point.create(ally).equals(destination)) {
+            //noinspection ConstantConditions
+            if (destination.isEqualTo(ally)) {
                 army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
             }
         }

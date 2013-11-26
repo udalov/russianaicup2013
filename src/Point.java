@@ -88,6 +88,10 @@ public final class Point implements Comparable<Point> {
         return new Point((x + other.x) / 2, (y + other.y) / 2);
     }
 
+    public boolean isEqualTo(@NotNull Unit unit) {
+        return unit.getX() == x && unit.getY() == y;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
