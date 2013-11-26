@@ -215,8 +215,19 @@ public class WarriorTurn {
             double result = 0;
             result -= IntArrays.sum(enemyHp);
             result += 30 * IntArrays.numberOfZeros(enemyHp);
-            result += 2 * IntArrays.sum(allyHp);
+
+            int allies = hpOfAlliesUnderThreshold();
+            result += 2 * allies + 0.2 * (IntArrays.sum(allyHp) - allies);
+
             result += 0.1 * Integer.bitCount(bonuses);
+            return result;
+        }
+
+        private int hpOfAlliesUnderThreshold() {
+            int result = 0;
+            for (int hp : allyHp) {
+                if (hp <= 85) result += hp;
+            }
             return result;
         }
 
