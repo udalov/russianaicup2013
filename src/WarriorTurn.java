@@ -151,6 +151,12 @@ public class WarriorTurn {
                         }
                     }
                 }
+
+                // Field ration
+                {
+                    Position next = cur.eatFieldRation();
+                    if (next != null) add(next, Go.eatFieldRation());
+                }
             }
         }
 
@@ -239,7 +245,8 @@ public class WarriorTurn {
 
         private int withoutGrenade() { return bonuses & 6; }
         // private int withoutMedikit() { return bonuses & 5; }
-        // private int withoutFieldRation() { return bonuses & 3; }
+        private int withoutFieldRation() { return bonuses & 3; }
+
         private int with(@NotNull BonusType bonus) {
             switch (bonus) {
                 case GRENADE: return bonuses | 1;
@@ -359,6 +366,15 @@ public class WarriorTurn {
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffect(target, allyHp, allies);
             return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp, collected);
+        }
+
+        @Nullable
+        public Position eatFieldRation() {
+            if (!hasFieldRation()) return null;
+            if (actionPoints >= self.getInitialActionPoints()) return null;
+            int ap = actionPoints - game.getFieldRationEatCost();
+            if (ap < 0) return null;
+            return new Position(me, stance, ap, withoutFieldRation(), enemyHp, allyHp, collected);
         }
     }
 
