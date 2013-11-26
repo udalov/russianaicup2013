@@ -17,8 +17,9 @@ public class WarriorTurn {
     private final TrooperStance stance;
     private final Board board;
     private final List<Trooper> enemies;
-    private final Map<TrooperType, Trooper> allies;
+    private final List<Trooper> allies;
     private final List<Trooper> alliesWithoutMe;
+    private final Map<TrooperType, Trooper> alliesMap;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -30,11 +31,13 @@ public class WarriorTurn {
         stance = self.getStance();
         board = new Board(world);
         List<Trooper> enemies = null;
-        allies = new EnumMap<>(TrooperType.class);
+        allies = new ArrayList<>(5);
         alliesWithoutMe = new ArrayList<>(4);
+        alliesMap = new EnumMap<>(TrooperType.class);
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
-                allies.put(trooper.getType(), trooper);
+                alliesMap.put(trooper.getType(), trooper);
+                allies.add(trooper);
                 if (trooper.getType() != self.getType()) {
                     alliesWithoutMe.add(trooper);
                 }
@@ -280,7 +283,7 @@ public class WarriorTurn {
                 self.getActionPoints(),
                 bonuses,
                 IntArrays.hitpointsOf(enemies),
-                IntArrays.hitpointsOf(allies.values())
+                IntArrays.hitpointsOf(allies)
         );
     }
 
@@ -380,7 +383,7 @@ public class WarriorTurn {
         if (!self.isHoldingMedikit()) return null;
         if (!can(game.getMedikitUseCost())) return null;
 
-        Trooper ally = Util.findMax(allies.values(), new Util.Evaluator<Trooper>() {
+        Trooper ally = Util.findMax(allies, new Util.Evaluator<Trooper>() {
             @Nullable
             @Override
             public Integer evaluate(@NotNull Trooper ally) {
@@ -430,11 +433,11 @@ public class WarriorTurn {
     private Point findNearestWounded(int maximalHitpoints, boolean includeSelf) {
         Point worst = null;
         int minDistance = Integer.MAX_VALUE;
-        for (Trooper trooper : allies.values()) {
-            if (trooper.getHitpoints() >= maximalHitpoints) continue;
-            if ((trooper.getType() == self.getType()) && !includeSelf) continue;
+        for (Trooper ally : allies) {
+            if (ally.getHitpoints() >= maximalHitpoints) continue;
+            if ((ally.getType() == self.getType()) && !includeSelf) continue;
 
-            Point wounded = Point.create(trooper);
+            Point wounded = Point.create(ally);
             Integer dist = board.findDistanceTo(me, wounded, false);
             if (dist != null && dist < minDistance) {
                 minDistance = dist;
@@ -484,7 +487,7 @@ public class WarriorTurn {
         }
 
         final SmallLongIntMap alliesSeenBy = new SmallLongIntMap();
-        for (Trooper ally : allies.values()) {
+        for (Trooper ally : allies) {
             for (Trooper enemy : enemies) {
                 if (isReachable(enemy.getShootingRange(), enemy, ally)) {
                     alliesSeenBy.inc(enemy.getPlayerId());
@@ -556,7 +559,7 @@ public class WarriorTurn {
             }
         }
         // 1 hitpoint of an ally = 4 (?) hitpoints of an enemy
-        for (Trooper ally : allies.values()) {
+        for (Trooper ally : allies) {
             result -= 4 * grenadeDamageToTrooper(target, ally);
         }
         return result;
@@ -618,7 +621,7 @@ public class WarriorTurn {
                 if (move != null) possibleMoves.add(move);
             }
 
-            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies.values()), false);
+            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies), false);
             if (move != null) possibleMoves.add(move);
 
             for (Direction direction : possibleMoves) {
@@ -699,7 +702,7 @@ public class WarriorTurn {
     @NotNull
     private Trooper findLeader() {
         for (TrooperType type : Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER)) {
-            Trooper trooper = allies.get(type);
+            Trooper trooper = alliesMap.get(type);
             if (trooper != null) return trooper;
         }
 

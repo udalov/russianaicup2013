@@ -1,8 +1,7 @@
 import model.Trooper;
 
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 
 public class IntArrays {
     public static final int[] EMPTY = {};
@@ -29,13 +28,12 @@ public class IntArrays {
     }
 
     @NotNull
-    public static int[] hitpointsOf(@NotNull Collection<Trooper> troopers) {
+    public static int[] hitpointsOf(@NotNull List<Trooper> troopers) {
         int n = troopers.size();
         if (n == 0) return EMPTY;
         int[] result = new int[n];
-        Iterator<Trooper> it = troopers.iterator();
         for (int i = 0; i < n; i++) {
-            result[i] = it.next().getHitpoints();
+            result[i] = troopers.get(i).getHitpoints();
         }
         return result;
     }
