@@ -89,75 +89,6 @@ public class WarriorTurn {
         final Map<Position, Pair<Go, Position>> prev = new HashMap<>();
         prev.put(start, null);
 
-        class QueueUpdater {
-            private final Position cur;
-            public QueueUpdater(@NotNull Position cur) { this.cur = cur; }
-
-            private void add(@NotNull Position next, @NotNull Go edge) {
-                if (!prev.containsKey(next)) {
-                    prev.put(next, new Pair<>(edge, cur));
-                    queue.add(next);
-                }
-            }
-
-            public void run() {
-                // Move
-                for (Direction direction : Util.DIRECTIONS) {
-                    Position next = cur.move(direction);
-                    if (next != null) add(next, Go.move(direction));
-                }
-
-                // Shoot
-                for (int i = 0, size = enemies.size(); i < size; i++) {
-                    Position next = cur.shoot(i);
-                    if (next != null) add(next, Go.shoot(Point.create(enemies.get(i))));
-                }
-
-                // Change stance
-                {
-                    Position higher = cur.raiseStance();
-                    if (higher != null) add(higher, Go.raiseStance());
-
-                    Position lower = cur.lowerStance();
-                    if (lower != null) add(lower, Go.lowerStance());
-                }
-
-                // Throw grenade
-                for (Trooper enemy : enemies) {
-                    Point point = Point.create(enemy);
-                    for (Direction direction : Direction.values()) {
-                        Point target = point.go(direction);
-                        if (target != null) {
-                            Position next = cur.throwGrenade(target);
-                            if (next != null) add(next, Go.throwGrenade(target));
-                        }
-                    }
-                }
-
-                // Use medikit
-                for (int i = 0, size = allies.size(); i < size; i++) {
-                    Point point = Point.create(allies.get(i));
-                    Position next = cur.useMedikit(i, point);
-                    if (next != null) add(next, Go.useMedikit(me.direction(point)));
-                }
-
-                // Field ration
-                {
-                    Position next = cur.eatFieldRation();
-                    if (next != null) add(next, Go.eatFieldRation());
-                }
-
-                // Heal
-                if (self.getType() == FIELD_MEDIC) {
-                    for (int i = 0, size = allies.size(); i < size; i++) {
-                        Point point = Point.create(allies.get(i));
-                        Position next = cur.heal(i, point);
-                        if (next != null) add(next, Go.heal(me.direction(point)));
-                    }
-                }
-            }
-        }
-
         Scorer scorer = new Scorer();
 
         Position best = null;
@@ -171,7 +102,7 @@ public class WarriorTurn {
                 best = cur;
             }
 
-            new QueueUpdater(cur).run();
+            new TransitionFinder(cur, queue, prev).run();
         }
 
         if (best == start) return Go.endTurn();
@@ -182,6 +113,82 @@ public class WarriorTurn {
             assert before != null : "Nothing before " + cur;
             if (before.second == start) return before.first;
             cur = before.second;
+        }
+    }
+
+    private final class TransitionFinder {
+        private final Position cur;
+        private final Queue<Position> queue;
+        private final Map<Position, Pair<Go, Position>> prev;
+
+        public TransitionFinder(@NotNull Position cur, @NotNull Queue<Position> queue, @NotNull Map<Position, Pair<Go, Position>> prev) {
+            this.cur = cur;
+            this.queue = queue;
+            this.prev = prev;
+        }
+
+        private void add(@NotNull Position next, @NotNull Go edge) {
+            if (!prev.containsKey(next)) {
+                prev.put(next, new Pair<>(edge, cur));
+                queue.add(next);
+            }
+        }
+
+        public void run() {
+            // Move
+            for (Direction direction : Util.DIRECTIONS) {
+                Position next = cur.move(direction);
+                if (next != null) add(next, Go.move(direction));
+            }
+
+            // Shoot
+            for (int i = 0, size = enemies.size(); i < size; i++) {
+                Position next = cur.shoot(i);
+                if (next != null) add(next, Go.shoot(Point.create(enemies.get(i))));
+            }
+
+            // Change stance
+            {
+                Position higher = cur.raiseStance();
+                if (higher != null) add(higher, Go.raiseStance());
+
+                Position lower = cur.lowerStance();
+                if (lower != null) add(lower, Go.lowerStance());
+            }
+
+            // Throw grenade
+            for (Trooper enemy : enemies) {
+                Point point = Point.create(enemy);
+                for (Direction direction : Direction.values()) {
+                    Point target = point.go(direction);
+                    if (target != null) {
+                        Position next = cur.throwGrenade(target);
+                        if (next != null) add(next, Go.throwGrenade(target));
+                    }
+                }
+            }
+
+            // Use medikit
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                Point point = Point.create(allies.get(i));
+                Position next = cur.useMedikit(i, point);
+                if (next != null) add(next, Go.useMedikit(me.direction(point)));
+            }
+
+            // Field ration
+            {
+                Position next = cur.eatFieldRation();
+                if (next != null) add(next, Go.eatFieldRation());
+            }
+
+            // Heal
+            if (self.getType() == FIELD_MEDIC) {
+                for (int i = 0, size = allies.size(); i < size; i++) {
+                    Point point = Point.create(allies.get(i));
+                    Position next = cur.heal(i, point);
+                    if (next != null) add(next, Go.heal(me.direction(point)));
+                }
+            }
         }
     }
 
