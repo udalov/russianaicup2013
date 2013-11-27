@@ -421,16 +421,18 @@ public class WarriorTurn {
     }
 
     private class Scorer {
-        public double evaluate(@NotNull Position x) {
+        public double evaluate(@NotNull Position p) {
             double result = 0;
 
-            result -= IntArrays.sum(x.enemyHp);
-            result += 30 * IntArrays.numberOfZeros(x.enemyHp);
+            result -= IntArrays.sum(p.enemyHp);
+            result += 30 * IntArrays.numberOfZeros(p.enemyHp);
 
-            int allies = hpOfAlliesUnderThreshold(x.allyHp);
-            result += 2 * allies + 0.2 * (IntArrays.sum(x.allyHp) - allies);
+            int allies = hpOfAlliesUnderThreshold(p.allyHp);
+            result += 2 * allies + 0.2 * (IntArrays.sum(p.allyHp) - allies);
 
-            result += 0.1 * Integer.bitCount(x.bonuses);
+            result -= 0.5 * expectedDamageOnNextTurn(p);
+
+            result += 0.1 * Integer.bitCount(p.bonuses);
             return result;
         }
 
@@ -439,6 +441,62 @@ public class WarriorTurn {
             for (int hp : allyHp) {
                 if (hp <= 85) result += hp;
             }
+            return result;
+        }
+
+        public double expectedDamageOnNextTurn(@NotNull Position p) {
+            // Assume that all visible enemies also see us, but this is not always true
+            // TODO: count number of other teams having at least one trooper who sees us
+
+            int n = allies.size();
+
+            int myIndex = -1;
+            for (int i = 0; i < n; i++) {
+                Trooper ally = allies.get(i);
+                if (ally.getType() == self.getType()) {
+                    myIndex = i;
+                    break;
+                }
+            }
+            assert myIndex >= 0 : "Where am I? " + allies;
+
+            double[] expectedDamage = new double[n];
+
+            for (int i = 0, size = enemies.size(); i < size; i++) {
+                Trooper enemy = enemies.get(i);
+                if (p.enemyHp[i] == 0) continue;
+
+                // Assume that the enemy trooper always is in the commander aura
+                int actionPoints = enemy.getInitialActionPoints() +
+                        (enemy.getType() != COMMANDER && enemy.getType() != SCOUT ? game.getCommanderAuraBonusActionPoints() : 0);
+
+                // Assume that he's always shooting right away until the end of his turn
+                // TODO: handle the case when he lowers the stance in the beginning
+                int maxDamageToAlly = (actionPoints / enemy.getShootCost()) * enemy.getDamage();
+
+                boolean[] isReachable = new boolean[n];
+                int alliesUnderSight = 0;
+                for (int j = 0; j < n; j++) {
+                    Trooper ally = allies.get(j);
+                    Point point = j == myIndex ? p.me : Point.create(ally);
+                    TrooperStance stance = j == myIndex ? p.stance : ally.getStance();
+                    if (isReachable(enemy.getShootingRange(), enemy, point, stance)) {
+                        isReachable[j] = true;
+                        alliesUnderSight++;
+                    }
+                }
+                if (alliesUnderSight == 0) continue;
+
+                for (int j = 0; j < n; j++) {
+                    if (isReachable[j]) expectedDamage[j] += maxDamageToAlly * 1. / alliesUnderSight;
+                }
+            }
+
+            double result = 0.;
+            for (int i = 0; i < n; i++) {
+                result += Math.min(expectedDamage[i], p.allyHp[i]);
+            }
+
             return result;
         }
     }
@@ -744,8 +802,16 @@ public class WarriorTurn {
         }
     }
 
+    private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Point object, @NotNull TrooperStance objectStance) {
+        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.x, object.y, objectStance);
+    }
+
     private boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance, @NotNull Trooper object) {
         return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.getX(), object.getY(), object.getStance());
+    }
+
+    private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Trooper object) {
+        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.getX(), object.getY(), object.getStance());
     }
 
     @NotNull
