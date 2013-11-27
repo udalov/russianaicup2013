@@ -65,9 +65,9 @@ public class WarriorTurn {
     @NotNull
     public Go makeTurn() {
         if (!enemies.isEmpty()) {
-            Go best = best(new CombatSituationScorer());
+            List<Go> best = best(new CombatSituationScorer());
             debug(self + " -> " + best);
-            return best;
+            return best.get(0);
         }
 
         Go messageBased = readMessages();
@@ -91,7 +91,7 @@ public class WarriorTurn {
     }
 
     @NotNull
-    private Go best(@NotNull Scorer scorer) {
+    private List<Go> best(@NotNull Scorer scorer) {
         Position start = startingPosition();
         final Queue<Position> queue = new LinkedList<>();
         queue.add(start);
@@ -112,13 +112,15 @@ public class WarriorTurn {
             new TransitionFinder(cur, queue, prev).run();
         }
 
-        if (best == start) return Go.endTurn();
+        if (best == start) return Collections.singletonList(Go.endTurn());
 
         Position cur = best;
+        List<Go> result = new ArrayList<>(12);
         while (true) {
             Pair<Go, Position> before = prev.get(cur);
             assert before != null : "Nothing before " + cur;
-            if (before.second == start) return before.first;
+            result.add(before.first);
+            if (before.second == start) return Util.reverse(result);
             cur = before.second;
         }
     }

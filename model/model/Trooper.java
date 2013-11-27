@@ -211,6 +211,6 @@ public final class Trooper extends Unit {
 
     @Override
     public String toString() {
-        return actionPoints + " " + stance + " " + type + " at (" + getX() + ", " + getY() + ")";
+        return actionPoints + " " + stance + " " + type + " " + hitpoints + "% at (" + getX() + ", " + getY() + ")";
     }
 }

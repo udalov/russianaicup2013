@@ -1,9 +1,7 @@
 import model.Direction;
 import model.TrooperStance;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 import static model.Direction.*;
 import static model.TrooperStance.*;
@@ -64,6 +62,13 @@ public class Util {
                 return -result;
             }
         });
+    }
+
+    @NotNull
+    public static <T> List<T> reverse(@NotNull List<T> list) {
+        ArrayList<T> result = new ArrayList<>(list);
+        Collections.reverse(result);
+        return result;
     }
 
     public interface Evaluator<Element> {
