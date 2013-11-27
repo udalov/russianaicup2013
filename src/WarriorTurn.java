@@ -144,25 +144,25 @@ public class WarriorTurn {
         }
 
         public void run() {
-            // Move
-            for (Direction direction : Util.DIRECTIONS) {
-                Position next = cur.move(direction);
-                if (next != null) add(next, Go.move(direction));
+            // Field ration
+            {
+                Position next = cur.eatFieldRation();
+                if (next != null) add(next, Go.eatFieldRation());
+            }
+
+            // Heal
+            if (self.getType() == FIELD_MEDIC) {
+                for (int i = 0, size = allies.size(); i < size; i++) {
+                    Point point = Point.create(allies.get(i));
+                    Position next = cur.heal(i, point);
+                    if (next != null) add(next, Go.heal(me.direction(point)));
+                }
             }
 
             // Shoot
             for (int i = 0, size = enemies.size(); i < size; i++) {
                 Position next = cur.shoot(i);
                 if (next != null) add(next, Go.shoot(Point.create(enemies.get(i))));
-            }
-
-            // Change stance
-            {
-                Position higher = cur.raiseStance();
-                if (higher != null) add(higher, Go.raiseStance());
-
-                Position lower = cur.lowerStance();
-                if (lower != null) add(lower, Go.lowerStance());
             }
 
             // Throw grenade
@@ -184,19 +184,19 @@ public class WarriorTurn {
                 if (next != null) add(next, Go.useMedikit(me.direction(point)));
             }
 
-            // Field ration
+            // Change stance
             {
-                Position next = cur.eatFieldRation();
-                if (next != null) add(next, Go.eatFieldRation());
+                Position higher = cur.raiseStance();
+                if (higher != null) add(higher, Go.raiseStance());
+
+                Position lower = cur.lowerStance();
+                if (lower != null) add(lower, Go.lowerStance());
             }
 
-            // Heal
-            if (self.getType() == FIELD_MEDIC) {
-                for (int i = 0, size = allies.size(); i < size; i++) {
-                    Point point = Point.create(allies.get(i));
-                    Position next = cur.heal(i, point);
-                    if (next != null) add(next, Go.heal(me.direction(point)));
-                }
+            // Move
+            for (Direction direction : Util.DIRECTIONS) {
+                Position next = cur.move(direction);
+                if (next != null) add(next, Go.move(direction));
             }
         }
     }
