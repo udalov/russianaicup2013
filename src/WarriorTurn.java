@@ -56,7 +56,7 @@ public class WarriorTurn {
     @NotNull
     public Go makeTurn() {
         if (!enemies.isEmpty()) {
-            Go best = best();
+            Go best = best(new CombatSituationScorer());
             debug(self + " -> " + best);
             return best;
         }
@@ -82,14 +82,12 @@ public class WarriorTurn {
     }
 
     @NotNull
-    private Go best() {
+    private Go best(@NotNull Scorer scorer) {
         Position start = startingPosition();
         final Queue<Position> queue = new LinkedList<>();
         queue.add(start);
         final Map<Position, Pair<Go, Position>> prev = new HashMap<>();
         prev.put(start, null);
-
-        Scorer scorer = new Scorer();
 
         Position best = null;
         double bestValue = -1e100;
@@ -424,7 +422,11 @@ public class WarriorTurn {
         );
     }
 
-    private class Scorer {
+    private abstract class Scorer {
+        public abstract double evaluate(@NotNull Position p);
+    }
+
+    private class CombatSituationScorer extends Scorer {
         public double evaluate(@NotNull Position p) {
             double result = 0;
 
