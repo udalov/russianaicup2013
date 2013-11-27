@@ -22,6 +22,8 @@ public class WarriorTurn {
     private final List<Trooper> allies;
     private final List<Trooper> alliesWithoutMe;
     private final Map<TrooperType, Trooper> alliesMap;
+    // Index of me in the 'allies' list
+    private final int myIndex;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -37,18 +39,24 @@ public class WarriorTurn {
         allies = new ArrayList<>(5);
         alliesWithoutMe = new ArrayList<>(4);
         alliesMap = new EnumMap<>(TrooperType.class);
+        int myIndex = -1;
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
-                alliesMap.put(trooper.getType(), trooper);
-                allies.add(trooper);
-                if (trooper.getType() != self.getType()) {
+                if (trooper.getType() == self.getType()) {
+                    myIndex = allies.size();
+                } else {
                     alliesWithoutMe.add(trooper);
                 }
+                allies.add(trooper);
+                alliesMap.put(trooper.getType(), trooper);
             } else {
                 if (enemies == null) enemies = new ArrayList<>(15);
                 enemies.add(trooper);
             }
         }
+        assert myIndex >= 0 : "Where am I? " + allies;
+        this.myIndex = myIndex;
+
 
         this.enemies = enemies == null ? Collections.<Trooper>emptyList() : enemies;
     }
@@ -439,13 +447,32 @@ public class WarriorTurn {
             result -= 0.5 * expectedDamageOnNextTurn(p);
 
             result += 0.1 * Integer.bitCount(p.bonuses);
+
+            // TODO: or if have a medikit
+            if (self.getType() == FIELD_MEDIC) {
+                result -= distanceToWoundedAllies(p);
+            }
+
+            return result;
+        }
+
+        private double distanceToWoundedAllies(@NotNull Position p) {
+            double result = 0;
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                if (i == myIndex) continue;
+                Trooper ally = allies.get(i);
+                int hp = p.allyHp[i];
+                if (hp < 85) {
+                    result += Point.create(ally).manhattanDistance(p.me) * (ally.getMaximalHitpoints() - hp);
+                }
+            }
             return result;
         }
 
         private int hpOfAlliesUnderThreshold(@NotNull int[] allyHp) {
             int result = 0;
             for (int hp : allyHp) {
-                if (hp <= 85) result += hp;
+                if (hp < 85) result += hp;
             }
             return result;
         }
@@ -455,16 +482,6 @@ public class WarriorTurn {
             // TODO: count number of other teams having at least one trooper who sees us
 
             int n = allies.size();
-
-            int myIndex = -1;
-            for (int i = 0; i < n; i++) {
-                Trooper ally = allies.get(i);
-                if (ally.getType() == self.getType()) {
-                    myIndex = i;
-                    break;
-                }
-            }
-            assert myIndex >= 0 : "Where am I? " + allies;
 
             double[] expectedDamage = new double[n];
 
