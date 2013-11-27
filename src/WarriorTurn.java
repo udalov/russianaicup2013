@@ -2,6 +2,7 @@ import model.*;
 
 import java.util.*;
 
+import static model.BonusType.*;
 import static model.Direction.CURRENT_POINT;
 import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
@@ -234,29 +235,16 @@ public class WarriorTurn {
             this.hashCode = hash;
         }
 
-        private boolean hasGrenade() { return (bonuses & 1) != 0; }
-        private boolean hasMedikit() { return (bonuses & 2) != 0; }
-        private boolean hasFieldRation() { return (bonuses & 4) != 0; }
         private boolean has(@NotNull BonusType bonus) {
-            switch (bonus) {
-                case GRENADE: return hasGrenade();
-                case MEDIKIT: return hasMedikit();
-                case FIELD_RATION: return hasFieldRation();
-                default: throw new IllegalStateException("You've got to be kidding me: " + bonus);
-            }
+            return (bonuses & (1 << bonus.ordinal())) != 0;
         }
 
-        private int withoutGrenade() { return bonuses & 6; }
-        private int withoutMedikit() { return bonuses & 5; }
-        private int withoutFieldRation() { return bonuses & 3; }
+        private int without(@NotNull BonusType bonus) {
+            return bonuses & ~(1 << bonus.ordinal());
+        }
 
         private int with(@NotNull BonusType bonus) {
-            switch (bonus) {
-                case GRENADE: return bonuses | 1;
-                case MEDIKIT: return bonuses | 2;
-                case FIELD_RATION: return bonuses | 4;
-                default: throw new IllegalStateException("You've got to be kidding me: " + bonus);
-            }
+            return bonuses | (1 << bonus.ordinal());
         }
 
         @NotNull
@@ -368,19 +356,19 @@ public class WarriorTurn {
 
         @Nullable
         public Position throwGrenade(@NotNull Point target) {
-            if (!hasGrenade()) return null;
+            if (!has(GRENADE)) return null;
             int ap = actionPoints - game.getGrenadeThrowCost();
             if (ap < 0) return null;
             if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) return null;
             int[] newEnemyHp = grenadeEffect(target, enemyHp, enemies);
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffect(target, allyHp, allies);
-            return new Position(me, stance, ap, withoutGrenade(), newEnemyHp, newAllyHp, collected);
+            return new Position(me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected);
         }
 
         @Nullable
         public Position useMedikit(int ally, @NotNull Point point) {
-            if (!hasMedikit()) return null;
+            if (!has(MEDIKIT)) return null;
             int ap = actionPoints - game.getMedikitUseCost();
             if (ap < 0) return null;
             int[] newAllyHp;
@@ -388,16 +376,16 @@ public class WarriorTurn {
             else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getMedikitBonusHitpoints());
             else return null;
             if (Arrays.equals(allyHp, newAllyHp)) return null;
-            return new Position(me, stance, ap, withoutMedikit(), enemyHp, newAllyHp, collected);
+            return new Position(me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
         }
 
         @Nullable
         public Position eatFieldRation() {
-            if (!hasFieldRation()) return null;
+            if (!has(FIELD_RATION)) return null;
             if (actionPoints >= self.getInitialActionPoints()) return null;
             int ap = actionPoints - game.getFieldRationEatCost();
             if (ap < 0) return null;
-            return new Position(me, stance, ap, withoutFieldRation(), enemyHp, allyHp, collected);
+            return new Position(me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected);
         }
 
         @Nullable
@@ -409,7 +397,7 @@ public class WarriorTurn {
             else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealBonusHitpoints());
             else return null;
             if (Arrays.equals(allyHp, newAllyHp)) return null;
-            return new Position(me, stance, ap, withoutMedikit(), enemyHp, newAllyHp, collected);
+            return new Position(me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
         }
     }
 
