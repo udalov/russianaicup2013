@@ -1,6 +1,7 @@
 .idea/workspace.xml
 out
 lib/kotlinc
+lib/bootstrap-strategy.jar
 dist
 info.txt
 *.class

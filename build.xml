@@ -1,6 +1,8 @@
 <project name="rac" default="dist">
     <property name="local.runner" value="lib/local-runner.jar"/>
     <property name="dist" value="dist"/>
+    <property name="rac-jar" value="${dist}/rac.jar"/>
+    <property name="bootstrap-strategy-jar" value="lib/bootstrap-strategy.jar"/>
     <property name="plugin" value="${java.io.tmpdir}/kotlin-plugin"/>
     <property name="kotlin.home" value="lib/kotlinc"/>
 
@@ -26,13 +28,17 @@
             <src path="runner"/>
             <src path="src"/>
         </javac>
-        <jar destfile="${dist}/rac.jar" basedir="${dist}/classes">
+        <jar destfile="${rac-jar}" basedir="${dist}/classes">
             <zipfileset includes="**/*" src="${kotlin.home}/lib/kotlin-runtime.jar"/>
             <zipfileset includes="**/*" src="${local.runner}"/>
             <manifest>
                 <attribute name="Main-Class" value="runner.auto.AutoPackage"/>
             </manifest>
         </jar>
+    </target>
+
+    <target name="bootstrap" depends="dist">
+        <move file="${rac-jar}" tofile="${bootstrap-strategy-jar}"/>
     </target>
 
     <target name="update">

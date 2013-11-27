@@ -1,6 +1,8 @@
 package runner
 
 import org.apache.log4j.Logger
+import java.util.ArrayList
+import java.io.File
 import java.net.ConnectException
 
 open class Player(val name: String, val classFile: String)
@@ -48,10 +50,10 @@ fun localRunner(vis: Boolean, map: WorldMap, teamSize: Int, seed: Long, p1: Play
     ))
 }
 
-fun runMyStrategy() {
+fun runMyStrategy(port: Long) {
     while (true) {
         try {
-            Runner.main(array<String>())
+            Runner.main(array("127.0.0.1", "$port", "0000000000000000"))
         } catch (e: ConnectException) {
             if (e.getMessage()?.startsWith("Connection refused") ?: false) {
                 Thread.sleep(40)
@@ -71,10 +73,43 @@ fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String) {
         else -> throw IllegalStateException("Unknown player: $c")
     }
 
-    val thread = Thread(localRunner(vis, map, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
-    thread.start()
-    runMyStrategy()
-    thread.join()
+    val threads = ArrayList<Thread>(5)
+    threads add Thread(localRunner(vis, map, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
+
+    var port: Long = 31001
+
+    for (team in lineup) {
+        if (team != 'M') continue
+
+        val p = port++
+        if (p == 31001.toLong()) {
+            threads add Thread { runMyStrategy(p) }
+            continue
+        }
+
+        val file = File("lib/bootstrap-strategy.jar")
+        assert(file.exists(), "Compile a strategy to test against to: $file")
+        threads add Thread {
+            while (true) {
+                val process = Runtime.getRuntime().exec("java -cp $file Runner 127.0.0.1 $p 0000000000000000")
+                val err = process.getErrorStream()?.reader()
+                process.waitFor()
+                if (err?.readText()?.contains("Connection refused") ?: false) {
+                    Thread.sleep(40)
+                    continue
+                }
+                break
+            }
+        }
+    }
+
+    for (thread in threads) {
+        thread.start()
+    }
+
+    for (thread in threads) {
+        thread.join()
+    }
 }
 
 fun time(block: () -> Unit) {
