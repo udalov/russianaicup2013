@@ -17,6 +17,6 @@ do
     end=`expr $seed + $step - 1`
     $CWD/mt $seed $end $map $lineup >$file
     echo "$map $lineup"
-    awk '{ arr[$1]++; if ($1<1 || $1>4) print "oh dear"; } END { print arr[1], arr[2], arr[3], arr[4]; }' <$file
+    awk 'BEGIN { a[1]=0;a[2]=0;a[3]=0;a[4]=0; } { a[$1]++; if ($1<1||$1>4) print "oh dear"; } END { print a[1],a[2],a[3],a[4]; }' <$file
     seed=`expr $end + 1`
 done
