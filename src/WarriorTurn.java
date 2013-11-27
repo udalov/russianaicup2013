@@ -61,9 +61,6 @@ public class WarriorTurn {
             return best;
         }
 
-        Go hideBehindCover = hideBehindCover();
-        if (hideBehindCover != null) return hideBehindCover;
-
         Go messageBased = readMessages();
         if (messageBased != null) return eatFieldRationOr(messageBased);
 
@@ -528,60 +525,6 @@ public class WarriorTurn {
         return null;
     }
 
-    @Nullable
-    private Go hideBehindCover() {
-        if (can(game.getStanceChangeCost()) && self.getActionPoints() <= game.getStanceChangeCost() + 1) {
-            TrooperStance lowered = Util.lower(stance);
-            if (lowered != null && howManyEnemiesCanShotMeThere(me, lowered) < howManyEnemiesCanShotMeThere(me, stance)) {
-                return Go.lowerStance();
-            }
-        }
-
-        if (apEqualOrSlightlyGreater(2 * getMoveCost()) && alliesWithoutMe.isEmpty()) {
-            // TODO: Util.findMin
-            int bestVulnerability = howManyEnemiesCanShotMeThere(me, stance);
-            Direction bestFirstStep = null;
-            for (Direction firstStep : Util.DIRECTIONS) {
-                Point there = me.go(firstStep);
-                if (there == null || !board.isPassable(there)) continue;
-                int vulnerability = Integer.MAX_VALUE;
-                for (Direction secondStep : Util.DIRECTIONS) {
-                    Point destination = there.go(secondStep);
-                    if (destination == null || !board.isPassable(destination)) continue;
-                    vulnerability = Math.min(vulnerability, howManyEnemiesCanShotMeThere(destination, stance));
-                }
-                if (vulnerability < bestVulnerability) {
-                    bestVulnerability = vulnerability;
-                    bestFirstStep = firstStep;
-                }
-            }
-
-            if (bestFirstStep != null) {
-                return Go.move(bestFirstStep);
-            }
-        }
-
-        if (apEqualOrSlightlyGreater(getMoveCost())) {
-            Direction best = Util.findMin(Util.DIRECTIONS, new Util.Evaluator<Direction>() {
-                @Override
-                @Nullable
-                public Integer evaluate(@NotNull Direction direction) {
-                    Point there = me.go(direction);
-                    if (there == null || !board.isPassable(there)) return null;
-                    return howManyEnemiesCanShotMeThere(there, stance);
-                }
-            });
-            //noinspection ConstantConditions
-            if (best != null && howManyEnemiesCanShotMeThere(me.go(best), stance) < howManyEnemiesCanShotMeThere(me, stance)) return Go.move(best);
-        }
-
-        return null;
-    }
-
-    private boolean apEqualOrSlightlyGreater(int value) {
-        return self.getActionPoints() == value || self.getActionPoints() == value + 1;
-    }
-
     private int howManyEnemiesCanShotMeThere(@NotNull Point point, @NotNull TrooperStance stance) {
         int result = 0;
         for (Trooper enemy : enemies) {
@@ -808,10 +751,6 @@ public class WarriorTurn {
 
     private boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance, @NotNull Trooper object) {
         return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.getX(), object.getY(), object.getStance());
-    }
-
-    private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Trooper object) {
-        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.getX(), object.getY(), object.getStance());
     }
 
     @NotNull
