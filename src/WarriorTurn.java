@@ -440,7 +440,7 @@ public class WarriorTurn {
 
             // TODO: or if have a medikit
             if (self.getType() == FIELD_MEDIC) {
-                result -= distanceToWoundedAllies(p);
+                result -= 0.5 * distanceToWoundedAllies(p);
             }
 
             return result;
