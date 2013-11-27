@@ -11,7 +11,7 @@ rm -rf $out
 mkdir -p $out
 
 seed=$begin
-for map in DEFAULT CHEESER MAP01 MAP02 MAP03
+for map in DEFAULT CHEESER MAP01 MAP02 MAP03 MAP04 MAP05
 do
     file=$out/$map-$lineup.out
     end=`expr $seed + $step - 1`

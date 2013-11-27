@@ -18,6 +18,8 @@ enum class WorldMap {
     MAP01
     MAP02
     MAP03
+    MAP04
+    MAP05
 }
 
 val LOG_FILE = "out/log.txt"
