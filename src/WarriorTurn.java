@@ -63,22 +63,37 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
+        TurnLocalData data = army.loadTurnLocalData(world.getMoveIndex(), self.getType());
+        // If the board changed between subsequent turns (new enemies are visible), we don't use the old found moves, since they're not the best anymore
+        // TODO: take into account all enemies that were seen during the small iteration, don't just delete them
+        if (data != null && data.getEnemyIds().equals(ids(enemies))) {
+            Go predefined = data.nextMove();
+            if (predefined != null) {
+                debug("predefined: " + self + " -> " + data);
+                return predefined;
+            }
+        }
+
+        Scorer scorer;
+
         if (!enemies.isEmpty()) {
-            List<Go> best = best(new CombatSituationScorer());
-            debug("combat: " + self + " -> " + best);
-            return best.get(0);
+            scorer = new CombatSituationScorer();
         } else {
             TrooperType leader = findLeader().getType();
             if (leader == self.getType()) {
-                List<Go> best = best(new LeaderScorer());
-                debug("leader: " + self + " -> " + best);
-                return best.get(0);
-            } else if (1==1) {
-                List<Go> best = best(new FollowerScorer(leader));
-                debug("follower: " + self + " -> " + best);
-                return best.get(0);
+                scorer = new LeaderScorer();
+            } else {
+                scorer = new FollowerScorer(leader);
             }
         }
+
+        List<Go> best = best(scorer);
+        debug(scorer, best);
+        Iterator<Go> it = best.iterator();
+        if (!it.hasNext()) return Go.endTurn();
+        army.saveTurnLocalData(world.getMoveIndex(), self.getType(), new TurnLocalData(it, ids(enemies)));
+        if(1==1) return it.next();
+
 
         Go messageBased = readMessages();
         if (messageBased != null) return eatFieldRationOr(messageBased);
@@ -123,7 +138,7 @@ public class WarriorTurn {
             new TransitionFinder(cur, queue, prev).run();
         }
 
-        if (best == start) return Collections.singletonList(Go.endTurn());
+        if (best == start) return Collections.emptyList();
 
         Position cur = best;
         List<Go> result = new ArrayList<>(12);
@@ -646,6 +661,15 @@ public class WarriorTurn {
         }
     }
 
+    @NotNull
+    private List<Long> ids(@NotNull List<Trooper> troopers) {
+        List<Long> result = new ArrayList<>(troopers.size());
+        for (Trooper trooper : troopers) {
+            result.add(trooper.getId());
+        }
+        return result;
+    }
+
     @Nullable
     private Go readMessages() {
         if (!can(getMoveCost())) return null;
@@ -911,5 +935,17 @@ public class WarriorTurn {
         if (LOCAL) {
             System.out.println(o);
         }
+    }
+
+    private void debug(@NotNull Scorer scorer, @NotNull List<Go> best) {
+        if (!LOCAL) return;
+
+        String s;
+        if (scorer instanceof CombatSituationScorer) s = "combat";
+        else if (scorer instanceof LeaderScorer) s = "leader";
+        else if (scorer instanceof FollowerScorer) s = "follower";
+        else throw new UnsupportedOperationException("Unknown scorer: " + scorer);
+
+        System.out.println(s + ": " + self + " -> " + best);
     }
 }

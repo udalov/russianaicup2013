@@ -17,6 +17,8 @@ public class Army {
 
     private int medicSelfHealed;
 
+    private final Map<TrooperType, Pair<Integer, TurnLocalData>> turnLocalData = new HashMap<>();
+
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         firstBoard = new Board(world);
         Point start = Point.create(firstTrooper);
@@ -100,5 +102,15 @@ public class Army {
 
     public void medicSelfHealed() {
         medicSelfHealed++;
+    }
+
+    @Nullable
+    public TurnLocalData loadTurnLocalData(int moveIndex, @NotNull TrooperType type) {
+        Pair<Integer, TurnLocalData> pair = turnLocalData.get(type);
+        return pair == null || pair.first != moveIndex ? null : pair.second;
+    }
+
+    public void saveTurnLocalData(int moveIndex, @NotNull TrooperType type, @NotNull TurnLocalData data) {
+        turnLocalData.put(type, new Pair<>(moveIndex, data));
     }
 }
