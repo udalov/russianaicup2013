@@ -19,7 +19,7 @@ public class PointMap<T> implements Map<Point, T> {
 
     @Override
     public boolean containsKey(Object key) {
-        return key instanceof Point && data[((Point) key).index()] != null;
+        return data[((Point) key).index()] != null;
     }
 
     @Override

@@ -30,7 +30,7 @@ public class WarriorTurn {
 
         me = Point.create(self);
         worldBonuses = Arrays.asList(world.getBonuses());
-        board = new Board(world);
+        board = army.getBoard();
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
         alliesMap = new EnumMap<>(TrooperType.class);
@@ -543,7 +543,7 @@ public class WarriorTurn {
             double result = 0;
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
-                Integer dist = army.lazyGetDistance(Point.create(allies.get(i)), p.me);
+                Integer dist = board.distance(Point.create(allies.get(i)), p.me);
                 if (dist != null) result += dist;
             }
             return result;
@@ -602,7 +602,7 @@ public class WarriorTurn {
         private final Point leader;
         private final Point dislocation = army.getOrUpdateDislocation(allies);
         private final Set<Point> set = new PointSet();
-        private final ArrayDeque<Point> queue = new ArrayDeque<>(16);
+        private final ArrayDeque<Point> queue = new ArrayDeque<>(15);
         private final List<Point> leaderPath;
 
         public FollowerScorer(@NotNull TrooperType leaderType) {
@@ -618,7 +618,7 @@ public class WarriorTurn {
             // TODO
             result += 3 * Integer.bitCount(p.bonuses);
 
-            Integer dist = army.lazyGetDistance(p.me, leader);
+            Integer dist = board.distance(p.me, leader);
             if (dist != null) result -= dist;
 
             int freeCells = leaderDegreeOfFreedom(p);
@@ -683,14 +683,14 @@ public class WarriorTurn {
             int result = 0;
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
-                Integer distance = army.lazyGetDistance(Point.create(allies.get(i)), p.me);
+                Integer distance = board.distance(Point.create(allies.get(i)), p.me);
                 if (distance != null && distance > 5) result++;
             }
             return result;
         }
 
         private int distanceToDislocation(@NotNull Position p) {
-            Integer dist = army.lazyGetDistance(p.me, dislocation);
+            Integer dist = board.distance(p.me, dislocation);
             return dist != null ? dist : 1000;
         }
     }

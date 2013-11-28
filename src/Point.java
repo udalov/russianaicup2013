@@ -3,7 +3,7 @@ import model.Unit;
 
 import static model.Direction.*;
 
-public final class Point implements Comparable<Point> {
+public final class Point {
     public final int x;
     public final int y;
 
@@ -107,11 +107,6 @@ public final class Point implements Comparable<Point> {
     @Override
     public int hashCode() {
         return index();
-    }
-
-    @Override
-    public int compareTo(@NotNull Point that) {
-        return index() - that.index();
     }
 
     @Override

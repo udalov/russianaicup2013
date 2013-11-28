@@ -10,7 +10,6 @@ public class Army {
     private int curDisIndex;
 
     private final Board board;
-    private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 
@@ -53,14 +52,9 @@ public class Army {
         throw new IllegalStateException("Impossible as it may seem, there are no free points nearby: " + p);
     }
 
-    @Nullable
-    public Integer lazyGetDistance(@NotNull Point from, @NotNull Point to) {
-        Map<Point, Integer> map = distances.get(from);
-        if (map == null) {
-            map = board.findDistances(from);
-            distances.put(from, map);
-        }
-        return map.get(to);
+    @NotNull
+    public Board getBoard() {
+        return board;
     }
 
     @NotNull

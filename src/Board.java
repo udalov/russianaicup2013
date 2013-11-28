@@ -17,6 +17,9 @@ public class Board {
     public static int HEIGHT = -1;
 
     private final PointSet obstacles;
+    private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
+
+    private final Queue<Point> queue = new ArrayDeque<>(WIDTH * HEIGHT);
 
     public Board(@NotNull World world) {
         CellType[][] cells = world.getCells();
@@ -38,6 +41,16 @@ public class Board {
 
     public boolean isPassable(@NotNull Point point) {
         return !obstacles.contains(point);
+    }
+
+    @Nullable
+    public Integer distance(@NotNull Point from, @NotNull Point to) {
+        Map<Point, Integer> map = distances.get(from);
+        if (map == null) {
+            map = findDistances(from);
+            distances.put(from, map);
+        }
+        return map.get(to);
     }
 
     @Nullable
@@ -92,34 +105,22 @@ public class Board {
         final Map<Point, Integer> dist = new PointMap<>();
         controller.saveDistanceMap(dist);
 
-        // TODO: drop
-        SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
-            @Override
-            public int compare(@NotNull Point o1, @NotNull Point o2) {
-                int d = dist.get(o1) - dist.get(o2);
-                return d != 0 ? d : o1.compareTo(o2);
-            }
-        });
         dist.put(from, 0);
-        set.add(from);
+        queue.clear();
+        queue.add(from);
 
-        while (!set.isEmpty()) {
-            Point point = set.first();
-            if (controller.isEndingPoint(point)) {
-                return point;
-            }
-            set.remove(point);
+        while (!queue.isEmpty()) {
+            Point point = queue.poll();
+            if (controller.isEndingPoint(point)) return point;
+
+            int newDist = dist.get(point) + 1;
 
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = point.go(direction);
-                if (next == null || !isPassable(next)) continue;
-
-                Integer curDist = dist.get(next);
-                int newDist = dist.get(point) + 1;
-                if (curDist == null || curDist > newDist) {
+                if (next != null && isPassable(next) && !dist.containsKey(next)) {
                     dist.put(next, newDist);
                     controller.savePrevious(next, point);
-                    set.add(next);
+                    queue.add(next);
                 }
             }
         }
