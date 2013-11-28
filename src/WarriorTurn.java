@@ -61,7 +61,7 @@ public class WarriorTurn {
         if (data != null && data.getEnemyIds().equals(ids(enemies))) {
             Go predefined = data.nextMove();
             if (predefined != null) {
-                debug("predefined: " + self + " -> " + data);
+                debug("predefined: " + self + " -> " + predefined);
                 return predefined;
             }
         }
@@ -247,6 +247,24 @@ public class WarriorTurn {
             return bonuses | (1 << bonus.ordinal());
         }
 
+        private double effectiveShootingRange() {
+            double result = self.getShootingRange();
+            if (self.getType() == SNIPER) {
+                result -= sniperShootingRangeBonus(self.getStance());
+                result += sniperShootingRangeBonus(stance);
+            }
+            return result;
+        }
+
+        private double sniperShootingRangeBonus(TrooperStance stance) {
+            switch (stance) {
+                case STANDING: return 0;
+                case KNEELING: return game.getSniperKneelingShootingRangeBonus();
+                case PRONE: return game.getSniperProneShootingRangeBonus();
+                default: throw new IllegalStateException("Sniper is so stealth, he's " + stance);
+            }
+        }
+
         @NotNull
         private int[] grenadeEffect(@NotNull Point target, @NotNull int[] hp, @NotNull List<Trooper> troopers) {
             int[] result = IntArrays.copy(hp);
@@ -330,7 +348,7 @@ public class WarriorTurn {
             int ap = actionPoints - self.getShootCost();
             if (ap < 0) return null;
             Trooper trooper = enemies.get(enemy);
-            if (!isReachable(self.getShootingRange(), me, stance, trooper)) return null;
+            if (!isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
             int hp = enemyHp[enemy];
             if (hp == 0) return null;
             int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
