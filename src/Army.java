@@ -9,7 +9,7 @@ public class Army {
     private final List<Point> dislocations = new ArrayList<>();
     private int curDisIndex;
 
-    private final Board firstBoard;
+    private final Board board;
     private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
@@ -19,7 +19,7 @@ public class Army {
     private final Map<TrooperType, Pair<Integer, TurnLocalData>> turnLocalData = new HashMap<>();
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
-        firstBoard = new Board(world);
+        board = new Board(world);
         Point start = Point.create(firstTrooper);
         Point center = Point.center();
         dislocations.add(findFreePointNearby(start));
@@ -41,7 +41,7 @@ public class Army {
         queue.offer(p);
         while (!queue.isEmpty()) {
             Point cur = queue.poll();
-            if (firstBoard.isPassable(cur)) return cur;
+            if (board.isPassable(cur)) return cur;
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = cur.go(direction);
                 if (next != null && !visited.contains(next)) {
@@ -54,10 +54,10 @@ public class Army {
     }
 
     @Nullable
-    public Integer getDistanceOnEmptyBoard(@NotNull Point from, @NotNull Point to) {
+    public Integer lazyGetDistance(@NotNull Point from, @NotNull Point to) {
         Map<Point, Integer> map = distances.get(from);
         if (map == null) {
-            map = firstBoard.findDistances(from);
+            map = board.findDistances(from);
             distances.put(from, map);
         }
         return map.get(to);

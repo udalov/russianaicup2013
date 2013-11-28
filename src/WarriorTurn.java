@@ -543,7 +543,7 @@ public class WarriorTurn {
             double result = 0;
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
-                Integer dist = army.getDistanceOnEmptyBoard(Point.create(allies.get(i)), p.me);
+                Integer dist = army.lazyGetDistance(Point.create(allies.get(i)), p.me);
                 if (dist != null) result += dist;
             }
             return result;
@@ -618,7 +618,7 @@ public class WarriorTurn {
             // TODO
             result += 3 * Integer.bitCount(p.bonuses);
 
-            Integer dist = army.getDistanceOnEmptyBoard(p.me, leader);
+            Integer dist = army.lazyGetDistance(p.me, leader);
             if (dist != null) result -= dist;
 
             int freeCells = leaderDegreeOfFreedom(p);
@@ -683,14 +683,14 @@ public class WarriorTurn {
             int result = 0;
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
-                Integer distance = army.getDistanceOnEmptyBoard(Point.create(allies.get(i)), p.me);
+                Integer distance = army.lazyGetDistance(Point.create(allies.get(i)), p.me);
                 if (distance != null && distance > 5) result++;
             }
             return result;
         }
 
         private int distanceToDislocation(@NotNull Position p) {
-            Integer dist = army.getDistanceOnEmptyBoard(p.me, dislocation);
+            Integer dist = army.lazyGetDistance(p.me, dislocation);
             return dist != null ? dist : 1000;
         }
     }

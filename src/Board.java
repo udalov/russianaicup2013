@@ -1,4 +1,3 @@
-import model.Bonus;
 import model.CellType;
 import model.Direction;
 import model.World;
@@ -6,12 +5,6 @@ import model.World;
 import java.util.*;
 
 public class Board {
-    public enum Cell {
-        FREE,
-        BONUS,
-        OBSTACLE
-    }
-
     public abstract static class Controller {
         public abstract boolean isEndingPoint(@NotNull Point point);
 
@@ -23,7 +16,7 @@ public class Board {
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
-    private final Cell[] cells;
+    private final PointSet obstacles;
 
     public Board(@NotNull World world) {
         CellType[][] cells = world.getCells();
@@ -32,31 +25,26 @@ public class Board {
         assert n == WIDTH : "Wrong width: " + n + " != " + WIDTH;
         assert m == HEIGHT : "Wrong height: " + m + " != " + HEIGHT;
 
-        this.cells = new Cell[n * m];
+        obstacles = new PointSet();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                this.cells[i * m + j] = cells[i][j] == CellType.FREE ? Cell.FREE : Cell.OBSTACLE;
+                if (cells[i][j] != CellType.FREE) {
+                    //noinspection ConstantConditions
+                    obstacles.add(Point.create(i, j));
+                }
             }
         }
-        for (Bonus bonus : world.getBonuses()) {
-            this.cells[bonus.getX() * m + bonus.getY()] = Cell.BONUS;
-        }
-    }
-
-    @NotNull
-    public Cell get(@NotNull Point point) {
-        return cells[point.index()];
     }
 
     public boolean isPassable(@NotNull Point point) {
-        return get(point) != Cell.OBSTACLE;
+        return !obstacles.contains(point);
     }
 
     @Nullable
     public List<Point> findPath(@NotNull Point from, @NotNull final Point to) {
         final Map<Point, Point> prev = new PointMap<>();
 
-        launchDijkstra(from, new Controller() {
+        bfs(from, new Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return point.equals(to);
@@ -85,7 +73,7 @@ public class Board {
     @SuppressWarnings("unchecked")
     public Map<Point, Integer> findDistances(@NotNull Point from) {
         final Map[] result = new Map[1];
-        launchDijkstra(from, new Controller() {
+        bfs(from, new Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return false;
@@ -100,19 +88,18 @@ public class Board {
     }
 
     @Nullable
-    public Point launchDijkstra(@NotNull Point from, @NotNull Controller controller) {
-        final Map<Point, Integer> wd = new PointMap<>();
+    public Point bfs(@NotNull Point from, @NotNull Controller controller) {
         final Map<Point, Integer> dist = new PointMap<>();
         controller.saveDistanceMap(dist);
 
+        // TODO: drop
         SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {
             @Override
             public int compare(@NotNull Point o1, @NotNull Point o2) {
-                int d = wd.get(o1) - wd.get(o2);
+                int d = dist.get(o1) - dist.get(o2);
                 return d != 0 ? d : o1.compareTo(o2);
             }
         });
-        wd.put(from, 0);
         dist.put(from, 0);
         set.add(from);
 
@@ -127,11 +114,10 @@ public class Board {
                 Point next = point.go(direction);
                 if (next == null || !isPassable(next)) continue;
 
-                Integer curDist = wd.get(next);
-                int newDist = wd.get(point) + cellWeight(get(next));
+                Integer curDist = dist.get(next);
+                int newDist = dist.get(point) + 1;
                 if (curDist == null || curDist > newDist) {
-                    wd.put(next, newDist);
-                    dist.put(next, dist.get(point) + 1);
+                    dist.put(next, newDist);
                     controller.savePrevious(next, point);
                     set.add(next);
                 }
@@ -139,13 +125,5 @@ public class Board {
         }
 
         return null;
-    }
-
-    private int cellWeight(@NotNull Cell cell) {
-        switch (cell) {
-            case FREE: return 5;
-            case BONUS: return 1;
-            default: throw new IllegalStateException("You shall not pass: " + cell);
-        }
     }
 }
