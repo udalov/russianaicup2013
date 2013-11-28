@@ -56,17 +56,11 @@ public class Board {
     }
 
     @Nullable
-    public Direction findBestMove(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
-        List<Point> path = findPath(from, to, moveThroughPeople);
-        return path == null || path.isEmpty() ? null : from.direction(path.get(0));
-    }
-
-    @Nullable
-    public List<Point> findPath(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
+    public List<Point> findPath(@NotNull Point from, @NotNull final Point to) {
         // TODO: optimize Map<Point, *>
         final Map<Point, Point> prev = new HashMap<>();
 
-        launchDijkstra(from, moveThroughPeople, new Controller() {
+        launchDijkstra(from, new Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return point.equals(to);
@@ -93,9 +87,9 @@ public class Board {
 
     @NotNull
     @SuppressWarnings("unchecked")
-    public Map<Point, Integer> findDistances(@NotNull Point from, boolean moveThroughPeople) {
+    public Map<Point, Integer> findDistances(@NotNull Point from) {
         final Map[] result = new Map[1];
-        launchDijkstra(from, moveThroughPeople, new Controller() {
+        launchDijkstra(from, new Controller() {
             @Override
             public boolean isEndingPoint(@NotNull Point point) {
                 return false;
@@ -110,24 +104,7 @@ public class Board {
     }
 
     @Nullable
-    public Integer findDistanceTo(@NotNull Point from, @NotNull final Point to, boolean moveThroughPeople) {
-        final Map[] result = new Map[1];
-        launchDijkstra(from, moveThroughPeople, new Controller() {
-            @Override
-            public boolean isEndingPoint(@NotNull Point point) {
-                return point.equals(to);
-            }
-
-            @Override
-            public void saveDistanceMap(@NotNull Map<Point, Integer> dist) {
-                result[0] = dist;
-            }
-        });
-        return (Integer) result[0].get(to);
-    }
-
-    @Nullable
-    public Point launchDijkstra(@NotNull Point from, boolean moveThroughPeople, @NotNull Controller controller) {
+    public Point launchDijkstra(@NotNull Point from, @NotNull Controller controller) {
         final Map<Point, Integer> wd = new HashMap<>();
         final Map<Point, Integer> dist = new HashMap<>();
         controller.saveDistanceMap(dist);
@@ -157,7 +134,7 @@ public class Board {
                 Cell cell = get(next);
                 if (cell != Cell.OBSTACLE) {
                     Integer curDist = wd.get(next);
-                    int newDist = wd.get(point) + cellWeight(cell, moveThroughPeople);
+                    int newDist = wd.get(point) + cellWeight(cell);
                     if (curDist == null || curDist > newDist) {
                         wd.put(next, newDist);
                         dist.put(next, dist.get(point) + 1);
@@ -171,11 +148,11 @@ public class Board {
         return null;
     }
 
-    private int cellWeight(@NotNull Cell cell, boolean moveThroughPeople) {
+    private int cellWeight(@NotNull Cell cell) {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return moveThroughPeople ? 5 : 40;
+            case TROOPER: return 5;
             default: throw new IllegalStateException("Unexpected cell: " + cell);
         }
     }

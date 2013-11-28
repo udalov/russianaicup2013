@@ -3,8 +3,6 @@ import model.*;
 import java.util.*;
 
 import static model.BonusType.*;
-import static model.Direction.CURRENT_POINT;
-import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
@@ -16,12 +14,10 @@ public class WarriorTurn {
     private final Game game;
 
     private final Point me;
-    private final TrooperStance stance;
     private final List<Bonus> worldBonuses;
     private final Board board;
     private final List<Trooper> enemies;
     private final List<Trooper> allies;
-    private final List<Trooper> alliesWithoutMe;
     private final Map<TrooperType, Trooper> alliesMap;
     // Index of me in the 'allies' list
     private final int myIndex;
@@ -33,20 +29,16 @@ public class WarriorTurn {
         this.game = game;
 
         me = Point.create(self);
-        stance = self.getStance();
         worldBonuses = Arrays.asList(world.getBonuses());
         board = new Board(world);
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
-        alliesWithoutMe = new ArrayList<>(4);
         alliesMap = new EnumMap<>(TrooperType.class);
         int myIndex = -1;
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
                 if (trooper.getType() == self.getType()) {
                     myIndex = allies.size();
-                } else {
-                    alliesWithoutMe.add(trooper);
                 }
                 allies.add(trooper);
                 alliesMap.put(trooper.getType(), trooper);
@@ -92,27 +84,7 @@ public class WarriorTurn {
         Iterator<Go> it = best.iterator();
         if (!it.hasNext()) return Go.endTurn();
         army.saveTurnLocalData(world.getMoveIndex(), self.getType(), new TurnLocalData(it, ids(enemies)));
-        if(1==1) return it.next();
-
-
-        Go messageBased = readMessages();
-        if (messageBased != null) return eatFieldRationOr(messageBased);
-
-        Direction useMedikit = useMedikit();
-        if (useMedikit != null) return eatFieldRationOr(Go.useMedikit(useMedikit));
-
-        Direction heal = heal();
-        if (heal != null) return eatFieldRationOr(Go.heal(heal));
-
-        Direction runToWounded = runToWounded();
-        if (runToWounded != null) return eatFieldRationOr(Go.move(runToWounded));
-
-        if (can(8) && stance != STANDING && howManyEnemiesCanShotMeThere(me, STANDING) == 0) return Go.raiseStance();
-
-        Direction move = move();
-        if (move != null) return Go.move(move);
-
-        return Go.endTurn();
+        return it.next();
     }
 
     @NotNull
@@ -345,6 +317,7 @@ public class WarriorTurn {
             int ap = actionPoints - getMoveCost(stance);
             if (ap < 0) return null;
             Point point = me.go(direction);
+            // TODO: don't use the field 'board' in Position, because it represents the board in the beginning of the small iteration
             if (point == null || !board.isPassable(point)) return null;
             Bonus bonus = maybeCollectBonus(point);
             int newBonuses = bonus == null ? bonuses : with(bonus.getType());
@@ -573,7 +546,7 @@ public class WarriorTurn {
 
         public FollowerScorer(@NotNull TrooperType leaderType) {
             this.leader = Point.create(alliesMap.get(leaderType));
-            List<Point> leaderPath = board.findPath(leader, dislocation, true);
+            List<Point> leaderPath = board.findPath(leader, dislocation);
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
 
@@ -670,217 +643,6 @@ public class WarriorTurn {
         return result;
     }
 
-    @Nullable
-    private Go readMessages() {
-        if (!can(getMoveCost())) return null;
-
-        for (Message message : army.getMessages(self)) {
-            if (message.getKind() == Message.Kind.OUT_OF_THE_WAY) {
-                Point whereFrom = message.getData();
-                Point best = null;
-                for (Direction direction : Util.DIRECTIONS) {
-                    Point cur = me.go(direction);
-                    if (cur != null && board.isPassable(cur)) {
-                        if (best == null || best.manhattanDistance(whereFrom) < cur.manhattanDistance(whereFrom)) {
-                            best = cur;
-                        }
-                    }
-                }
-                if (best != null) {
-                    return Go.move(me.direction(best));
-                }
-            } else {
-                throw new UnsupportedOperationException("What's that supposed to mean: " + message);
-            }
-        }
-
-        return null;
-    }
-
-    private int howManyEnemiesCanShotMeThere(@NotNull Point point, @NotNull TrooperStance stance) {
-        int result = 0;
-        for (Trooper enemy : enemies) {
-            if (world.isVisible(enemy.getShootingRange(), enemy.getX(), enemy.getY(), enemy.getStance(), point.x, point.y, stance)) {
-                result++;
-            }
-        }
-        return result;
-    }
-
-    @Nullable
-    private Direction useMedikit() {
-        if (!self.isHoldingMedikit()) return null;
-        if (!can(game.getMedikitUseCost())) return null;
-
-        Trooper ally = Util.findMax(allies, new Util.Evaluator<Trooper>() {
-            @Nullable
-            @Override
-            public Integer evaluate(@NotNull Trooper ally) {
-                Point point = Point.create(ally);
-                int heal;
-                if (point.isNeighbor(me)) {
-                    heal = game.getMedikitBonusHitpoints();
-                } else if (point.equals(me)) {
-                    heal = game.getMedikitHealSelfBonusHitpoints();
-                } else return null;
-                int result = Math.min(ally.getMaximalHitpoints() - ally.getHitpoints(), heal);
-                return result < 30 ? null : result;
-            }
-        });
-
-        return ally != null ? me.direction(Point.create(ally)) : null;
-    }
-
-    @Nullable
-    private Direction heal() {
-        if (self.getType() != FIELD_MEDIC) return null;
-        if (!can(game.getFieldMedicHealCost())) return null;
-
-        Point wounded = findNearestWounded(self.getMaximalHitpoints() * 9 / 10, army.allowMedicSelfHealing());
-        if (wounded == null || me.manhattanDistance(wounded) > 1) return null;
-
-        if (wounded.equals(me)) {
-            army.medicSelfHealed();
-            return CURRENT_POINT;
-        }
-
-        return me.direction(wounded);
-    }
-
-    @Nullable
-    private Direction runToWounded() {
-        if (self.getType() != FIELD_MEDIC) return null;
-        if (!can(getMoveCost())) return null;
-
-        Point wounded = findNearestWounded(self.getMaximalHitpoints() * 2 / 3, false);
-        if (wounded == null) return null;
-
-        return board.findBestMove(me, wounded, false);
-    }
-
-    @Nullable
-    private Point findNearestWounded(int maximalHitpoints, boolean includeSelf) {
-        Point worst = null;
-        int minDistance = Integer.MAX_VALUE;
-        for (Trooper ally : allies) {
-            if (ally.getHitpoints() >= maximalHitpoints) continue;
-            if ((ally.getType() == self.getType()) && !includeSelf) continue;
-
-            Point wounded = Point.create(ally);
-            Integer dist = board.findDistanceTo(me, wounded, false);
-            if (dist != null && dist < minDistance) {
-                minDistance = dist;
-                worst = wounded;
-            }
-        }
-
-        return worst;
-    }
-
-    @NotNull
-    private Go eatFieldRationOr(@NotNull Go action) {
-        return eatFieldRation() ? Go.eatFieldRation() : action;
-    }
-
-    private boolean eatFieldRation() {
-        return self.isHoldingFieldRation() && can(game.getFieldRationEatCost())
-                && self.getActionPoints() <= self.getInitialActionPoints() - game.getFieldRationBonusActionPoints() + game.getFieldRationEatCost();
-    }
-
-    @Nullable
-    private Direction move() {
-        if (!can(getMoveCost())) return null;
-
-        Trooper leader = findLeader();
-
-        if (self.getType() == leader.getType()) {
-            List<Direction> possibleMoves = new ArrayList<>(2);
-
-            Pair<Point, Integer> bonusDist = findClosestRelevantBonus();
-            if (bonusDist != null && bonusDist.second <= 4) {
-                Direction move = board.findBestMove(me, bonusDist.first, false);
-                if (move != null) possibleMoves.add(move);
-            }
-
-            Direction move = board.findBestMove(me, army.getOrUpdateDislocation(allies), false);
-            if (move != null) possibleMoves.add(move);
-
-            for (Direction direction : possibleMoves) {
-                //noinspection ConstantConditions
-                if (farAwayFromAllAllies(me.go(direction))) continue;
-                return clearPath(direction);
-            }
-
-            return null;
-        }
-
-        Pair<Point, Integer> bonusDist = findClosestRelevantBonus();
-        if (bonusDist != null && bonusDist.second <= 10) {
-            Direction move = board.findBestMove(me, bonusDist.first, false);
-            if (move != null) return move;
-        }
-
-        Point target = Point.create(leader);
-        if (me.manhattanDistance(target) > 1) {
-            return board.findBestMove(me, target, false);
-        }
-
-        return null;
-    }
-
-    private boolean farAwayFromAllAllies(@NotNull Point point) {
-        if (alliesWithoutMe.isEmpty()) return false;
-        for (Trooper ally : alliesWithoutMe) {
-            Integer d = board.findDistanceTo(Point.create(ally), (point), true);
-            if (d == null || d <= 4) return false;
-        }
-        return true;
-    }
-
-    @NotNull
-    private Direction clearPath(@NotNull Direction direction) {
-        Point destination = me.go(direction);
-        for (Trooper ally : alliesWithoutMe) {
-            //noinspection ConstantConditions
-            if (destination.isEqualTo(ally)) {
-                army.sendMessage(ally, new Message(Message.Kind.OUT_OF_THE_WAY, me), 4);
-            }
-        }
-        return direction;
-    }
-
-    @Nullable
-    private Pair<Point, Integer> findClosestRelevantBonus() {
-        Point result = null;
-        int mind = Integer.MAX_VALUE;
-
-        Map<Point, Integer> dist = board.findDistances(me, true);
-        Trooper leader = findLeader();
-
-        for (Bonus bonus : world.getBonuses()) {
-            if (isHolding(bonus.getType())) continue;
-            Point bonusPoint = Point.create(bonus);
-            Integer distToBonus = dist.get(bonusPoint);
-            if (distToBonus == null) continue;
-
-            int totalDistance = distToBonus;
-            if (totalDistance >= mind) continue;
-
-            if (leader.getType() != self.getType()) {
-                Integer backToLeader = board.findDistanceTo(bonusPoint, Point.create(leader), true);
-                if (backToLeader == null) continue;
-                totalDistance += backToLeader;
-            }
-
-            if (totalDistance < mind) {
-                mind = totalDistance;
-                result = bonusPoint;
-            }
-        }
-
-        return result == null ? null : new Pair<>(result, mind);
-    }
-
     @NotNull
     private Trooper findLeader() {
         for (TrooperType type : Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER)) {
@@ -889,14 +651,6 @@ public class WarriorTurn {
         }
 
         throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
-    }
-
-    private boolean can(int cost) {
-        return self.getActionPoints() >= cost;
-    }
-
-    private int getMoveCost() {
-        return getMoveCost(stance);
     }
 
     private int getMoveCost(@NotNull TrooperStance stance) {

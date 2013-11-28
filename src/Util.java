@@ -1,7 +1,10 @@
 import model.Direction;
 import model.TrooperStance;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static model.Direction.*;
 import static model.TrooperStance.*;
@@ -32,47 +35,10 @@ public class Util {
         }
     }
 
-    @Nullable
-    public static <T> T findMin(@NotNull Collection<? extends T> elements, @NotNull Evaluator<? super T> evaluator) {
-        if (elements.isEmpty()) return null;
-        if (elements.size() == 1) return elements.iterator().next();
-
-        T best = null;
-        int bestValue = Integer.MAX_VALUE;
-        for (T element : elements) {
-            Integer cur = evaluator.evaluate(element);
-            if (cur != null && (best == null || cur < bestValue)) {
-                best = element;
-                bestValue = cur;
-            }
-        }
-
-        return best;
-    }
-
-    @Nullable
-    public static <T> T findMax(@NotNull Collection<? extends T> elements, @NotNull final Evaluator<? super T> evaluator) {
-        return findMin(elements, new Evaluator<T>() {
-            @Nullable
-            @Override
-            public Integer evaluate(@NotNull T t) {
-                Integer result = evaluator.evaluate(t);
-                if (result == null) return null;
-                if (result == Integer.MIN_VALUE) return Integer.MAX_VALUE;
-                return -result;
-            }
-        });
-    }
-
     @NotNull
     public static <T> List<T> reverse(@NotNull List<T> list) {
         ArrayList<T> result = new ArrayList<>(list);
         Collections.reverse(result);
         return result;
-    }
-
-    public interface Evaluator<Element> {
-        @Nullable
-        Integer evaluate(@NotNull Element element);
     }
 }

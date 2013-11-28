@@ -13,7 +13,6 @@ public class Army {
     private final Map<Point, Map<Point, Integer>> distances = new HashMap<>(802);
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
-    private final Map<TrooperType, Inbox> inboxes = new HashMap<>();
 
     private int medicSelfHealed;
 
@@ -33,10 +32,6 @@ public class Army {
         dislocations.add(findFreePointNearby(start.verticalOpposite()));
 
         curDisIndex = 0;
-
-        for (Trooper trooper : world.getTroopers()) {
-            inboxes.put(trooper.getType(), new Inbox());
-        }
     }
 
     @NotNull
@@ -62,7 +57,7 @@ public class Army {
     public Integer getDistanceOnEmptyBoard(@NotNull Point from, @NotNull Point to) {
         Map<Point, Integer> map = distances.get(from);
         if (map == null) {
-            map = firstBoard.findDistances(from, true);
+            map = firstBoard.findDistances(from);
             distances.put(from, map);
         }
         return map.get(to);
@@ -85,15 +80,6 @@ public class Army {
     @NotNull
     public List<TrooperType> getOrder() {
         return order;
-    }
-
-    public void sendMessage(@NotNull Trooper ally, @NotNull Message message, int timeToLive) {
-        inboxes.get(ally.getType()).add(message, timeToLive);
-    }
-
-    @NotNull
-    public Inbox getMessages(@NotNull Trooper ally) {
-        return inboxes.get(ally.getType());
     }
 
     public boolean allowMedicSelfHealing() {
