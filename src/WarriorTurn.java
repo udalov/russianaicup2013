@@ -531,6 +531,11 @@ public class WarriorTurn {
 
             result -= 0.01 * distanceToAllies(p);
 
+            // TODO: also for others
+            if (self.getType() == SNIPER) {
+                result -= p.stance.ordinal();
+            }
+
             return result;
         }
 
