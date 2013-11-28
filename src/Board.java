@@ -1,13 +1,14 @@
-import model.*;
+import model.Bonus;
+import model.CellType;
+import model.Direction;
+import model.World;
 
 import java.util.*;
 
 public class Board {
-    // Not very accurate: in case when a cell contains both a trooper and a bonus, it's TROOPER
     public enum Cell {
         FREE,
         BONUS,
-        TROOPER,
         OBSTACLE
     }
 
@@ -40,9 +41,6 @@ public class Board {
         for (Bonus bonus : world.getBonuses()) {
             this.cells[bonus.getX() * m + bonus.getY()] = Cell.BONUS;
         }
-        for (Trooper trooper : world.getTroopers()) {
-            this.cells[trooper.getX() * m + trooper.getY()] = Cell.TROOPER;
-        }
     }
 
     @NotNull
@@ -51,8 +49,7 @@ public class Board {
     }
 
     public boolean isPassable(@NotNull Point point) {
-        Cell cell = get(point);
-        return cell == Cell.FREE || cell == Cell.BONUS;
+        return get(point) != Cell.OBSTACLE;
     }
 
     @Nullable
@@ -129,18 +126,15 @@ public class Board {
 
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = point.go(direction);
-                if (next == null) continue;
+                if (next == null || !isPassable(next)) continue;
 
-                Cell cell = get(next);
-                if (cell != Cell.OBSTACLE) {
-                    Integer curDist = wd.get(next);
-                    int newDist = wd.get(point) + cellWeight(cell);
-                    if (curDist == null || curDist > newDist) {
-                        wd.put(next, newDist);
-                        dist.put(next, dist.get(point) + 1);
-                        controller.savePrevious(next, point);
-                        set.add(next);
-                    }
+                Integer curDist = wd.get(next);
+                int newDist = wd.get(point) + cellWeight(get(next));
+                if (curDist == null || curDist > newDist) {
+                    wd.put(next, newDist);
+                    dist.put(next, dist.get(point) + 1);
+                    controller.savePrevious(next, point);
+                    set.add(next);
                 }
             }
         }
@@ -152,8 +146,7 @@ public class Board {
         switch (cell) {
             case FREE: return 5;
             case BONUS: return 1;
-            case TROOPER: return 5;
-            default: throw new IllegalStateException("Unexpected cell: " + cell);
+            default: throw new IllegalStateException("You shall not pass: " + cell);
         }
     }
 }

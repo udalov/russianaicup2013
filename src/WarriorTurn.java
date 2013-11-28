@@ -263,6 +263,17 @@ public class WarriorTurn {
             return bonuses | (1 << bonus.ordinal());
         }
 
+        private boolean isPassablePoint(@NotNull Point point) {
+            if (!board.isPassable(point)) return false;
+            for (Pair<Integer, Point> pair : allies()) {
+                if (point.equals(pair.second)) return false;
+            }
+            for (Trooper enemy : enemies) {
+                if (point.isEqualTo(enemy)) return false;
+            }
+            return true;
+        }
+
         private double effectiveShootingRange() {
             double result = self.getShootingRange();
             if (self.getType() == SNIPER) {
@@ -364,8 +375,7 @@ public class WarriorTurn {
             int ap = actionPoints - getMoveCost(stance);
             if (ap < 0) return null;
             Point point = me.go(direction);
-            // TODO: don't use the field 'board' in Position, because it represents the board in the beginning of the small iteration
-            if (point == null || !board.isPassable(point)) return null;
+            if (point == null || !isPassablePoint(point)) return null;
             Bonus bonus = maybeCollectBonus(point);
             int newBonuses = bonus == null ? bonuses : with(bonus.getType());
             int[] newCollected = bonus == null ? collected : IntArrays.add(collected, (int) bonus.getId());
@@ -636,7 +646,7 @@ public class WarriorTurn {
                 Point point = queue.poll();
                 for (Direction direction : Util.DIRECTIONS) {
                     Point q = point.go(direction);
-                    if (q != null && board.get(q) != Board.Cell.OBSTACLE && !set.contains(q)) {
+                    if (q != null && board.isPassable(q) && !set.contains(q)) {
                         set.add(q);
                         queue.add(q);
                         if (++result == 5) return result;
