@@ -9,7 +9,7 @@ fun main(args: Array<String>) = time {
     val seed = Math.abs(Random().nextLong())
     println(seed)
 
-    runGame("-vis" in args.toSet(), MAP01, seed, "MSSS")
+    runGame("-vis" in args.toSet(), MAP01, seed, "MSSS", "local")
 
     println(File(LOG_FILE).readText())
 }

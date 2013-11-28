@@ -8,7 +8,7 @@ import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
-    private static final boolean LOCAL = Arrays.toString(Thread.currentThread().getStackTrace()).contains("runMyStrategy");
+    private static final boolean LOCAL = Thread.currentThread().getName().equals("local");
 
     private final Army army;
     private final Trooper self;

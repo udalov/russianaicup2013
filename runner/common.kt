@@ -66,7 +66,7 @@ fun runMyStrategy(port: Long) {
     }
 }
 
-fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String) {
+fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String, threadName: String) {
     fun parse(c: Char) = when (c) {
         'M' -> MyStrategy
         'E' -> EmptyPlayer
@@ -85,13 +85,17 @@ fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String) {
 
         val p = port++
         if (p == 31001.toLong()) {
-            threads add Thread { runMyStrategy(p) }
+            threads add Thread {
+                Thread.currentThread().setName(threadName)
+                runMyStrategy(p)
+            }
             continue
         }
 
         val file = File("lib/bootstrap-strategy.jar")
         assert(file.exists(), "Compile a strategy to test against to: $file")
         threads add Thread {
+            Thread.currentThread().setName(threadName)
             while (true) {
                 val process = Runtime.getRuntime().exec("java -cp $file Runner 127.0.0.1 $p 0000000000000000")
                 val err = process.getErrorStream()?.reader()

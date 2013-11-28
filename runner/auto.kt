@@ -18,7 +18,7 @@ fun main(args: Array<String>) {
     val map = WorldMap.valueOf(args[1])
     val lineup = args[2]
 
-    runGame(false, map, seed, lineup)
+    runGame(false, map, seed, lineup, "auto")
 
     val index = lineup.indexOf('M')
     assert(index >= 0, "M not found in $lineup")
