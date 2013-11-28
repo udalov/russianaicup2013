@@ -480,8 +480,7 @@ public class WarriorTurn {
         public final double evaluate(@NotNull Position p) {
             double result = 0;
 
-            int allies = hpOfAlliesUnderThreshold(p.allyHp);
-            result += 2 * allies + 0.2 * (IntArrays.sum(p.allyHp) - allies);
+            result += weightedHpOfAllies(p.allyHp);
 
             // TODO: or if have a medikit
             if (self.getType() == FIELD_MEDIC) {
@@ -493,10 +492,10 @@ public class WarriorTurn {
             return result;
         }
 
-        private int hpOfAlliesUnderThreshold(@NotNull int[] allyHp) {
-            int result = 0;
+        private double weightedHpOfAllies(@NotNull int[] allyHp) {
+            double result = 0;
             for (int hp : allyHp) {
-                if (hp < 85) result += hp;
+                result += 2 * Math.min(hp, 85) + 0.2 * Math.max(hp - 85, 0);
             }
             return result;
         }
