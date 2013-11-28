@@ -558,8 +558,8 @@ public class WarriorTurn {
 
         public FollowerScorer(@NotNull TrooperType leaderType) {
             this.leader = Point.create(alliesMap.get(leaderType));
-            this.leaderPath = board.findPath(leader, dislocation, true);
-            assert leaderPath != null : "Leader should be able to get from " + leader + " to " + dislocation;
+            List<Point> leaderPath = board.findPath(leader, dislocation, true);
+            this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
 
         @Override
