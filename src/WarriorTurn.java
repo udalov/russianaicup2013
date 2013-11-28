@@ -58,7 +58,6 @@ public class WarriorTurn {
         assert myIndex >= 0 : "Where am I? " + allies;
         this.myIndex = myIndex;
 
-
         this.enemies = enemies == null ? Collections.<Trooper>emptyList() : enemies;
     }
 
@@ -66,8 +65,19 @@ public class WarriorTurn {
     public Go makeTurn() {
         if (!enemies.isEmpty()) {
             List<Go> best = best(new CombatSituationScorer());
-            debug(self + " -> " + best);
+            debug("combat: " + self + " -> " + best);
             return best.get(0);
+        } else {
+            TrooperType leader = findLeader().getType();
+            if (leader == self.getType()) {
+                List<Go> best = best(new LeaderScorer());
+                debug("leader: " + self + " -> " + best);
+                return best.get(0);
+            } else if (1==1) {
+                List<Go> best = best(new FollowerScorer(leader));
+                debug("follower: " + self + " -> " + best);
+                return best.get(0);
+            }
         }
 
         Go messageBased = readMessages();
@@ -93,6 +103,7 @@ public class WarriorTurn {
     @NotNull
     private List<Go> best(@NotNull Scorer scorer) {
         Position start = startingPosition();
+        // TODO: ArrayDeque?
         final Queue<Position> queue = new LinkedList<>();
         queue.add(start);
         final Map<Position, Pair<Go, Position>> prev = new HashMap<>();
@@ -421,41 +432,19 @@ public class WarriorTurn {
     }
 
     private abstract class Scorer {
-        public abstract double evaluate(@NotNull Position p);
-    }
-
-    private class CombatSituationScorer extends Scorer {
-        public double evaluate(@NotNull Position p) {
+        public final double evaluate(@NotNull Position p) {
             double result = 0;
-
-            result -= IntArrays.sum(p.enemyHp);
-            result += 30 * IntArrays.numberOfZeros(p.enemyHp);
 
             int allies = hpOfAlliesUnderThreshold(p.allyHp);
             result += 2 * allies + 0.2 * (IntArrays.sum(p.allyHp) - allies);
-
-            result -= 0.5 * expectedDamageOnNextTurn(p);
-
-            result += 0.1 * Integer.bitCount(p.bonuses);
 
             // TODO: or if have a medikit
             if (self.getType() == FIELD_MEDIC) {
                 result -= 0.5 * distanceToWoundedAllies(p);
             }
 
-            return result;
-        }
+            result += situation(p);
 
-        private double distanceToWoundedAllies(@NotNull Position p) {
-            double result = 0;
-            for (int i = 0, size = allies.size(); i < size; i++) {
-                if (i == myIndex) continue;
-                Trooper ally = allies.get(i);
-                int hp = p.allyHp[i];
-                if (hp < 85) {
-                    result += Point.create(ally).manhattanDistance(p.me) * (ally.getMaximalHitpoints() - hp);
-                }
-            }
             return result;
         }
 
@@ -467,7 +456,53 @@ public class WarriorTurn {
             return result;
         }
 
-        public double expectedDamageOnNextTurn(@NotNull Position p) {
+        private double distanceToWoundedAllies(@NotNull Position p) {
+            double result = 0;
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                if (i == myIndex) continue;
+                Trooper ally = allies.get(i);
+                int hp = p.allyHp[i];
+                if (hp < 85) {
+                    // TODO: shortest path distance?
+                    result += Point.create(ally).manhattanDistance(p.me) * (ally.getMaximalHitpoints() - hp);
+                }
+            }
+            return result;
+        }
+
+        protected abstract double situation(@NotNull Position p);
+    }
+
+    private class CombatSituationScorer extends Scorer {
+        @Override
+        protected double situation(@NotNull Position p) {
+            double result = 0;
+
+            result -= IntArrays.sum(p.enemyHp);
+            result += 30 * IntArrays.numberOfZeros(p.enemyHp);
+
+            result -= 0.5 * expectedDamageOnNextTurn(p);
+
+            result += 0.1 * Integer.bitCount(p.bonuses);
+
+            result -= 0.01 * distanceToAllies(p);
+
+            return result;
+        }
+
+        private double distanceToAllies(@NotNull Position p) {
+            double result = 0;
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                if (i == myIndex) continue;
+                Integer dist = army.getDistanceOnEmptyBoard(Point.create(allies.get(i)), p.me);
+                if (dist != null) result += dist;
+            }
+            return result;
+        }
+
+        private double expectedDamageOnNextTurn(@NotNull Position p) {
+            // TODO: take into account grenades/medikits that enemies have
+
             // Assume that all visible enemies also see us, but this is not always true
             // TODO: count number of other teams having at least one trooper who sees us
 
@@ -511,6 +546,103 @@ public class WarriorTurn {
             }
 
             return result;
+        }
+    }
+
+    private class FollowerScorer extends Scorer {
+        private final Point leader;
+        private final Point dislocation = army.getOrUpdateDislocation(allies);
+        private final Set<Point> set = new PointSet();
+        private final ArrayDeque<Point> queue = new ArrayDeque<>(16);
+        private final List<Point> leaderPath;
+
+        public FollowerScorer(@NotNull TrooperType leaderType) {
+            this.leader = Point.create(alliesMap.get(leaderType));
+            this.leaderPath = board.findPath(leader, dislocation, true);
+            assert leaderPath != null : "Leader should be able to get from " + leader + " to " + dislocation;
+        }
+
+        @Override
+        protected double situation(@NotNull Position p) {
+            double result = 0;
+
+            // TODO
+            result += 0.1 * Integer.bitCount(p.bonuses);
+
+            Integer dist = army.getDistanceOnEmptyBoard(p.me, leader);
+            if (dist != null) result -= dist;
+
+            int freeCells = leaderDegreeOfFreedom(p);
+            result -= 100 * Math.max(5 - freeCells, 0);
+
+            if (isBlockingLeader(p)) result -= 10;
+
+            return result;
+        }
+
+        private boolean isBlockingLeader(@NotNull Position p) {
+            for (Point point : leaderPath) {
+                if (p.me.equals(point)) return true;
+            }
+            return false;
+        }
+
+        private int leaderDegreeOfFreedom(@NotNull Position p) {
+            set.clear();
+            queue.clear();
+
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                set.add(i == myIndex ? p.me : Point.create(allies.get(i)));
+            }
+            queue.add(leader);
+
+            int result = 1;
+            while (!queue.isEmpty()) {
+                Point point = queue.poll();
+                for (Direction direction : Util.DIRECTIONS) {
+                    Point q = point.go(direction);
+                    if (q != null && board.get(q) != Board.Cell.OBSTACLE && !set.contains(q)) {
+                        set.add(q);
+                        queue.add(q);
+                        if (++result == 5) return result;
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
+
+    private class LeaderScorer extends Scorer {
+        private final Point dislocation = army.getOrUpdateDislocation(allies);
+
+        @Override
+        protected double situation(@NotNull Position p) {
+            double result = 0;
+
+            // TODO
+            result += 0.1 * Integer.bitCount(p.bonuses);
+
+            result -= distanceToDislocation(p);
+
+            result -= 100 * farAwayTeammates(p);
+
+            return result;
+        }
+
+        private int farAwayTeammates(@NotNull Position p) {
+            int result = 0;
+            for (int i = 0, size = allies.size(); i < size; i++) {
+                if (i == myIndex) continue;
+                Integer distance = army.getDistanceOnEmptyBoard(Point.create(allies.get(i)), p.me);
+                if (distance != null && distance > 5) result++;
+            }
+            return result;
+        }
+
+        private int distanceToDislocation(@NotNull Position p) {
+            Integer dist = army.getDistanceOnEmptyBoard(p.me, dislocation);
+            return dist != null ? dist : 1000;
         }
     }
 

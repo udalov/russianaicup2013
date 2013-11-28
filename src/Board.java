@@ -57,6 +57,12 @@ public class Board {
 
     @Nullable
     public Direction findBestMove(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
+        List<Point> path = findPath(from, to, moveThroughPeople);
+        return path == null || path.isEmpty() ? null : from.direction(path.get(0));
+    }
+
+    @Nullable
+    public List<Point> findPath(@NotNull Point from, @NotNull final Point to, final boolean moveThroughPeople) {
         // TODO: optimize Map<Point, *>
         final Map<Point, Point> prev = new HashMap<>();
 
@@ -72,15 +78,15 @@ public class Board {
             }
         });
 
+        List<Point> result = new ArrayList<>();
+        result.add(to);
+
         Point cur = to;
         while (true) {
             Point back = prev.get(cur);
             if (back == null) return null;
-            if (back == from) {
-                Direction result = from.direction(cur);
-                assert result != Direction.CURRENT_POINT : "To travel from " + from + " to " + to + " do nothing first, they said";
-                return result;
-            }
+            if (back.equals(from)) return Util.reverse(result);
+            result.add(back);
             cur = back;
         }
     }

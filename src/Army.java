@@ -9,23 +9,26 @@ public class Army {
     private final List<Point> dislocations = new ArrayList<>();
     private int curDisIndex;
 
+    private final Board firstBoard;
+    private final Map<Point, Map<Point, Integer>> distances = new HashMap<>(802);
+
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
     private final Map<TrooperType, Inbox> inboxes = new HashMap<>();
 
     private int medicSelfHealed;
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
-        Board board = new Board(world);
+        firstBoard = new Board(world);
         Point start = Point.create(firstTrooper);
         Point center = Point.center();
-        dislocations.add(findFreePointNearby(board, start));
-        dislocations.add(findFreePointNearby(board, start.halfwayTo(center)));
-        dislocations.add(findFreePointNearby(board, center));
-        dislocations.add(findFreePointNearby(board, center.halfwayTo(start.opposite())));
-        dislocations.add(findFreePointNearby(board, start.opposite()));
-        dislocations.add(findFreePointNearby(board, start.horizontalOpposite()));
-        dislocations.add(findFreePointNearby(board, center));
-        dislocations.add(findFreePointNearby(board, start.verticalOpposite()));
+        dislocations.add(findFreePointNearby(start));
+        dislocations.add(findFreePointNearby(start.halfwayTo(center)));
+        dislocations.add(findFreePointNearby(center));
+        dislocations.add(findFreePointNearby(center.halfwayTo(start.opposite())));
+        dislocations.add(findFreePointNearby(start.opposite()));
+        dislocations.add(findFreePointNearby(start.horizontalOpposite()));
+        dislocations.add(findFreePointNearby(center));
+        dislocations.add(findFreePointNearby(start.verticalOpposite()));
 
         curDisIndex = 0;
 
@@ -35,13 +38,13 @@ public class Army {
     }
 
     @NotNull
-    private Point findFreePointNearby(@NotNull Board board, @NotNull Point p) {
-        Set<Point> visited = new HashSet<>();
+    private Point findFreePointNearby(@NotNull Point p) {
+        Set<Point> visited = new PointSet();
         Queue<Point> queue = new LinkedList<>();
         queue.offer(p);
         while (!queue.isEmpty()) {
             Point cur = queue.poll();
-            if (board.get(cur) != Board.Cell.OBSTACLE) return cur;
+            if (firstBoard.get(cur) != Board.Cell.OBSTACLE) return cur;
             for (Direction direction : Util.DIRECTIONS) {
                 Point next = cur.go(direction);
                 if (next != null && !visited.contains(next)) {
@@ -51,6 +54,16 @@ public class Army {
             }
         }
         throw new IllegalStateException("Impossible as it may seem, there are no free points nearby: " + p);
+    }
+
+    @Nullable
+    public Integer getDistanceOnEmptyBoard(@NotNull Point from, @NotNull Point to) {
+        Map<Point, Integer> map = distances.get(from);
+        if (map == null) {
+            map = firstBoard.findDistances(from, true);
+            distances.put(from, map);
+        }
+        return map.get(to);
     }
 
     @NotNull
