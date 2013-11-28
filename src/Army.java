@@ -10,7 +10,7 @@ public class Army {
     private int curDisIndex;
 
     private final Board firstBoard;
-    private final Map<Point, Map<Point, Integer>> distances = new HashMap<>(802);
+    private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 

@@ -54,8 +54,7 @@ public class Board {
 
     @Nullable
     public List<Point> findPath(@NotNull Point from, @NotNull final Point to) {
-        // TODO: optimize Map<Point, *>
-        final Map<Point, Point> prev = new HashMap<>();
+        final Map<Point, Point> prev = new PointMap<>();
 
         launchDijkstra(from, new Controller() {
             @Override
@@ -102,8 +101,8 @@ public class Board {
 
     @Nullable
     public Point launchDijkstra(@NotNull Point from, @NotNull Controller controller) {
-        final Map<Point, Integer> wd = new HashMap<>();
-        final Map<Point, Integer> dist = new HashMap<>();
+        final Map<Point, Integer> wd = new PointMap<>();
+        final Map<Point, Integer> dist = new PointMap<>();
         controller.saveDistanceMap(dist);
 
         SortedSet<Point> set = new TreeSet<>(new Comparator<Point>() {

@@ -1,8 +1,3 @@
-- don't always lower stance while shooting: if we're behind a cover, we won't see the enemy if we lie down
-- if a medic was shot 4 or 5 times in a row, RUN! or kill oneself... it's probably a smart enemy who wants to score a lot of points
-  maybe also shoot medics first? 1) they're too powerful to be alive 2) they will bring more points, if they heal themselves
-    maybe even not shoot them to the death, since they'll heal themselves and will bring even more points
-    don't forget to adapt grenade strategy to this
-- if low health, high action points, and am attacked, run
-- if we see an enemy far away, maybe it makes more sense to get closer to him to throw a grenade at him
-- default stance after several turns should be KNEELING?
+- move faster on cheeser.map
+- don't split medic with sniper on map03.map
+
