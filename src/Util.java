@@ -1,10 +1,7 @@
 import model.Direction;
 import model.TrooperStance;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static model.Direction.*;
 import static model.TrooperStance.*;
@@ -40,5 +37,23 @@ public class Util {
         ArrayList<T> result = new ArrayList<>(list);
         Collections.reverse(result);
         return result;
+    }
+
+    @NotNull
+    public static <T> Iterable<T> iterable(@NotNull final AbstractIterator<T> iterator) {
+        return new Iterable<T>() {
+            @Override
+            @NotNull
+            public Iterator<T> iterator() {
+                return iterator;
+            }
+        };
+    }
+
+    public static abstract class AbstractIterator<T> implements Iterator<T> {
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Oh please");
+        }
     }
 }

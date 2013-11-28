@@ -150,10 +150,9 @@ public class WarriorTurn {
 
             // Heal
             if (self.getType() == FIELD_MEDIC) {
-                for (int i = 0, size = allies.size(); i < size; i++) {
-                    Point point = i == myIndex ? cur.me : Point.create(allies.get(i));
-                    Position next = cur.heal(i, point);
-                    if (next != null) add(next, Go.heal(me.direction(point)));
+                for (Pair<Integer, Point> pair : cur.allies()) {
+                    Position next = cur.heal(pair.first, pair.second);
+                    if (next != null) add(next, Go.heal(me.direction(pair.second)));
                 }
             }
 
@@ -176,10 +175,9 @@ public class WarriorTurn {
             }
 
             // Use medikit
-            for (int i = 0, size = allies.size(); i < size; i++) {
-                Point point = i == myIndex ? cur.me : Point.create(allies.get(i));
-                Position next = cur.useMedikit(i, point);
-                if (next != null) add(next, Go.useMedikit(me.direction(point)));
+            for (Pair<Integer, Point> pair : cur.allies()) {
+                Position next = cur.useMedikit(pair.first, pair.second);
+                if (next != null) add(next, Go.useMedikit(me.direction(pair.second)));
             }
 
             // Change stance
@@ -235,6 +233,24 @@ public class WarriorTurn {
             this.hashCode = hash;
         }
 
+        @NotNull
+        public Iterable<Pair<Integer, Point>> allies() {
+            return Util.iterable(new Util.AbstractIterator<Pair<Integer, Point>>() {
+                private int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    return i < allies.size();
+                }
+
+                @Override
+                public Pair<Integer, Point> next() {
+                    Point ally = i == myIndex ? me : Point.create(allies.get(i));
+                    return new Pair<>(i++, ally);
+                }
+            });
+        }
+
         private boolean has(@NotNull BonusType bonus) {
             return (bonuses & (1 << bonus.ordinal())) != 0;
         }
@@ -266,19 +282,32 @@ public class WarriorTurn {
         }
 
         @NotNull
-        private int[] grenadeEffect(@NotNull Point target, @NotNull int[] hp, @NotNull List<Trooper> troopers) {
-            int[] result = IntArrays.copy(hp);
-            for (int i = 0, size = troopers.size(); i < size; i++) {
-                Point point = Point.create(troopers.get(i));
-                if (point.equals(target)) {
-                    result[i] = Math.max(hp[i] - game.getGrenadeDirectDamage(), 0);
-                } else if (point.isNeighbor(target)) {
-                    result[i] = Math.max(hp[i] - game.getGrenadeCollateralDamage(), 0);
-                } else {
-                    result[i] = hp[i];
-                }
+        private int[] grenadeEffectToEnemies(@NotNull Point target) {
+            int[] result = IntArrays.copy(enemyHp);
+            for (int i = 0, size = enemies.size(); i < size; i++) {
+                result[i] = grenadeEffectToTrooper(target, Point.create(enemies.get(i)), enemyHp[i]);
             }
             return result;
+        }
+
+        @NotNull
+        private int[] grenadeEffectToAllies(@NotNull Point target) {
+            int[] result = IntArrays.copy(allyHp);
+            for (Pair<Integer, Point> pair : allies()) {
+                int i = pair.first;
+                result[i] = grenadeEffectToTrooper(target, pair.second, allyHp[i]);
+            }
+            return result;
+        }
+
+        private int grenadeEffectToTrooper(@NotNull Point target, @NotNull Point trooper, int hitpoints) {
+            if (trooper.equals(target)) {
+                return Math.max(hitpoints - game.getGrenadeDirectDamage(), 0);
+            } else if (trooper.isNeighbor(target)) {
+                return Math.max(hitpoints - game.getGrenadeCollateralDamage(), 0);
+            } else {
+                return hitpoints;
+            }
         }
 
         @NotNull
@@ -379,9 +408,9 @@ public class WarriorTurn {
             int ap = actionPoints - game.getGrenadeThrowCost();
             if (ap < 0) return null;
             if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) return null;
-            int[] newEnemyHp = grenadeEffect(target, enemyHp, enemies);
+            int[] newEnemyHp = grenadeEffectToEnemies(target);
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
-            int[] newAllyHp = grenadeEffect(target, allyHp, allies);
+            int[] newAllyHp = grenadeEffectToAllies(target);
             return new Position(me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected);
         }
 
@@ -597,8 +626,8 @@ public class WarriorTurn {
             set.clear();
             queue.clear();
 
-            for (int i = 0, size = allies.size(); i < size; i++) {
-                set.add(i == myIndex ? p.me : Point.create(allies.get(i)));
+            for (Pair<Integer, Point> ally : p.allies()) {
+                set.add(ally.second);
             }
             queue.add(leader);
 
