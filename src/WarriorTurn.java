@@ -611,7 +611,7 @@ public class WarriorTurn {
             double result = 0;
 
             // TODO
-            result += 0.1 * Integer.bitCount(p.bonuses);
+            result += 3 * Integer.bitCount(p.bonuses);
 
             Integer dist = army.getDistanceOnEmptyBoard(p.me, leader);
             if (dist != null) result -= dist;
@@ -665,7 +665,7 @@ public class WarriorTurn {
             double result = 0;
 
             // TODO
-            result += 0.1 * Integer.bitCount(p.bonuses);
+            result += 3 * Integer.bitCount(p.bonuses);
 
             result -= distanceToDislocation(p);
 
