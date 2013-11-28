@@ -151,7 +151,7 @@ public class WarriorTurn {
             // Heal
             if (self.getType() == FIELD_MEDIC) {
                 for (int i = 0, size = allies.size(); i < size; i++) {
-                    Point point = Point.create(allies.get(i));
+                    Point point = i == myIndex ? cur.me : Point.create(allies.get(i));
                     Position next = cur.heal(i, point);
                     if (next != null) add(next, Go.heal(me.direction(point)));
                 }
@@ -177,7 +177,7 @@ public class WarriorTurn {
 
             // Use medikit
             for (int i = 0, size = allies.size(); i < size; i++) {
-                Point point = Point.create(allies.get(i));
+                Point point = i == myIndex ? cur.me : Point.create(allies.get(i));
                 Position next = cur.useMedikit(i, point);
                 if (next != null) add(next, Go.useMedikit(me.direction(point)));
             }
