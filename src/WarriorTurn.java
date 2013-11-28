@@ -152,7 +152,7 @@ public class WarriorTurn {
             if (self.getType() == FIELD_MEDIC) {
                 for (Pair<Integer, Point> pair : cur.allies()) {
                     Position next = cur.heal(pair.first, pair.second);
-                    if (next != null) add(next, Go.heal(me.direction(pair.second)));
+                    if (next != null) add(next, Go.heal(cur.me.direction(pair.second)));
                 }
             }
 
@@ -177,7 +177,7 @@ public class WarriorTurn {
             // Use medikit
             for (Pair<Integer, Point> pair : cur.allies()) {
                 Position next = cur.useMedikit(pair.first, pair.second);
-                if (next != null) add(next, Go.useMedikit(me.direction(pair.second)));
+                if (next != null) add(next, Go.useMedikit(cur.me.direction(pair.second)));
             }
 
             // Change stance
