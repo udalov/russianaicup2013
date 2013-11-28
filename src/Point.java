@@ -35,6 +35,10 @@ public final class Point implements Comparable<Point> {
         return new Point(unit.getX(), unit.getY());
     }
 
+    public int index() {
+        return x * Board.HEIGHT + y;
+    }
+
     @NotNull
     public Direction direction(@NotNull Point neighbor) {
         int dx = neighbor.x - x;
@@ -102,13 +106,12 @@ public final class Point implements Comparable<Point> {
 
     @Override
     public int hashCode() {
-        return 239 * x + y;
+        return index();
     }
 
     @Override
-    public int compareTo(@NotNull Point o) {
-        int dx = x - o.x;
-        return dx != 0 ? dx : y - o.y;
+    public int compareTo(@NotNull Point that) {
+        return index() - that.index();
     }
 
     @Override

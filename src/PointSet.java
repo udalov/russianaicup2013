@@ -19,12 +19,12 @@ public class PointSet implements Set<Point> {
 
     @Override
     public boolean contains(Object o) {
-        return o instanceof Point && data.get(index((Point) o));
+        return o instanceof Point && data.get(((Point) o).index());
     }
 
     @Override
     public boolean add(@NotNull Point p) {
-        int i = index(p);
+        int i = p.index();
         if (data.get(i)) return false;
         data.set(i);
         size++;
@@ -35,10 +35,6 @@ public class PointSet implements Set<Point> {
     public void clear() {
         size = 0;
         data.clear();
-    }
-
-    private int index(@NotNull Point p) {
-        return p.x * Board.HEIGHT + p.y;
     }
 
 

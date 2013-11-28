@@ -19,21 +19,21 @@ public class PointMap<T> implements Map<Point, T> {
 
     @Override
     public boolean containsKey(Object key) {
-        return key instanceof Point && data[index((Point) key)] != null;
+        return key instanceof Point && data[((Point) key).index()] != null;
     }
 
     @Override
     @Nullable
     @SuppressWarnings("unchecked")
     public T get(Object key) {
-        return (T) data[index((Point) key)];
+        return (T) data[((Point) key).index()];
     }
 
     @Override
     @Nullable
     @SuppressWarnings("unchecked")
     public T put(@NotNull Point point, @NotNull T value) {
-        int i = index(point);
+        int i = point.index();
         T old = (T) data[i];
         if (old == null) size++;
         data[i] = value;
@@ -44,10 +44,6 @@ public class PointMap<T> implements Map<Point, T> {
     public void clear() {
         size = 0;
         Arrays.fill(data, null);
-    }
-
-    private int index(@NotNull Point p) {
-        return p.x * Board.HEIGHT + p.y;
     }
 
 

@@ -45,7 +45,7 @@ public class Board {
 
     @NotNull
     public Cell get(@NotNull Point point) {
-        return cells[point.x * HEIGHT + point.y];
+        return cells[point.index()];
     }
 
     public boolean isPassable(@NotNull Point point) {
