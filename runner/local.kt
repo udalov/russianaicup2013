@@ -1,9 +1,9 @@
 package runner.local
 
 import runner.*
-import runner.WorldMap.*
 import java.io.File
 import java.util.Random
+import Board.Kind.*
 
 fun main(args: Array<String>) = time {
     val seed = Math.abs(Random().nextLong())

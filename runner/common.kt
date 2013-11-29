@@ -11,20 +11,9 @@ object EmptyPlayer : Player("EmptyPlayer", javaClass<com.a.b.a.a.e.b>().getSimpl
 object QuickStartGuy : Player("QuickStartGuy", javaClass<com.a.b.a.a.e.c>().getSimpleName() + ".class")
 object SmartGuy : Player("SmartGuy", javaClass<com.a.b.a.a.e.a>().getSimpleName() + ".class")
 
-enum class WorldMap {
-    DEFAULT
-    EMPTY
-    CHEESER
-    MAP01
-    MAP02
-    MAP03
-    MAP04
-    MAP05
-}
-
 val LOG_FILE = "out/log.txt"
 
-fun localRunner(vis: Boolean, map: WorldMap, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
+fun localRunner(vis: Boolean, map: Board.Kind, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
     Logger.getRootLogger()?.removeAllAppenders()
 
     return com.a.b.c(array(
@@ -66,7 +55,7 @@ fun runMyStrategy(port: Long) {
     }
 }
 
-fun runGame(vis: Boolean, map: WorldMap, seed: Long, lineup: String, threadName: String) {
+fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadName: String) {
     fun parse(c: Char) = when (c) {
         'M' -> MyStrategy
         'E' -> EmptyPlayer

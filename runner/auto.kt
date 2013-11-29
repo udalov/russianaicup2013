@@ -15,7 +15,7 @@ fun findMyPlace(index: Int): Int {
 // args = [seed, map, lineup]
 fun main(args: Array<String>) {
     val seed = args[0].toLong()
-    val map = WorldMap.valueOf(args[1])
+    val map = Board.Kind.valueOf(args[1])
     val lineup = args[2]
 
     runGame(false, map, seed, lineup, "auto")
