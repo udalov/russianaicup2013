@@ -492,11 +492,12 @@ public class WarriorTurn {
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
                 Trooper ally = allies.get(i);
-                int hp = p.allyHp[i];
-                if (hp < 85) {
-                    Integer dist = board.distance(Point.create(ally), p.me);
-                    if (dist != null) result += dist * (ally.getMaximalHitpoints() - hp);
-                }
+                Integer dist = board.distance(Point.create(ally), p.me);
+                if (dist == null || dist == 0) continue;
+                int toHeal = ally.getMaximalHitpoints() - p.allyHp[i];
+                if (toHeal > 60) result += 3 * dist;
+                else if (toHeal > 15) result += dist;
+                else if (toHeal > 0) result += 0.1 * dist;
             }
             return result;
         }
