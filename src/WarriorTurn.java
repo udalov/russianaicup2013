@@ -239,6 +239,29 @@ public class WarriorTurn {
             });
         }
 
+        @NotNull
+        private Iterable<Trooper> aliveEnemies() {
+            return Util.iterable(new Util.AbstractIterator<Trooper>() {
+                private final int size = enemies.size();
+                private int i = 0;
+
+                @Override
+                public boolean hasNext() {
+                    while (i < size) {
+                        if (enemyHp[i] > 0) return true;
+                        i++;
+                    }
+                    return false;
+                }
+
+                @Override
+                public Trooper next() {
+                    while (!hasNext());
+                    return enemies.get(i++);
+                }
+            });
+        }
+
         private boolean has(@NotNull BonusType bonus) {
             return (bonuses & (1 << bonus.ordinal())) != 0;
         }
@@ -256,7 +279,7 @@ public class WarriorTurn {
             for (Pair<Integer, Point> pair : allies()) {
                 if (point.equals(pair.second)) return false;
             }
-            for (Trooper enemy : enemies) {
+            for (Trooper enemy : aliveEnemies()) {
                 if (point.isEqualTo(enemy)) return false;
             }
             return true;
@@ -373,10 +396,10 @@ public class WarriorTurn {
         public Position shoot(int enemy) {
             int ap = actionPoints - self.getShootCost();
             if (ap < 0) return null;
-            Trooper trooper = enemies.get(enemy);
-            if (!isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
             int hp = enemyHp[enemy];
             if (hp == 0) return null;
+            Trooper trooper = enemies.get(enemy);
+            if (!isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
             int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
             return new Position(me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
         }
@@ -550,7 +573,7 @@ public class WarriorTurn {
 
         private double closestEnemy(@NotNull Position p) {
             double closestEnemy = 1e100;
-            for (Trooper enemy : enemies) {
+            for (Trooper enemy : p.aliveEnemies()) {
                 closestEnemy = Math.min(closestEnemy, Point.create(enemy).euclideanDistance(p.me));
             }
             return closestEnemy;
@@ -576,10 +599,7 @@ public class WarriorTurn {
 
             double[] expectedDamage = new double[n];
 
-            for (int i = 0, size = enemies.size(); i < size; i++) {
-                Trooper enemy = enemies.get(i);
-                if (p.enemyHp[i] == 0) continue;
-
+            for (Trooper enemy : p.aliveEnemies()) {
                 // Assume that the enemy trooper always is in the commander aura
                 int actionPoints = enemy.getInitialActionPoints() +
                         (enemy.getType() != COMMANDER && enemy.getType() != SCOUT ? game.getCommanderAuraBonusActionPoints() : 0);
