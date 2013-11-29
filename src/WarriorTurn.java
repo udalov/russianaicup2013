@@ -502,8 +502,8 @@ public class WarriorTurn {
                 Trooper ally = allies.get(i);
                 int hp = p.allyHp[i];
                 if (hp < 85) {
-                    // TODO: shortest path distance?
-                    result += Point.create(ally).manhattanDistance(p.me) * (ally.getMaximalHitpoints() - hp);
+                    Integer dist = board.distance(Point.create(ally), p.me);
+                    if (dist != null) result += dist * (ally.getMaximalHitpoints() - hp);
                 }
             }
             return result;
