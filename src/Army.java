@@ -6,7 +6,7 @@ import model.World;
 import java.util.*;
 
 public class Army {
-    private final List<Point> wayPoints = new ArrayList<>();
+    private final List<Point> wayPoints = new ArrayList<>(25);
     private int curWayPoint;
 
     private final Board board;
@@ -31,13 +31,32 @@ public class Army {
         Point center = Point.center();
 
         wayPoint(start);
-        wayPoint(start.halfwayTo(center));
-        wayPoint(center);
-        wayPoint(center.halfwayTo(start.opposite()));
-        wayPoint(start.opposite());
-        wayPoint(start.horizontalOpposite());
-        wayPoint(center);
-        wayPoint(start.verticalOpposite());
+
+        Point hor = start.horizontalOpposite();
+        Point ver = start.verticalOpposite();
+        Point opp = start.opposite();
+
+        if (board.getKind() == Board.Kind.MAP02) {
+            wayPoint(start.halfwayTo(ver).halfwayTo(center));
+            wayPoint(start.halfwayTo(start.halfwayTo(hor)));
+            wayPoint(start.halfwayTo(hor));
+            wayPoint(start.halfwayTo(start.halfwayTo(hor)));
+            wayPoint(start.halfwayTo(ver).halfwayTo(center));
+            wayPoint(ver);
+            wayPoint(ver.halfwayTo(opp));
+            wayPoint(opp);
+            wayPoint(opp.halfwayTo(hor));
+            wayPoint(hor);
+            wayPoint(hor.halfwayTo(start));
+        } else {
+            wayPoint(start.halfwayTo(center));
+            wayPoint(center);
+            wayPoint(center.halfwayTo(opp));
+            wayPoint(opp);
+            wayPoint(hor);
+            wayPoint(center);
+            wayPoint(ver);
+        }
     }
 
     private boolean wayPoint(@NotNull Point point) {
