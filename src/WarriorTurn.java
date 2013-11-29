@@ -660,6 +660,9 @@ public class WarriorTurn {
     private class LeaderScorer extends Scorer {
         private final Point dislocation = army.getOrUpdateDislocation(allies);
 
+        // TODO: this is a map-specific hack, get rid of it
+        private final int criticalDistanceToAllies = board.getKind() == Board.Kind.CHEESER ? 6 : 5;
+
         @Override
         protected double situation(@NotNull Position p) {
             double result = 0;
@@ -679,7 +682,7 @@ public class WarriorTurn {
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
                 Integer distance = board.distance(Point.create(allies.get(i)), p.me);
-                if (distance != null && distance > 5) result++;
+                if (distance != null && distance > criticalDistanceToAllies) result++;
             }
             return result;
         }
