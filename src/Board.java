@@ -5,6 +5,33 @@ import model.World;
 import java.util.*;
 
 public class Board {
+    public enum Kind {
+        UNKNOWN(0),
+        DEFAULT(49318912),
+        CHEESER(43536704),
+        MAP01(-2071390976),
+        MAP02(-1500897472),
+        MAP03(-1006608576),
+        MAP04(1693721344),
+        MAP05(2031338624);
+
+        private final int hashCode;
+
+        private Kind(int hashCode) {
+            this.hashCode = hashCode;
+        }
+
+        @NotNull
+        public static Kind byHashCode(int hashCode) {
+            for (Kind kind : values()) {
+                if (kind.hashCode == hashCode) {
+                    return kind;
+                }
+            }
+            return UNKNOWN;
+        }
+    }
+
     public abstract static class Controller {
         public abstract boolean isEndingPoint(@NotNull Point point);
 
@@ -16,6 +43,7 @@ public class Board {
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
+    private final Kind kind;
     private final Set<Point> obstacles = new PointSet();
     private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
@@ -28,6 +56,8 @@ public class Board {
         assert n == WIDTH : "Wrong width: " + n + " != " + WIDTH;
         assert m == HEIGHT : "Wrong height: " + m + " != " + HEIGHT;
 
+        this.kind = Kind.byHashCode(worldMapHashCode(cells));
+
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 if (cells[i][j] != CellType.FREE) {
@@ -36,6 +66,21 @@ public class Board {
                 }
             }
         }
+    }
+
+    @NotNull
+    public Kind getKind() {
+        return kind;
+    }
+
+    private int worldMapHashCode(@NotNull CellType[][] cells) {
+        int result = 0;
+        for (CellType[] row : cells) {
+            for (CellType cell : row) {
+                result = result * 31 + cell.ordinal();
+            }
+        }
+        return result;
     }
 
     public boolean isPassable(@NotNull Point point) {

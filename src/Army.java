@@ -31,6 +31,8 @@ public class Army {
         dislocations.add(findFreePointNearby(start.verticalOpposite()));
 
         curDisIndex = 0;
+
+        Debug.log("map: " + board.getKind());
     }
 
     @NotNull

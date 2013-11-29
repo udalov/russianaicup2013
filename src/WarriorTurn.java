@@ -6,8 +6,6 @@ import static model.BonusType.*;
 import static model.TrooperType.*;
 
 public class WarriorTurn {
-    private static final boolean LOCAL = Thread.currentThread().getName().equals("local");
-
     private final Army army;
     private final Trooper self;
     private final World world;
@@ -727,7 +725,7 @@ public class WarriorTurn {
     }
 
     private void debug(@NotNull Scorer scorer, @NotNull List<Go> best) {
-        if (!LOCAL) return;
+        if (!Debug.ENABLED) return;
 
         String s;
         if (scorer instanceof CombatSituationScorer) s = "combat";
@@ -735,6 +733,6 @@ public class WarriorTurn {
         else if (scorer instanceof FollowerScorer) s = "follower";
         else throw new UnsupportedOperationException("Unknown scorer: " + scorer);
 
-        System.out.println(world.getMoveIndex() + " " + s + ": " + self + " -> " + best);
+        Debug.log(world.getMoveIndex() + " " + s + ": " + self + " -> " + best);
     }
 }
