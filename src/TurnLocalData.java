@@ -1,3 +1,6 @@
+import model.Trooper;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,5 +21,14 @@ public class TurnLocalData {
     @NotNull
     public List<Long> getEnemyIds() {
         return enemyIds;
+    }
+
+    @NotNull
+    public static List<Long> ids(@NotNull List<Trooper> troopers) {
+        List<Long> result = new ArrayList<>(troopers.size());
+        for (Trooper trooper : troopers) {
+            result.add(trooper.getId());
+        }
+        return result;
     }
 }

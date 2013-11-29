@@ -55,19 +55,9 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        TurnLocalData data = army.loadTurnLocalData(world.getMoveIndex(), self.getType());
-        // If the board changed between subsequent turns (new enemies are visible), we don't use the old found moves, since they're not the best anymore
-        // TODO: take into account all enemies that were seen during the small iteration, don't just delete them
-        if (data != null && data.getEnemyIds().equals(ids(enemies))) {
-            Go predefined = data.nextMove();
-            if (predefined != null) {
-                debug("predefined: " + self + " -> " + predefined);
-                return predefined;
-            }
-        }
+        // TODO: take into account all enemies that were seen during the small iteration, don't just forget about them
 
         Scorer scorer;
-
         if (!enemies.isEmpty()) {
             scorer = new CombatSituationScorer();
         } else {
@@ -81,10 +71,7 @@ public class WarriorTurn {
 
         List<Go> best = best(scorer);
         debug(scorer, best);
-        Iterator<Go> it = best.iterator();
-        if (!it.hasNext()) return Go.endTurn();
-        army.saveTurnLocalData(world.getMoveIndex(), self.getType(), new TurnLocalData(it, ids(enemies)));
-        return it.next();
+        return best.isEmpty() ? Go.endTurn() : best.iterator().next();
     }
 
     @NotNull
@@ -695,15 +682,6 @@ public class WarriorTurn {
     }
 
     @NotNull
-    private List<Long> ids(@NotNull List<Trooper> troopers) {
-        List<Long> result = new ArrayList<>(troopers.size());
-        for (Trooper trooper : troopers) {
-            result.add(trooper.getId());
-        }
-        return result;
-    }
-
-    @NotNull
     private Trooper findLeader() {
         for (TrooperType type : Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER)) {
             Trooper trooper = alliesMap.get(type);
@@ -743,12 +721,6 @@ public class WarriorTurn {
     @Override
     public String toString() {
         return self + ", turn #" + world.getMoveIndex();
-    }
-
-    private void debug(@Nullable Object o) {
-        if (LOCAL) {
-            System.out.println(o);
-        }
     }
 
     private void debug(@NotNull Scorer scorer, @NotNull List<Go> best) {
