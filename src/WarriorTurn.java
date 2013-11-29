@@ -474,8 +474,27 @@ public class WarriorTurn {
                 result -= 0.5 * distanceToWoundedAllies(p);
             }
 
+            result += 5 * underCommanderAura(p);
+
             result += situation(p);
 
+            return result;
+        }
+
+        private int underCommanderAura(@NotNull Position p) {
+            Point commander = null;
+            for (Pair<Integer, Point> pair : p.allies()) {
+                if (allies.get(pair.first).getType() == COMMANDER) commander = pair.second;
+            }
+            if (commander == null) return 0;
+
+            int result = 0;
+            for (Pair<Integer, Point> pair : p.allies()) {
+                TrooperType type = allies.get(pair.first).getType();
+                if (type != COMMANDER && type != SCOUT) {
+                    if (pair.second.euclideanDistance(p.me) <= game.getCommanderAuraRange()) result++;
+                }
+            }
             return result;
         }
 
