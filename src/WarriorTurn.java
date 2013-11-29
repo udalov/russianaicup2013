@@ -680,8 +680,9 @@ public class WarriorTurn {
         protected double situation(@NotNull Position p) {
             double result = 0;
 
-            // TODO
             result += 3 * Integer.bitCount(p.bonuses);
+            // Only use field ration in a combat
+            if (p.has(FIELD_RATION)) result += 10;
 
             Integer dist = board.distance(p.me, leader);
             if (dist != null) result -= dist;
@@ -737,8 +738,9 @@ public class WarriorTurn {
         protected double situation(@NotNull Position p) {
             double result = 0;
 
-            // TODO
             result += 3 * Integer.bitCount(p.bonuses);
+            // Only use field ration in a combat
+            if (p.has(FIELD_RATION)) result += 10;
 
             result -= distanceToWayPoint(p);
 
