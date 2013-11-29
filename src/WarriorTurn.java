@@ -634,21 +634,23 @@ public class WarriorTurn {
                 // TODO: handle the case when he lowers the stance in the beginning
                 int maxDamageToAlly = (actionPoints / enemy.getShootCost()) * enemy.getDamage();
 
-                boolean[] isReachable = new boolean[n];
+                int isReachable = 0;
                 int alliesUnderSight = 0;
                 for (int j = 0; j < n; j++) {
                     Trooper ally = allies.get(j);
                     Point point = j == myIndex ? p.me : Point.create(ally);
                     TrooperStance stance = j == myIndex ? p.stance : ally.getStance();
                     if (isReachable(enemy.getShootingRange(), enemy, point, stance)) {
-                        isReachable[j] = true;
+                        isReachable |= 1 << j;
                         alliesUnderSight++;
                     }
                 }
                 if (alliesUnderSight == 0) continue;
 
                 for (int j = 0; j < n; j++) {
-                    if (isReachable[j]) expectedDamage[j] += maxDamageToAlly * 1. / alliesUnderSight;
+                    if ((isReachable & (1 << j)) != 0) {
+                        expectedDamage[j] += maxDamageToAlly * 1. / alliesUnderSight;
+                    }
                 }
             }
 
