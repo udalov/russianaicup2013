@@ -38,40 +38,57 @@ public class Army {
     }
 
     private void buildWayPoints(@NotNull Trooper commander) {
-        Point start = Point.create(commander);
-        Point center = Point.center();
+        final Point start = Point.create(commander);
 
-        wayPoint(start);
+        class WayPoints {
+            /*
+              0  1  2  3  4
+              5  6  7  8  9
+             10 11 12 13 14
+             15 16 17 18 19
+             20 21 22 23 24
+             */
+            private final Point[] loc = new Point[25];
 
-        Point hor = start.horizontalOpposite();
-        Point ver = start.verticalOpposite();
-        Point opp = start.opposite();
+            public WayPoints() {
+                loc[0] = start;
+                loc[4] = start.horizontalOpposite();
+                loc[20] = start.verticalOpposite();
+                loc[24] = start.opposite();
+                loc[12] = Point.center();
+
+                between(0, 2, 4);
+                between(0, 10, 20);
+                between(4, 14, 24);
+                between(20, 22, 24);
+
+                for (int x : Arrays.asList(5, 7, 9, 15, 17, 19)) {
+                    between(x - 5, x, x + 5);
+                }
+
+                for (int x : Arrays.asList(1, 3, 6, 8, 11, 13, 16, 18, 21, 23)) {
+                    between(x - 1, x, x + 1);
+                }
+            }
+
+            private void between(int first, int result, int second) {
+                loc[result] = loc[first].halfwayTo(loc[second]);
+            }
+
+            public void set(@NotNull int... wp) {
+                for (int i : wp) {
+                    wayPoints.add(findFreePointNearby(loc[i]));
+                }
+            }
+        }
+
+        WayPoints wp = new WayPoints();
 
         if (board.getKind() == Board.Kind.MAP02) {
-            wayPoint(start.halfwayTo(ver).halfwayTo(center));
-            wayPoint(start.halfwayTo(start.halfwayTo(hor)));
-            wayPoint(start.halfwayTo(hor));
-            wayPoint(start.halfwayTo(start.halfwayTo(hor)));
-            wayPoint(start.halfwayTo(ver).halfwayTo(center));
-            wayPoint(ver);
-            wayPoint(ver.halfwayTo(opp));
-            wayPoint(opp);
-            wayPoint(opp.halfwayTo(hor));
-            wayPoint(hor);
-            wayPoint(hor.halfwayTo(start));
+            wp.set(0, 11, 1, 2, 1, 11, 20, 22, 24, 13, 4, 2);
         } else {
-            wayPoint(start.halfwayTo(center));
-            wayPoint(center);
-            wayPoint(center.halfwayTo(opp));
-            wayPoint(opp);
-            wayPoint(hor);
-            wayPoint(center);
-            wayPoint(ver);
+            wp.set(0, 6, 12, 18, 24, 4, 12, 20);
         }
-    }
-
-    private boolean wayPoint(@NotNull Point point) {
-        return wayPoints.add(findFreePointNearby(point));
     }
 
     @NotNull
