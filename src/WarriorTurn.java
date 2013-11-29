@@ -528,10 +528,20 @@ public class WarriorTurn {
 
             // TODO: also for others
             if (self.getType() == SNIPER) {
-                result -= p.stance.ordinal();
+                if (closestEnemy(p) < 8) {
+                    result -= p.stance.ordinal();
+                }
             }
 
             return result;
+        }
+
+        private double closestEnemy(@NotNull Position p) {
+            double closestEnemy = 1e100;
+            for (Trooper enemy : enemies) {
+                closestEnemy = Math.min(closestEnemy, Point.create(enemy).euclideanDistance(p.me));
+            }
+            return closestEnemy;
         }
 
         private double distanceToAllies(@NotNull Position p) {
