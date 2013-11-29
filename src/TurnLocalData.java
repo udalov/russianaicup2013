@@ -1,34 +1,25 @@
 import model.Trooper;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class TurnLocalData {
-    private final Iterator<Go> predefinedMoves;
-    private final List<Long> enemyIds;
-
-    public TurnLocalData(@NotNull Iterator<Go> predefinedMoves, @NotNull List<Long> enemyIds) {
-        this.predefinedMoves = predefinedMoves;
-        this.enemyIds = enemyIds;
-    }
-
-    @Nullable
-    public Go nextMove() {
-        return predefinedMoves.hasNext() ? predefinedMoves.next() : null;
-    }
+    // TODO: also store bonuses seen in the beginning of the turn?
+    private final List<Trooper> enemies = new ArrayList<>(15);
 
     @NotNull
-    public List<Long> getEnemyIds() {
-        return enemyIds;
-    }
-
-    @NotNull
-    public static List<Long> ids(@NotNull List<Trooper> troopers) {
-        List<Long> result = new ArrayList<>(troopers.size());
-        for (Trooper trooper : troopers) {
-            result.add(trooper.getId());
+    public List<Trooper> updateEnemies(@NotNull List<Trooper> moreEnemies) {
+        outer: for (Trooper enemy : moreEnemies) {
+            for (int i = 0, size = enemies.size(); i < size; i++) {
+                Trooper trooper = enemies.get(i);
+                if (trooper.getId() == enemy.getId()) {
+                    // Just in case
+                    enemies.set(i, enemy);
+                    continue outer;
+                }
+            }
+            enemies.add(enemy);
         }
-        return result;
+        return enemies;
     }
 }

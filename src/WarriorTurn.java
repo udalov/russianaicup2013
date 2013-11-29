@@ -50,13 +50,16 @@ public class WarriorTurn {
         assert myIndex >= 0 : "Where am I? " + allies;
         this.myIndex = myIndex;
 
-        this.enemies = enemies == null ? Collections.<Trooper>emptyList() : enemies;
+        TurnLocalData data = army.loadTurnLocalData(world.getMoveIndex(), self.getType());
+        if (data == null) {
+            data = new TurnLocalData();
+            army.saveTurnLocalData(world.getMoveIndex(), self.getType(), data);
+        }
+        this.enemies = data.updateEnemies(enemies == null ? Collections.<Trooper>emptyList() : enemies);
     }
 
     @NotNull
     public Go makeTurn() {
-        // TODO: take into account all enemies that were seen during the small iteration, don't just forget about them
-
         Scorer scorer;
         if (!enemies.isEmpty()) {
             scorer = new CombatSituationScorer();
@@ -538,7 +541,7 @@ public class WarriorTurn {
         private double expectedDamageOnNextTurn(@NotNull Position p) {
             // TODO: take into account grenades/medikits that enemies have
 
-            // Assume that all visible enemies also see us, but this is not always true
+            // Assume that all enemies see us, but this is not always true
             // TODO: count number of other teams having at least one trooper who sees us
 
             int n = allies.size();
@@ -732,6 +735,6 @@ public class WarriorTurn {
         else if (scorer instanceof FollowerScorer) s = "follower";
         else throw new UnsupportedOperationException("Unknown scorer: " + scorer);
 
-        System.out.println(s + ": " + self + " -> " + best);
+        System.out.println(world.getMoveIndex() + " " + s + ": " + self + " -> " + best);
     }
 }
