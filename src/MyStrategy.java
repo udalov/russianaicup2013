@@ -18,7 +18,7 @@ public class MyStrategy implements Strategy {
         long id = self.getPlayerId();
         Army army = ARMIES.get(id);
         if (army == null) {
-            army = new Army(self, world);
+            army = new Army(world);
             ARMIES.put(id, army);
         }
 

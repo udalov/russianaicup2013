@@ -5,6 +5,8 @@ import model.World;
 
 import java.util.*;
 
+import static model.TrooperType.COMMANDER;
+
 public class Army {
     private final List<Point> wayPoints = new ArrayList<>(25);
     private int curWayPoint;
@@ -17,17 +19,26 @@ public class Army {
 
     private final Map<TrooperType, Pair<Integer, TurnLocalData>> turnLocalData = new HashMap<>();
 
-    public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
+    public Army(@NotNull World world) {
         board = new Board(world);
-        buildWayPoints(firstTrooper);
+
+        Trooper commander = null;
+        for (Trooper trooper : world.getTroopers()) {
+            if (trooper.getType() == COMMANDER && trooper.isTeammate()) {
+                commander = trooper;
+            }
+        }
+        assert commander != null : "Where's commander? " + Arrays.toString(world.getTroopers());
+
+        buildWayPoints(commander);
 
         curWayPoint = 0;
 
         Debug.log("map: " + board.getKind());
     }
 
-    private void buildWayPoints(Trooper firstTrooper) {
-        Point start = Point.create(firstTrooper);
+    private void buildWayPoints(@NotNull Trooper commander) {
+        Point start = Point.create(commander);
         Point center = Point.center();
 
         wayPoint(start);
