@@ -6,8 +6,8 @@ import model.World;
 import java.util.*;
 
 public class Army {
-    private final List<Point> dislocations = new ArrayList<>();
-    private int curDisIndex;
+    private final List<Point> wayPoints = new ArrayList<>();
+    private int curWayPoint;
 
     private final Board board;
 
@@ -19,20 +19,29 @@ public class Army {
 
     public Army(@NotNull Trooper firstTrooper, @NotNull World world) {
         board = new Board(world);
-        Point start = Point.create(firstTrooper);
-        Point center = Point.center();
-        dislocations.add(findFreePointNearby(start));
-        dislocations.add(findFreePointNearby(start.halfwayTo(center)));
-        dislocations.add(findFreePointNearby(center));
-        dislocations.add(findFreePointNearby(center.halfwayTo(start.opposite())));
-        dislocations.add(findFreePointNearby(start.opposite()));
-        dislocations.add(findFreePointNearby(start.horizontalOpposite()));
-        dislocations.add(findFreePointNearby(center));
-        dislocations.add(findFreePointNearby(start.verticalOpposite()));
+        buildWayPoints(firstTrooper);
 
-        curDisIndex = 0;
+        curWayPoint = 0;
 
         Debug.log("map: " + board.getKind());
+    }
+
+    private void buildWayPoints(Trooper firstTrooper) {
+        Point start = Point.create(firstTrooper);
+        Point center = Point.center();
+
+        wayPoint(start);
+        wayPoint(start.halfwayTo(center));
+        wayPoint(center);
+        wayPoint(center.halfwayTo(start.opposite()));
+        wayPoint(start.opposite());
+        wayPoint(start.horizontalOpposite());
+        wayPoint(center);
+        wayPoint(start.verticalOpposite());
+    }
+
+    private boolean wayPoint(@NotNull Point point) {
+        return wayPoints.add(findFreePointNearby(point));
     }
 
     @NotNull
@@ -60,17 +69,17 @@ public class Army {
     }
 
     @NotNull
-    public Point getOrUpdateDislocation(@NotNull Collection<Trooper> allies) {
-        Point dislocation = dislocations.get(curDisIndex);
+    public Point getOrUpdateWayPoint(@NotNull Collection<Trooper> allies) {
+        Point wayPoint = wayPoints.get(curWayPoint);
         int curDist = 0;
         for (Trooper ally : allies) {
-            curDist += Point.create(ally).manhattanDistance(dislocation);
+            curDist += Point.create(ally).manhattanDistance(wayPoint);
         }
         if (curDist < 4 * allies.size()) {
-            curDisIndex = (curDisIndex + 1) % dislocations.size();
-            dislocation = dislocations.get(curDisIndex);
+            curWayPoint = (curWayPoint + 1) % wayPoints.size();
+            wayPoint = wayPoints.get(curWayPoint);
         }
-        return dislocation;
+        return wayPoint;
     }
 
     @NotNull

@@ -595,14 +595,14 @@ public class WarriorTurn {
 
     private class FollowerScorer extends Scorer {
         private final Point leader;
-        private final Point dislocation = army.getOrUpdateDislocation(allies);
+        private final Point wayPoint = army.getOrUpdateWayPoint(allies);
         private final Set<Point> set = new PointSet();
         private final ArrayDeque<Point> queue = new ArrayDeque<>(15);
         private final List<Point> leaderPath;
 
         public FollowerScorer(@NotNull TrooperType leaderType) {
             this.leader = Point.create(alliesMap.get(leaderType));
-            List<Point> leaderPath = board.findPath(leader, dislocation);
+            List<Point> leaderPath = board.findPath(leader, wayPoint);
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
 
@@ -658,7 +658,7 @@ public class WarriorTurn {
     }
 
     private class LeaderScorer extends Scorer {
-        private final Point dislocation = army.getOrUpdateDislocation(allies);
+        private final Point wayPoint = army.getOrUpdateWayPoint(allies);
 
         // TODO: this is a map-specific hack, get rid of it
         private final int criticalDistanceToAllies = board.getKind() == Board.Kind.CHEESER ? 6 : 5;
@@ -670,7 +670,7 @@ public class WarriorTurn {
             // TODO
             result += 3 * Integer.bitCount(p.bonuses);
 
-            result -= distanceToDislocation(p);
+            result -= distanceToWayPoint(p);
 
             result -= 100 * farAwayTeammates(p);
 
@@ -687,8 +687,8 @@ public class WarriorTurn {
             return result;
         }
 
-        private int distanceToDislocation(@NotNull Position p) {
-            Integer dist = board.distance(p.me, dislocation);
+        private int distanceToWayPoint(@NotNull Position p) {
+            Integer dist = board.distance(p.me, wayPoint);
             return dist != null ? dist : 1000;
         }
     }
