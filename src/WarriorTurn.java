@@ -474,14 +474,6 @@ public class WarriorTurn {
                 result -= 0.5 * distanceToWoundedAllies(p);
             }
 
-            // TODO: this is a map-specific hack, get rid of it
-            if (board.getKind() == Board.Kind.MAP03) {
-                for (Pair<Integer, Point> pair : p.allies()) {
-                    Integer dist = board.distance(pair.second, p.me);
-                    if (dist != null) result -= 2 * dist;
-                }
-            }
-
             result += situation(p);
 
             return result;
