@@ -283,7 +283,7 @@ public class WarriorTurn {
             return result;
         }
 
-        private double sniperShootingRangeBonus(TrooperStance stance) {
+        private double sniperShootingRangeBonus(@NotNull TrooperStance stance) {
             switch (stance) {
                 case STANDING: return 0;
                 case KNEELING: return game.getSniperKneelingShootingRangeBonus();
@@ -334,10 +334,9 @@ public class WarriorTurn {
         @Nullable
         private Bonus maybeCollectBonus(@NotNull Point point) {
             for (Bonus bonus : worldBonuses) {
-                if (!point.isEqualTo(bonus)) continue;
-                if (has(bonus.getType())) continue;
-                int id = (int) bonus.getId();
-                return IntArrays.contains(collected, id) ? null : bonus;
+                if (point.isEqualTo(bonus)) {
+                    return has(bonus.getType()) || IntArrays.contains(collected, (int) bonus.getId()) ? null : bonus;
+                }
             }
             return null;
         }

@@ -16,7 +16,7 @@ public class Board {
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
-    private final PointSet obstacles;
+    private final Set<Point> obstacles = new PointSet();
     private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
     private final Queue<Point> queue = new ArrayDeque<>(WIDTH * HEIGHT);
@@ -28,7 +28,6 @@ public class Board {
         assert n == WIDTH : "Wrong width: " + n + " != " + WIDTH;
         assert m == HEIGHT : "Wrong height: " + m + " != " + HEIGHT;
 
-        obstacles = new PointSet();
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
                 if (cells[i][j] != CellType.FREE) {
