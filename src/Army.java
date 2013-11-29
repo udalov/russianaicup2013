@@ -88,6 +88,8 @@ public class Army {
             wp.set(0, 11, 1, 2, 1, 11, 20, 22, 24, 13, 4, 2);
         } else if (board.getKind() == Board.Kind.MAP03) {
             wp.set(0, 1, 2, 3, 4, 3, 2, 7, 11, 15, 22, 19, 13, 7);
+        } else if (board.getKind() == Board.Kind.MAP05) {
+            wp.set(0, 6, 11, 16, 20, 22, 24, 18, 8, 4, 2, 7);
         } else {
             wp.set(0, 6, 12, 18, 24, 4, 12, 20);
         }
