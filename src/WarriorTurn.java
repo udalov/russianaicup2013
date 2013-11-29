@@ -548,12 +548,25 @@ public class WarriorTurn {
     }
 
     private class CombatSituationScorer extends Scorer {
+        private final Map<Long, Integer> enemyTeams = new HashMap<>(6);
+
+        {
+            for (Trooper enemy : enemies) {
+                long id = enemy.getPlayerId();
+                if (!enemyTeams.containsKey(id)) {
+                    enemyTeams.put(id, enemyTeams.size());
+                }
+            }
+        }
+
         @Override
         protected double situation(@NotNull Position p) {
             double result = 0;
 
             result -= IntArrays.sum(p.enemyHp);
             result += 30 * IntArrays.numberOfZeros(p.enemyHp);
+
+            result -= 10 * enemyTeamsThatSeeUs(p);
 
             result -= 0.5 * expectedDamageOnNextTurn(p);
 
@@ -569,6 +582,19 @@ public class WarriorTurn {
             }
 
             return result;
+        }
+
+        private int enemyTeamsThatSeeUs(@NotNull Position p) {
+            int bitset = 0;
+            for (Trooper enemy : p.aliveEnemies()) {
+                for (Pair<Integer, Point> pair : p.allies()) {
+                    TrooperStance stance = pair.first == myIndex ? p.stance : allies.get(pair.first).getStance();
+                    if (isReachable(enemy.getVisionRange(), enemy, pair.second, stance)) {
+                        bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
+                    }
+                }
+            }
+            return Integer.bitCount(bitset);
         }
 
         private double closestEnemy(@NotNull Position p) {
