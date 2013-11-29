@@ -478,7 +478,7 @@ public class WarriorTurn {
             if (board.getKind() == Board.Kind.MAP03) {
                 for (Pair<Integer, Point> pair : p.allies()) {
                     Integer dist = board.distance(pair.second, p.me);
-                    if (dist != null) result -= 0.1 * dist;
+                    if (dist != null) result -= 2 * dist;
                 }
             }
 
@@ -705,7 +705,11 @@ public class WarriorTurn {
 
     @NotNull
     private Trooper findLeader() {
-        for (TrooperType type : Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER)) {
+        // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
+        List<TrooperType> leaders = board.getKind() == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
+                Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
+                Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
+        for (TrooperType type : leaders) {
             Trooper trooper = alliesMap.get(type);
             if (trooper != null) return trooper;
         }
