@@ -7,8 +7,10 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="model" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="local-runner" level="project" />
     <orderEntry type="module" module-name="src" />
+    <orderEntry type="module" module-name="runner" />
   </component>
 </module>
 

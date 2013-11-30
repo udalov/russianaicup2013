@@ -10,24 +10,20 @@
 
     <target name="clean">
         <delete dir="${dist}"/>
-    </target>
-
-    <target name="mkdir">
         <mkdir dir="${dist}/classes"/>
     </target>
 
-    <target name="src" depends="clean,mkdir">
+    <target name="src" depends="clean">
         <zip basedir="src" destfile="${dist}/solution.zip" excludes="src.iml"/>
     </target>
 
-    <target name="dist" depends="clean,mkdir">
-        <javac destdir="${dist}/classes" classpath="${local.runner}" debug="true" debuglevel="lines,vars,source" includeantruntime="false"
-               target="1.7">
-            <withKotlin/>
+    <target name="dist" depends="clean">
+        <javac destdir="${dist}/classes" debug="true" debuglevel="lines,vars,source" includeantruntime="false" target="1.7">
             <src path="model"/>
             <src path="runner"/>
             <src path="src"/>
         </javac>
+        <kotlinc src="local" classpath="${local.runner}:runner:src" output="${dist}/classes"/>
         <jar destfile="${rac-jar}" basedir="${dist}/classes">
             <zipfileset includes="**/*" src="${kotlin.home}/lib/kotlin-runtime.jar"/>
             <zipfileset includes="**/*" src="${local.runner}"/>
