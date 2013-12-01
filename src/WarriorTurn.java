@@ -19,6 +19,7 @@ public class WarriorTurn {
     private final Map<TrooperType, Trooper> alliesMap;
     // Index of me in the 'allies' list
     private final int myIndex;
+    private final Const coeff;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -28,7 +29,8 @@ public class WarriorTurn {
 
         me = Point.create(self);
         worldBonuses = Arrays.asList(world.getBonuses());
-        board = army.getBoard();
+        board = army.board;
+        coeff = army.coeff;
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
         alliesMap = new EnumMap<>(TrooperType.class);
@@ -490,14 +492,14 @@ public class WarriorTurn {
         public final double evaluate(@NotNull Position p) {
             double result = 0;
 
-            result += weightedHpOfAllies(p.allyHp);
+            result += coeff.weightedHpOfAllies * weightedHpOfAllies(p.allyHp);
 
             // TODO: or if have a medikit
             if (self.getType() == FIELD_MEDIC) {
-                result -= 0.5 * distanceToWoundedAllies(p);
+                result -= coeff.medicDistanceToWoundedAllies * distanceToWoundedAllies(p);
             }
 
-            result += 5 * underCommanderAura(p);
+            result += coeff.underCommanderAura * underCommanderAura(p);
 
             result += situation(p);
 
@@ -524,7 +526,8 @@ public class WarriorTurn {
         private double weightedHpOfAllies(@NotNull int[] allyHp) {
             double result = 0;
             for (int hp : allyHp) {
-                result += 2 * Math.min(hp, 85) + 0.2 * Math.max(hp - 85, 0);
+                // TODO: these coefficients
+                result += 2 * Math.min(hp, coeff.maxHpToHeal) + 0.2 * Math.max(hp - coeff.maxHpToHeal, 0);
             }
             return result;
         }
@@ -563,16 +566,16 @@ public class WarriorTurn {
         protected double situation(@NotNull Position p) {
             double result = 0;
 
-            result -= IntArrays.sum(p.enemyHp);
-            result += 30 * IntArrays.numberOfZeros(p.enemyHp);
+            result -= coeff.enemyHp * IntArrays.sum(p.enemyHp);
+            result += coeff.killEnemy * IntArrays.numberOfZeros(p.enemyHp);
 
-            result -= 10 * enemyTeamsThatSeeUs(p);
+            result -= coeff.enemyTeamsThatSeeUs * enemyTeamsThatSeeUs(p);
 
-            result -= 0.5 * expectedDamageOnNextTurn(p);
+            result -= coeff.expectedDamageOnNextTurn * expectedDamageOnNextTurn(p);
 
-            result += 0.1 * Integer.bitCount(p.bonuses);
+            result += coeff.bonusInCombat * Integer.bitCount(p.bonuses);
 
-            result -= 0.01 * distanceToAllies(p);
+            result -= coeff.distanceToAlliesInCombat * distanceToAllies(p);
 
             // TODO: also for others
             if (self.getType() == SNIPER) {
@@ -680,17 +683,17 @@ public class WarriorTurn {
         protected double situation(@NotNull Position p) {
             double result = 0;
 
-            result += 3 * Integer.bitCount(p.bonuses);
-            // Only use field ration in a combat
-            if (p.has(FIELD_RATION)) result += 10;
+            if (p.has(GRENADE)) result += coeff.hasGrenadeInMovement;
+            if (p.has(MEDIKIT)) result += coeff.hasMedikitInMovement;
+            if (p.has(FIELD_RATION)) result += coeff.hasFieldRationInMovement;
 
             Integer dist = board.distance(p.me, leader);
-            if (dist != null) result -= dist;
+            if (dist != null) result -= coeff.followerDistanceToLeader * dist;
 
             int freeCells = leaderDegreeOfFreedom(p);
-            result -= 100 * Math.max(5 - freeCells, 0);
+            result -= coeff.leaderDegreeOfFreedom * Math.max(5 - freeCells, 0);
 
-            if (isBlockingLeader(p)) result -= 10;
+            if (isBlockingLeader(p)) result -= coeff.isFollowerBlockingLeader;
 
             return result;
         }
@@ -731,20 +734,18 @@ public class WarriorTurn {
     private class LeaderScorer extends Scorer {
         private final Point wayPoint = army.getOrUpdateWayPoint(allies);
 
-        // TODO: this is a map-specific hack, get rid of it
-        private final int criticalDistanceToAllies = board.getKind() == Board.Kind.CHEESER ? 6 : 5;
-
         @Override
         protected double situation(@NotNull Position p) {
             double result = 0;
 
             result += 3 * Integer.bitCount(p.bonuses);
-            // Only use field ration in a combat
-            if (p.has(FIELD_RATION)) result += 10;
+            if (p.has(GRENADE)) result += coeff.hasGrenadeInMovement;
+            if (p.has(MEDIKIT)) result += coeff.hasMedikitInMovement;
+            if (p.has(FIELD_RATION)) result += coeff.hasFieldRationInMovement;
 
-            result -= distanceToWayPoint(p);
+            result -= coeff.leaderDistanceToWayPoint * distanceToWayPoint(p);
 
-            result -= 100 * farAwayTeammates(p);
+            result -= coeff.leaderFarAwayTeammates * farAwayTeammates(p);
 
             return result;
         }
@@ -754,7 +755,7 @@ public class WarriorTurn {
             for (int i = 0, size = allies.size(); i < size; i++) {
                 if (i == myIndex) continue;
                 Integer distance = board.distance(Point.create(allies.get(i)), p.me);
-                if (distance != null && distance > criticalDistanceToAllies) result++;
+                if (distance != null && distance > coeff.leaderCriticalDistanceToAllies) result++;
             }
             return result;
         }

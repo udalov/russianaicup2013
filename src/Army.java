@@ -11,7 +11,8 @@ public class Army {
     private final List<Point> wayPoints = new ArrayList<>(25);
     private int curWayPoint;
 
-    private final Board board;
+    public final Board board;
+    public final Const coeff;
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
 
@@ -21,6 +22,7 @@ public class Army {
 
     public Army(@NotNull World world) {
         board = new Board(world);
+        coeff = Const.valueOf(board.getKind().toString());
 
         Trooper commander = null;
         for (Trooper trooper : world.getTroopers()) {
@@ -112,11 +114,6 @@ public class Army {
             }
         }
         throw new IllegalStateException("Impossible as it may seem, there are no free points nearby: " + p);
-    }
-
-    @NotNull
-    public Board getBoard() {
-        return board;
     }
 
     @NotNull
