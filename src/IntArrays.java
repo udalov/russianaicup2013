@@ -26,8 +26,13 @@ public class IntArrays {
     }
 
     @NotNull
-    public static int[] copy(@NotNull int[] a) {
-        return Arrays.copyOf(a, a.length);
+    public static int[] diff(@NotNull int[] a, @NotNull int[] b) {
+        int len = a.length;
+        int[] result = Arrays.copyOf(a, len);
+        for (int i = 0; i < len; i++) {
+            result[i] -= b[i];
+        }
+        return result;
     }
 
     @NotNull
@@ -41,7 +46,7 @@ public class IntArrays {
     @NotNull
     public static int[] replace(@NotNull int[] a, int index, int value) {
         if (a[index] == value) return a;
-        int[] result = copy(a);
+        int[] result = Arrays.copyOf(a, a.length);
         result[index] = value;
         return result;
     }

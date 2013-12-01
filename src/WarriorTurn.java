@@ -307,16 +307,17 @@ public class WarriorTurn {
 
         @NotNull
         private int[] grenadeEffectToEnemies(@NotNull Point target) {
-            int[] result = IntArrays.copy(enemyHp);
-            for (int i = 0, size = enemies.size(); i < size; i++) {
+            int size = enemyHp.length;
+            int[] result = new int[size];
+            for (int i = 0; i < size; i++) {
                 result[i] = grenadeEffectToTrooper(target, Point.create(enemies.get(i)), enemyHp[i]);
             }
             return result;
         }
 
         @NotNull
-        private int[] grenadeEffectToAllies(@NotNull Point target) {
-            int[] result = IntArrays.copy(allyHp);
+        public int[] grenadeEffectToAllies(@NotNull Point target) {
+            int[] result = new int[allyHp.length];
             for (Pair<Integer, Point> pair : allies()) {
                 int i = pair.first;
                 result[i] = grenadeEffectToTrooper(target, pair.second, allyHp[i]);
@@ -619,8 +620,6 @@ public class WarriorTurn {
         }
 
         private double expectedDamageOnNextTurn(@NotNull Position p) {
-            // TODO: take into account grenades/medikits that enemies have
-
             // Assume that all enemies see us, but this is not always true
             // TODO: count number of other teams having at least one trooper who sees us
 
@@ -636,6 +635,29 @@ public class WarriorTurn {
                 }
                 if (enemy.isHoldingFieldRation()) {
                     actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+                }
+
+                // Assume that he'll always throw a grenade if he has one
+                if (enemy.isHoldingGrenade() && actionPoints >= game.getGrenadeThrowCost()) {
+                    int[] best = p.allyHp;
+                    int bestDamage = 0;
+                    for (Pair<Integer, Point> ally : p.allies()) {
+                        Point target = ally.second;
+                        if (Point.create(enemy).euclideanDistance(target) <= game.getGrenadeThrowRange()) {
+                            int[] hp = p.grenadeEffectToAllies(target);
+                            int damage = IntArrays.sum(IntArrays.diff(p.allyHp, hp));
+                            if (damage > bestDamage) {
+                                bestDamage = damage;
+                                best = hp;
+                            }
+                        }
+                    }
+                    if (bestDamage > 0) {
+                        actionPoints -= game.getGrenadeThrowCost();
+                        for (int i = 0; i < p.allyHp.length; i++) {
+                            expectedDamage[i] += p.allyHp[i] - best[i];
+                        }
+                    }
                 }
 
                 // Assume that he's always shooting right away until the end of his turn
