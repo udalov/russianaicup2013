@@ -9,7 +9,7 @@
     <taskdef resource="org/jetbrains/jet/buildtools/ant/antlib.xml" classpath="${kotlin.home}/lib/kotlin-ant.jar"/>
 
     <target name="clean">
-        <delete dir="${dist}"/>
+        <delete dir="${dist}/classes"/>
         <mkdir dir="${dist}/classes"/>
     </target>
 
@@ -17,12 +17,16 @@
         <zip basedir="src" destfile="${dist}/solution.zip" excludes="src.iml"/>
     </target>
 
-    <target name="dist" depends="clean">
+    <target name="compile" depends="clean">
         <javac destdir="${dist}/classes" debug="true" debuglevel="lines,vars,source" includeantruntime="false" target="1.7">
             <src path="model"/>
             <src path="runner"/>
             <src path="src"/>
         </javac>
+    </target>
+
+    <target name="dist" depends="compile">
+        <delete file="${rac-jar}"/>
         <kotlinc src="local" classpath="${local.runner}:runner:src" output="${dist}/classes"/>
         <jar destfile="${rac-jar}" basedir="${dist}/classes">
             <zipfileset includes="**/*" src="${kotlin.home}/lib/kotlin-runtime.jar"/>
@@ -33,8 +37,10 @@
         </jar>
     </target>
 
-    <target name="bootstrap" depends="dist">
-        <move file="${rac-jar}" tofile="${bootstrap-strategy-jar}"/>
+    <!-- Usage: ant -Dbootstrap-name=m2 bootstrap -->
+    <target name="bootstrap" depends="compile">
+        <delete file="${dist}/${bootstrap-name}.jar"/>
+        <jar destfile="${dist}/${bootstrap-name}.jar" basedir="${dist}/classes"/>
     </target>
 
     <target name="update">

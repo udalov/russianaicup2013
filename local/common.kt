@@ -67,26 +67,28 @@ fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadNam
     val threads = ArrayList<Thread>(5)
     threads add Thread(localRunner(vis, map, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
 
-    var port: Long = 31001
+    val initialPort: Long = 31001
+    var myStrategies = 0
 
     for (team in lineup) {
         if (team != 'M') continue
 
-        val p = port++
-        if (p == 31001.toLong()) {
+        val port = initialPort + (myStrategies++)
+
+        if (myStrategies == 1) {
             threads add Thread {
                 Thread.currentThread().setName(threadName)
-                runMyStrategy(p)
+                runMyStrategy(port)
             }
             continue
         }
 
-        val file = File("lib/bootstrap-strategy.jar")
+        val file = File("dist/m${myStrategies}.jar")
         assert(file.exists(), "Compile a strategy to test against to: $file")
         threads add Thread {
             Thread.currentThread().setName(threadName)
             while (true) {
-                val process = Runtime.getRuntime().exec("java -cp $file Runner 127.0.0.1 $p 0000000000000000")
+                val process = Runtime.getRuntime().exec("java -cp $file Runner 127.0.0.1 $port 0000000000000000")
                 val err = process.getErrorStream()?.reader()
                 process.waitFor()
                 if (err?.readText()?.contains("Connection refused") ?: false) {
