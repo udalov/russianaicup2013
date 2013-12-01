@@ -637,6 +637,8 @@ public class WarriorTurn {
                     actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
                 }
 
+/*
+                // TODO: fix and uncomment expected damage from grenades
                 // Assume that he'll always throw a grenade if he has one
                 if (enemy.isHoldingGrenade() && actionPoints >= game.getGrenadeThrowCost()) {
                     int[] best = p.allyHp;
@@ -659,6 +661,7 @@ public class WarriorTurn {
                         }
                     }
                 }
+*/
 
                 // Assume that he's always shooting right away until the end of his turn
                 // TODO: handle the case when he lowers the stance in the beginning
