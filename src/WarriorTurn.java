@@ -629,9 +629,14 @@ public class WarriorTurn {
             double[] expectedDamage = new double[n];
 
             for (Trooper enemy : p.aliveEnemies()) {
-                // Assume that the enemy trooper always is in the commander aura
-                int actionPoints = enemy.getInitialActionPoints() +
-                        (enemy.getType() != COMMANDER && enemy.getType() != SCOUT ? game.getCommanderAuraBonusActionPoints() : 0);
+                int actionPoints = enemy.getInitialActionPoints();
+                if (enemy.getType() != COMMANDER && enemy.getType() != SCOUT) {
+                    // Assume that the enemy trooper always is in the commander aura
+                    actionPoints += game.getCommanderAuraBonusActionPoints();
+                }
+                if (enemy.isHoldingFieldRation()) {
+                    actionPoints += game.getFieldRationBonusActionPoints() - game.getFieldRationEatCost();
+                }
 
                 // Assume that he's always shooting right away until the end of his turn
                 // TODO: handle the case when he lowers the stance in the beginning
