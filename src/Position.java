@@ -5,7 +5,7 @@ import java.util.Arrays;
 import static model.BonusType.*;
 import static model.TrooperType.SNIPER;
 
-public final class Position {
+public class Position {
     public final Situation situation;
     public final Point me;
     public final TrooperStance stance;
