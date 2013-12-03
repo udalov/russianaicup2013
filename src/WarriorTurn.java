@@ -578,11 +578,8 @@ public class WarriorTurn {
 
             result -= coeff.distanceToAlliesInCombat * distanceToAllies(p);
 
-            // TODO: also for others
-            if (self.getType() == SNIPER) {
-                if (closestEnemy(p) < 8) {
-                    result -= p.stance.ordinal();
-                }
+            if (closestEnemy(p) < 8 /* TODO */) {
+                result -= coeff.combatStance * p.stance.ordinal();
             }
 
             return result;
