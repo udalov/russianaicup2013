@@ -502,7 +502,7 @@ public class WarriorTurn {
 
             result += coeff.underCommanderAura * underCommanderAura(p);
 
-            result += situation(p);
+            result += situationSpecificScore(p);
 
             return result;
         }
@@ -548,7 +548,7 @@ public class WarriorTurn {
             return result;
         }
 
-        protected abstract double situation(@NotNull Position p);
+        protected abstract double situationSpecificScore(@NotNull Position p);
     }
 
     private class CombatSituationScorer extends Scorer {
@@ -564,7 +564,7 @@ public class WarriorTurn {
         }
 
         @Override
-        protected double situation(@NotNull Position p) {
+        protected double situationSpecificScore(@NotNull Position p) {
             double result = 0;
 
             result -= coeff.enemyHp * IntArrays.sum(p.enemyHp);
@@ -707,7 +707,7 @@ public class WarriorTurn {
         }
 
         @Override
-        protected double situation(@NotNull Position p) {
+        protected double situationSpecificScore(@NotNull Position p) {
             double result = 0;
 
             if (p.has(GRENADE)) result += coeff.hasGrenadeInMovement;
@@ -762,7 +762,7 @@ public class WarriorTurn {
         private final Point wayPoint = army.getOrUpdateWayPoint(allies);
 
         @Override
-        protected double situation(@NotNull Position p) {
+        protected double situationSpecificScore(@NotNull Position p) {
             double result = 0;
 
             result += 3 * Integer.bitCount(p.bonuses);
