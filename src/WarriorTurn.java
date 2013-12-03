@@ -70,14 +70,15 @@ public class WarriorTurn {
             }
         }
 
-        List<Go> best = best(scorer);
+        Situation situation = new Situation(game, world, army, self, allies, myIndex, enemies, Arrays.asList(world.getBonuses()));
+        List<Go> best = best(scorer, situation);
         debug(scorer, best);
         return best.isEmpty() ? Go.endTurn() : best.iterator().next();
     }
 
     @NotNull
-    private List<Go> best(@NotNull Scorer scorer) {
-        Position start = startingPosition();
+    private List<Go> best(@NotNull Scorer scorer, @NotNull Situation situation) {
+        Position start = startingPosition(situation);
         // TODO: ArrayDeque?
         final Queue<Position> queue = new LinkedList<>();
         queue.add(start);
@@ -95,7 +96,7 @@ public class WarriorTurn {
                 best = cur;
             }
 
-            new TransitionFinder(cur, queue, prev).run();
+            new TransitionFinder(situation, cur, queue, prev).run();
         }
 
         if (best == start) return Collections.emptyList();
@@ -111,12 +112,15 @@ public class WarriorTurn {
         }
     }
 
-    private final class TransitionFinder {
+    private static final class TransitionFinder {
+        private final Situation situation;
         private final Position cur;
         private final Queue<Position> queue;
         private final Map<Position, Pair<Go, Position>> prev;
 
-        public TransitionFinder(@NotNull Position cur, @NotNull Queue<Position> queue, @NotNull Map<Position, Pair<Go, Position>> prev) {
+        public TransitionFinder(@NotNull Situation situation, @NotNull Position cur, @NotNull Queue<Position> queue,
+                                @NotNull Map<Position, Pair<Go, Position>> prev) {
+            this.situation = situation;
             this.cur = cur;
             this.queue = queue;
             this.prev = prev;
@@ -137,7 +141,7 @@ public class WarriorTurn {
             }
 
             // Heal
-            if (self.getType() == FIELD_MEDIC) {
+            if (situation.self.getType() == FIELD_MEDIC) {
                 for (Pair<Integer, Point> pair : cur.allies()) {
                     Position next = cur.heal(pair.first, pair.second);
                     if (next != null) add(next, Go.heal(cur.me.direction(pair.second)));
@@ -145,13 +149,13 @@ public class WarriorTurn {
             }
 
             // Shoot
-            for (int i = 0, size = enemies.size(); i < size; i++) {
+            for (int i = 0, size = situation.enemies.size(); i < size; i++) {
                 Position next = cur.shoot(i);
-                if (next != null) add(next, Go.shoot(Point.create(enemies.get(i))));
+                if (next != null) add(next, Go.shoot(Point.create(situation.enemies.get(i))));
             }
 
             // Throw grenade
-            for (Trooper enemy : enemies) {
+            for (Trooper enemy : situation.enemies) {
                 Point point = Point.create(enemy);
                 for (Direction direction : Direction.values()) {
                     Point target = point.go(direction);
@@ -186,13 +190,13 @@ public class WarriorTurn {
     }
 
     @NotNull
-    public Position startingPosition() {
+    public Position startingPosition(@NotNull Situation situation) {
         int bonuses = 0;
         for (BonusType bonus : BonusType.values()) {
             if (isHolding(bonus)) bonuses |= 1 << bonus.ordinal();
         }
         return new Position(
-                new Situation(game, world, army, self, allies, myIndex, enemies, Arrays.asList(world.getBonuses())),
+                situation,
                 me,
                 self.getStance(),
                 self.getActionPoints(),
