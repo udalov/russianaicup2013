@@ -8,7 +8,7 @@ import java.util.*;
 import static model.BonusType.*;
 import static model.TrooperType.*;
 
-public class WarriorTurn {
+public class MakeTurn {
     private final Army army;
     private final Trooper self;
     private final World world;
@@ -19,7 +19,7 @@ public class WarriorTurn {
     private final List<Trooper> allies;
     private final Map<TrooperType, Trooper> alliesMap;
 
-    public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
+    public MakeTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
         this.self = self;
         this.world = world;
