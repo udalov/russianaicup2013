@@ -14,16 +14,24 @@ public class Situation {
     public final List<Trooper> enemies;
     public final List<Bonus> bonuses;
 
-    public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull Trooper self, @NotNull List<Trooper> allies, int myIndex,
+    public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull Trooper self, @NotNull List<Trooper> allies,
                      @NotNull List<Trooper> enemies, @NotNull List<Bonus> bonuses) {
         this.game = game;
         this.world = world;
         this.army = army;
         this.self = self;
         this.allies = allies;
-        this.myIndex = myIndex;
         this.enemies = enemies;
         this.bonuses = bonuses;
+
+        int myIndex = -1;
+        for (int i = 0, n = allies.size(); i < n; i++) {
+            if (allies.get(i).getType() == self.getType()) {
+                myIndex = i;
+            }
+        }
+        assert myIndex >= 0 : "Where am I? " + allies;
+        this.myIndex = myIndex;
     }
 
     public int getMoveCost(@NotNull TrooperStance stance) {

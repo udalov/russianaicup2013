@@ -18,8 +18,6 @@ public class WarriorTurn {
     private final List<Trooper> enemies;
     private final List<Trooper> allies;
     private final Map<TrooperType, Trooper> alliesMap;
-    // Index of me in the 'allies' list
-    private final int myIndex;
 
     public WarriorTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -31,12 +29,8 @@ public class WarriorTurn {
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
         alliesMap = new EnumMap<>(TrooperType.class);
-        int myIndex = -1;
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
-                if (trooper.getType() == self.getType()) {
-                    myIndex = allies.size();
-                }
                 allies.add(trooper);
                 alliesMap.put(trooper.getType(), trooper);
             } else {
@@ -44,8 +38,6 @@ public class WarriorTurn {
                 enemies.add(trooper);
             }
         }
-        assert myIndex >= 0 : "Where am I? " + allies;
-        this.myIndex = myIndex;
 
         TurnLocalData data = army.loadTurnLocalData(world.getMoveIndex(), self.getType());
         if (data == null) {
@@ -57,7 +49,7 @@ public class WarriorTurn {
 
     @NotNull
     public Go makeTurn() {
-        Situation situation = new Situation(game, world, army, self, allies, myIndex, enemies, Arrays.asList(world.getBonuses()));
+        Situation situation = new Situation(game, world, army, self, allies, enemies, Arrays.asList(world.getBonuses()));
 
         Scorer scorer;
         if (!enemies.isEmpty()) {
