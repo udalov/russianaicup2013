@@ -9,11 +9,13 @@ public class Board {
         UNKNOWN(0),
         DEFAULT(49318912),
         CHEESER(43536704),
+        FEFER(-608025536),
         MAP01(-2071390976),
         MAP02(-1500897472),
         MAP03(-1006608576),
         MAP04(1693721344),
-        MAP05(2031338624);
+        MAP05(2031338624),
+        MAP06(-1450008832);
 
         private final int hashCode;
 

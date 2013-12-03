@@ -7,6 +7,8 @@ public enum Const {
         leaderCriticalDistanceToAllies = 6;
     }},
 
+    FEFER,
+
     MAP01,
 
     MAP02,
@@ -15,7 +17,9 @@ public enum Const {
 
     MAP04,
 
-    MAP05;
+    MAP05,
+
+    MAP06;
 
     public double weightedHpOfAllies = 1;
     public double medicDistanceToWoundedAllies = 0.5;
