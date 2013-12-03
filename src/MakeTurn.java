@@ -1,12 +1,10 @@
 import model.Game;
 import model.Trooper;
-import model.TrooperType;
 import model.World;
 
 import java.util.*;
 
 import static model.BonusType.*;
-import static model.TrooperType.*;
 
 public class MakeTurn {
     private final Army army;
@@ -17,7 +15,6 @@ public class MakeTurn {
     private final Point me;
     private final List<Trooper> enemies;
     private final List<Trooper> allies;
-    private final Map<TrooperType, Trooper> alliesMap;
 
     public MakeTurn(@NotNull Army army, @NotNull Trooper self, @NotNull World world, @NotNull Game game) {
         this.army = army;
@@ -28,11 +25,9 @@ public class MakeTurn {
         me = Point.create(self);
         List<Trooper> enemies = null;
         allies = new ArrayList<>(5);
-        alliesMap = new EnumMap<>(TrooperType.class);
         for (Trooper trooper : world.getTroopers()) {
             if (trooper.isTeammate()) {
                 allies.add(trooper);
-                alliesMap.put(trooper.getType(), trooper);
             } else {
                 if (enemies == null) enemies = new ArrayList<>(15);
                 enemies.add(trooper);
@@ -51,25 +46,13 @@ public class MakeTurn {
     public Go makeTurn() {
         Situation situation = new Situation(game, world, army, self, allies, enemies, Arrays.asList(world.getBonuses()));
 
-        Scorer scorer;
-        if (!enemies.isEmpty()) {
-            scorer = new Scorer.CombatSituation(situation);
-        } else {
-            TrooperType leader = findLeader().getType();
-            if (leader == self.getType()) {
-                scorer = new Scorer.Leader(situation);
-            } else {
-                scorer = new Scorer.Follower(situation, alliesMap.get(leader));
-            }
-        }
-
-        List<Go> best = best(scorer, situation);
-        debug(scorer, best);
+        List<Go> best = best(situation);
+        debug(situation.scorer, best);
         return best.isEmpty() ? Go.endTurn() : best.iterator().next();
     }
 
     @NotNull
-    private List<Go> best(@NotNull Scorer scorer, @NotNull Situation situation) {
+    private List<Go> best(@NotNull Situation situation) {
         Position start = startingPosition(situation);
         // TODO: ArrayDeque?
         final Queue<Position> queue = new LinkedList<>();
@@ -82,7 +65,7 @@ public class MakeTurn {
         while (!queue.isEmpty()) {
             Position cur = queue.poll();
 
-            double curValue = scorer.evaluate(cur);
+            double curValue = situation.scorer.evaluate(cur);
             if (curValue > bestValue) {
                 bestValue = curValue;
                 best = cur;
@@ -120,20 +103,6 @@ public class MakeTurn {
                 IntArrays.hitpointsOf(allies),
                 IntArrays.EMPTY
         );
-    }
-
-    @NotNull
-    private Trooper findLeader() {
-        // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
-        List<TrooperType> leaders = army.board.getKind() == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
-                Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
-                Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
-        for (TrooperType type : leaders) {
-            Trooper trooper = alliesMap.get(type);
-            if (trooper != null) return trooper;
-        }
-
-        throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
     }
 
     @NotNull

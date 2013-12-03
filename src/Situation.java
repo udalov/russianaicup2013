@@ -1,6 +1,9 @@
 import model.*;
 
+import java.util.Arrays;
 import java.util.List;
+
+import static model.TrooperType.*;
 
 public class Situation {
     public final Game game;
@@ -13,6 +16,8 @@ public class Situation {
     public final int myIndex;
     public final List<Trooper> enemies;
     public final List<Bonus> bonuses;
+
+    public final Scorer scorer;
 
     public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull Trooper self, @NotNull List<Trooper> allies,
                      @NotNull List<Trooper> enemies, @NotNull List<Bonus> bonuses) {
@@ -32,6 +37,33 @@ public class Situation {
         }
         assert myIndex >= 0 : "Where am I? " + allies;
         this.myIndex = myIndex;
+
+        if (!enemies.isEmpty()) {
+            this.scorer = new Scorer.CombatSituation(this);
+        } else {
+            Trooper leader = findLeader();
+            if (leader.getType() == self.getType()) {
+                this.scorer = new Scorer.Leader(this);
+            } else {
+                this.scorer = new Scorer.Follower(this, leader);
+            }
+        }
+    }
+
+    @NotNull
+    private Trooper findLeader() {
+        // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
+        List<TrooperType> leaderOrder = army.board.getKind() == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
+                Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
+                Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
+
+        for (TrooperType type : leaderOrder) {
+            for (Trooper ally : allies) {
+                if (ally.getType() == type) return ally;
+            }
+        }
+
+        throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
     }
 
     public int getMoveCost(@NotNull TrooperStance stance) {
