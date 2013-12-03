@@ -21,7 +21,7 @@ public enum Const {
     public double medicDistanceToWoundedAllies = 0.5;
     public double underCommanderAura = 5;
 
-    public double maxHpToHeal = 80;
+    public double maxHpToHeal = 85;
 
     public double enemyHp = 1;
     public double killEnemy = 30;
