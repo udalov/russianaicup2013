@@ -12,7 +12,6 @@ public class WarriorTurn {
     private final Game game;
 
     private final Point me;
-    private final List<Bonus> worldBonuses;
     private final Board board;
     private final List<Trooper> enemies;
     private final List<Trooper> allies;
@@ -28,7 +27,6 @@ public class WarriorTurn {
         this.game = game;
 
         me = Point.create(self);
-        worldBonuses = Arrays.asList(world.getBonuses());
         board = army.board;
         coeff = army.coeff;
         List<Trooper> enemies = null;
@@ -187,7 +185,8 @@ public class WarriorTurn {
         }
     }
 
-    public final class Position {
+    public static final class Position {
+        public final Situation situation;
         public final Point me;
         public final TrooperStance stance;
         public final int actionPoints;
@@ -203,8 +202,9 @@ public class WarriorTurn {
 
         private final int hashCode;
 
-        public Position(@NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp, @NotNull int[] allyHp,
-                        @NotNull int[] collected) {
+        public Position(@NotNull Situation situation, @NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp,
+                        @NotNull int[] allyHp, @NotNull int[] collected) {
+            this.situation = situation;
             this.me = me;
             this.stance = stance;
             this.actionPoints = actionPoints;
@@ -230,12 +230,12 @@ public class WarriorTurn {
 
                 @Override
                 public boolean hasNext() {
-                    return i < allies.size();
+                    return i < situation.allies.size();
                 }
 
                 @Override
                 public Pair<Integer, Point> next() {
-                    Point ally = i == myIndex ? me : Point.create(allies.get(i));
+                    Point ally = i == situation.myIndex ? me : Point.create(situation.allies.get(i));
                     return new Pair<>(i++, ally);
                 }
             });
@@ -244,7 +244,7 @@ public class WarriorTurn {
         @NotNull
         private Iterable<Trooper> aliveEnemies() {
             return Util.iterable(new Util.AbstractIterator<Trooper>() {
-                private final int size = enemies.size();
+                private final int size = situation.enemies.size();
                 private int i = 0;
 
                 @Override
@@ -259,7 +259,7 @@ public class WarriorTurn {
                 @Override
                 public Trooper next() {
                     while (!hasNext());
-                    return enemies.get(i++);
+                    return situation.enemies.get(i++);
                 }
             });
         }
@@ -277,7 +277,7 @@ public class WarriorTurn {
         }
 
         private boolean isPassablePoint(@NotNull Point point) {
-            if (!board.isPassable(point)) return false;
+            if (!situation.army.board.isPassable(point)) return false;
             for (Pair<Integer, Point> pair : allies()) {
                 if (point.equals(pair.second)) return false;
             }
@@ -288,9 +288,9 @@ public class WarriorTurn {
         }
 
         private double effectiveShootingRange() {
-            double result = self.getShootingRange();
-            if (self.getType() == SNIPER) {
-                result -= sniperShootingRangeBonus(self.getStance());
+            double result = situation.self.getShootingRange();
+            if (situation.self.getType() == SNIPER) {
+                result -= sniperShootingRangeBonus(situation.self.getStance());
                 result += sniperShootingRangeBonus(stance);
             }
             return result;
@@ -299,8 +299,10 @@ public class WarriorTurn {
         private double sniperShootingRangeBonus(@NotNull TrooperStance stance) {
             switch (stance) {
                 case STANDING: return 0;
-                case KNEELING: return game.getSniperKneelingShootingRangeBonus();
-                case PRONE: return game.getSniperProneShootingRangeBonus();
+                case KNEELING:
+                    return situation.game.getSniperKneelingShootingRangeBonus();
+                case PRONE:
+                    return situation.game.getSniperProneShootingRangeBonus();
                 default: throw new IllegalStateException("Sniper is so stealth, he's " + stance);
             }
         }
@@ -310,7 +312,7 @@ public class WarriorTurn {
             int size = enemyHp.length;
             int[] result = new int[size];
             for (int i = 0; i < size; i++) {
-                result[i] = grenadeEffectToTrooper(target, Point.create(enemies.get(i)), enemyHp[i]);
+                result[i] = grenadeEffectToTrooper(target, Point.create(situation.enemies.get(i)), enemyHp[i]);
             }
             return result;
         }
@@ -327,9 +329,9 @@ public class WarriorTurn {
 
         private int grenadeEffectToTrooper(@NotNull Point target, @NotNull Point trooper, int hitpoints) {
             if (trooper.equals(target)) {
-                return Math.max(hitpoints - game.getGrenadeDirectDamage(), 0);
+                return Math.max(hitpoints - situation.game.getGrenadeDirectDamage(), 0);
             } else if (trooper.isNeighbor(target)) {
-                return Math.max(hitpoints - game.getGrenadeCollateralDamage(), 0);
+                return Math.max(hitpoints - situation.game.getGrenadeCollateralDamage(), 0);
             } else {
                 return hitpoints;
             }
@@ -338,7 +340,7 @@ public class WarriorTurn {
         @NotNull
         private int[] healEffect(int ally, int healingBonus) {
             // Relies on the fact that maximal hitpoints are the same for every trooper
-            int maxHp = self.getMaximalHitpoints();
+            int maxHp = situation.self.getMaximalHitpoints();
             int hp = allyHp[ally];
             if (hp >= maxHp) return allyHp;
 
@@ -347,7 +349,7 @@ public class WarriorTurn {
 
         @Nullable
         private Bonus maybeCollectBonus(@NotNull Point point) {
-            for (Bonus bonus : worldBonuses) {
+            for (Bonus bonus : situation.bonuses) {
                 if (point.isEqualTo(bonus)) {
                     return has(bonus.getType()) || IntArrays.contains(collected, (int) bonus.getId()) ? null : bonus;
                 }
@@ -385,90 +387,90 @@ public class WarriorTurn {
 
         @Nullable
         public Position move(@NotNull Direction direction) {
-            int ap = actionPoints - getMoveCost(stance);
+            int ap = actionPoints - situation.getMoveCost(stance);
             if (ap < 0) return null;
             Point point = me.go(direction);
             if (point == null || !isPassablePoint(point)) return null;
             Bonus bonus = maybeCollectBonus(point);
             int newBonuses = bonus == null ? bonuses : with(bonus.getType());
             int[] newCollected = bonus == null ? collected : IntArrays.add(collected, (int) bonus.getId());
-            return new Position(point, stance, ap, newBonuses, enemyHp, allyHp, newCollected);
+            return new Position(situation, point, stance, ap, newBonuses, enemyHp, allyHp, newCollected);
         }
 
         @Nullable
         public Position shoot(int enemy) {
-            int ap = actionPoints - self.getShootCost();
+            int ap = actionPoints - situation.self.getShootCost();
             if (ap < 0) return null;
             int hp = enemyHp[enemy];
             if (hp == 0) return null;
-            Trooper trooper = enemies.get(enemy);
-            if (!isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
-            int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - self.getDamage(stance), 0));
-            return new Position(me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
+            Trooper trooper = situation.enemies.get(enemy);
+            if (!situation.isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
+            int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - situation.self.getDamage(stance), 0));
+            return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
         }
 
         @Nullable
         public Position raiseStance() {
-            int ap = actionPoints - game.getStanceChangeCost();
+            int ap = actionPoints - situation.game.getStanceChangeCost();
             if (ap < 0) return null;
             TrooperStance newStance = Util.higher(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp, collected);
+            return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected);
         }
 
         @Nullable
         public Position lowerStance() {
-            int ap = actionPoints - game.getStanceChangeCost();
+            int ap = actionPoints - situation.game.getStanceChangeCost();
             if (ap < 0) return null;
             TrooperStance newStance = Util.lower(stance);
             if (newStance == null) return null;
-            return new Position(me, newStance, ap, bonuses, enemyHp, allyHp, collected);
+            return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected);
         }
 
         @Nullable
         public Position throwGrenade(@NotNull Point target) {
             if (!has(GRENADE)) return null;
-            int ap = actionPoints - game.getGrenadeThrowCost();
+            int ap = actionPoints - situation.game.getGrenadeThrowCost();
             if (ap < 0) return null;
-            if (!me.withinEuclidean(target, game.getGrenadeThrowRange())) return null;
+            if (!me.withinEuclidean(target, situation.game.getGrenadeThrowRange())) return null;
             int[] newEnemyHp = grenadeEffectToEnemies(target);
             if (Arrays.equals(enemyHp, newEnemyHp)) return null;
             int[] newAllyHp = grenadeEffectToAllies(target);
-            return new Position(me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected);
+            return new Position(situation, me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected);
         }
 
         @Nullable
         public Position useMedikit(int ally, @NotNull Point point) {
             if (!has(MEDIKIT)) return null;
-            int ap = actionPoints - game.getMedikitUseCost();
+            int ap = actionPoints - situation.game.getMedikitUseCost();
             if (ap < 0) return null;
             int[] newAllyHp;
-            if (point.equals(me)) newAllyHp = healEffect(ally, game.getMedikitHealSelfBonusHitpoints());
-            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getMedikitBonusHitpoints());
+            if (point.equals(me)) newAllyHp = healEffect(ally, situation.game.getMedikitHealSelfBonusHitpoints());
+            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, situation.game.getMedikitBonusHitpoints());
             else return null;
             if (Arrays.equals(allyHp, newAllyHp)) return null;
-            return new Position(me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
+            return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
         }
 
         @Nullable
         public Position eatFieldRation() {
             if (!has(FIELD_RATION)) return null;
-            if (actionPoints >= self.getInitialActionPoints()) return null;
-            int ap = actionPoints - game.getFieldRationEatCost();
+            if (actionPoints >= situation.self.getInitialActionPoints()) return null;
+            int ap = actionPoints - situation.game.getFieldRationEatCost();
             if (ap < 0) return null;
-            return new Position(me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected);
+            return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected);
         }
 
         @Nullable
         public Position heal(int ally, @NotNull Point point) {
-            int ap = actionPoints - game.getFieldMedicHealCost();
+            int ap = actionPoints - situation.game.getFieldMedicHealCost();
             if (ap < 0) return null;
             int[] newAllyHp;
-            if (point.equals(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealSelfBonusHitpoints());
-            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, game.getFieldMedicHealBonusHitpoints());
+            if (point.equals(me)) newAllyHp = healEffect(ally, situation.game.getFieldMedicHealSelfBonusHitpoints());
+            else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, situation.game.getFieldMedicHealBonusHitpoints());
             else return null;
             if (Arrays.equals(allyHp, newAllyHp)) return null;
-            return new Position(me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
+            return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
         }
     }
 
@@ -479,6 +481,7 @@ public class WarriorTurn {
             if (isHolding(bonus)) bonuses |= 1 << bonus.ordinal();
         }
         return new Position(
+                new Situation(game, world, army, self, allies, myIndex, enemies, Arrays.asList(world.getBonuses())),
                 me,
                 self.getStance(),
                 self.getActionPoints(),
@@ -807,15 +810,6 @@ public class WarriorTurn {
         throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
     }
 
-    private int getMoveCost(@NotNull TrooperStance stance) {
-        switch (stance) {
-            case PRONE: return game.getProneMoveCost();
-            case KNEELING: return game.getKneelingMoveCost();
-            case STANDING: return game.getStandingMoveCost();
-            default: throw new IllegalStateException("Unknown stance: " + stance);
-        }
-    }
-
     private boolean isHolding(@NotNull BonusType type) {
         switch (type) {
             case GRENADE: return self.isHoldingGrenade();
@@ -827,10 +821,6 @@ public class WarriorTurn {
 
     private boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Point object, @NotNull TrooperStance objectStance) {
         return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.x, object.y, objectStance);
-    }
-
-    private boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance, @NotNull Trooper object) {
-        return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.getX(), object.getY(), object.getStance());
     }
 
     @NotNull
