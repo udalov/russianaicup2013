@@ -1,5 +1,4 @@
 import model.Direction;
-import model.Trooper;
 import model.TrooperStance;
 
 import java.util.*;
@@ -60,12 +59,11 @@ public abstract class Scorer {
 
     private double distanceToWoundedAllies(@NotNull Position p) {
         double result = 0;
-        for (int i = 0, size = situation.allies.size(); i < size; i++) {
-            if (i == situation.self.index) continue;
-            Warrior ally = situation.allies.get(i);
+        for (Warrior ally : situation.allies) {
+            if (ally.equals(situation.self)) continue;
             Integer dist = situation.army.board.distance(ally.point, p.me);
             if (dist == null || dist == 0) continue;
-            int toHeal = ally.getMaximalHitpoints() - p.allyHp[i];
+            int toHeal = ally.getMaximalHitpoints() - p.allyHp[ally.index];
             if (toHeal > 60) result += 3 * dist;
             else if (toHeal > 15) result += dist;
             else if (toHeal > 0) result += 0.1 * dist;
@@ -101,9 +99,9 @@ public abstract class Scorer {
 
         private int farAwayTeammates(@NotNull Position p) {
             int result = 0;
-            for (int i = 0, size = situation.allies.size(); i < size; i++) {
-                if (i == situation.self.index) continue;
-                Integer distance = situation.army.board.distance(situation.allies.get(i).point, p.me);
+            for (Warrior ally : situation.allies) {
+                if (ally.equals(situation.self)) continue;
+                Integer distance = situation.army.board.distance(ally.point, p.me);
                 if (distance != null && distance > coeff.leaderCriticalDistanceToAllies) result++;
             }
             return result;
@@ -239,9 +237,9 @@ public abstract class Scorer {
 
         private double distanceToAllies(@NotNull Position p) {
             double result = 0;
-            for (int i = 0, size = situation.allies.size(); i < size; i++) {
-                if (i == situation.self.index) continue;
-                Integer dist = situation.army.board.distance(situation.allies.get(i).point, p.me);
+            for (Warrior ally : situation.allies) {
+                if (ally.equals(situation.self)) continue;
+                Integer dist = situation.army.board.distance(ally.point, p.me);
                 if (dist != null) result += dist;
             }
             return result;

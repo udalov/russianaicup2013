@@ -26,12 +26,6 @@ public class Warrior {
         this(self.index, self.trooper, point, stance);
     }
 
-    @NotNull
-    @Deprecated
-    public Trooper trooper() {
-        return trooper;
-    }
-
     public double getShootingRange() {
         return trooper.getShootingRange();
     }
@@ -58,6 +52,16 @@ public class Warrior {
 
     public double getVisionRange() {
         return trooper.getVisionRange();
+    }
+
+    @Override
+    public int hashCode() {
+        return (int) trooper.getId();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof Warrior && ((Warrior) obj).trooper.getId() == trooper.getId();
     }
 
     @Override

@@ -134,8 +134,8 @@ public class Position {
     private int[] grenadeEffectToEnemies(@NotNull Point target) {
         int size = enemyHp.length;
         int[] result = new int[size];
-        for (int i = 0; i < size; i++) {
-            result[i] = grenadeEffectToTrooper(target, situation.enemies.get(i).point, enemyHp[i]);
+        for (EnemyWarrior enemy : situation.enemies) {
+            result[enemy.index] = grenadeEffectToTrooper(target, enemy.point, enemyHp[enemy.index]);
         }
         return result;
     }
@@ -220,14 +220,13 @@ public class Position {
     }
 
     @Nullable
-    public Position shoot(int enemyIndex) {
+    public Position shoot(@NotNull EnemyWarrior enemy) {
         int ap = actionPoints - situation.self.getShootCost();
         if (ap < 0) return null;
-        int hp = enemyHp[enemyIndex];
+        int hp = enemyHp[enemy.index];
         if (hp == 0) return null;
-        EnemyWarrior enemy = situation.enemies.get(enemyIndex);
         if (!situation.isReachable(effectiveShootingRange(), me, stance, enemy.point, enemy.stance)) return null;
-        int[] newEnemyHp = IntArrays.replace(enemyHp, enemyIndex, Math.max(hp - situation.self.getDamage(stance), 0));
+        int[] newEnemyHp = IntArrays.replace(enemyHp, enemy.index, Math.max(hp - situation.self.getDamage(stance), 0));
         return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
     }
 
@@ -262,13 +261,13 @@ public class Position {
     }
 
     @Nullable
-    public Position useMedikit(int ally, @NotNull Point point) {
+    public Position useMedikit(@NotNull Warrior ally) {
         if (!has(MEDIKIT)) return null;
         int ap = actionPoints - situation.game.getMedikitUseCost();
         if (ap < 0) return null;
         int[] newAllyHp;
-        if (point.equals(me)) newAllyHp = healEffect(ally, situation.game.getMedikitHealSelfBonusHitpoints());
-        else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, situation.game.getMedikitBonusHitpoints());
+        if (ally.point.equals(me)) newAllyHp = healEffect(ally.index, situation.game.getMedikitHealSelfBonusHitpoints());
+        else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getMedikitBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
         return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
@@ -284,12 +283,12 @@ public class Position {
     }
 
     @Nullable
-    public Position heal(int ally, @NotNull Point point) {
+    public Position heal(@NotNull Warrior ally) {
         int ap = actionPoints - situation.game.getFieldMedicHealCost();
         if (ap < 0) return null;
         int[] newAllyHp;
-        if (point.equals(me)) newAllyHp = healEffect(ally, situation.game.getFieldMedicHealSelfBonusHitpoints());
-        else if (point.isNeighbor(me)) newAllyHp = healEffect(ally, situation.game.getFieldMedicHealBonusHitpoints());
+        if (ally.point.equals(me)) newAllyHp = healEffect(ally.index, situation.game.getFieldMedicHealSelfBonusHitpoints());
+        else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getFieldMedicHealBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
         return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);

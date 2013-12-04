@@ -36,15 +36,15 @@ public class TransitionFinder {
         // Heal
         if (situation.self.type == FIELD_MEDIC) {
             for (Warrior ally : cur.allies()) {
-                Position next = cur.heal(ally.index, ally.point);
+                Position next = cur.heal(ally);
                 if (next != null) add(next, Go.heal(cur.me.direction(ally.point)));
             }
         }
 
         // Shoot
-        for (int i = 0, size = situation.enemies.size(); i < size; i++) {
-            Position next = cur.shoot(i);
-            if (next != null) add(next, Go.shoot(situation.enemies.get(i).point));
+        for (EnemyWarrior enemy : situation.enemies) {
+            Position next = cur.shoot(enemy);
+            if (next != null) add(next, Go.shoot(enemy.point));
         }
 
         // Throw grenade
@@ -60,7 +60,7 @@ public class TransitionFinder {
 
         // Use medikit
         for (Warrior ally : cur.allies()) {
-            Position next = cur.useMedikit(ally.index, ally.point);
+            Position next = cur.useMedikit(ally);
             if (next != null) add(next, Go.useMedikit(cur.me.direction(ally.point)));
         }
 
