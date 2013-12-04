@@ -216,9 +216,28 @@ public abstract class Scorer {
             }
 
             if (computeNextAllyTurn && situation.army.isOrderComplete()) {
-                result += nextAllyTurn(p);
+                result += coeff.combatNextAllyTurn * nextAllyTurn(p);
             }
 
+            // TODO: only if high hp?
+            result += coeff.combatVisibleEnemies * visibleEnemies(p);
+
+            return result;
+        }
+
+        // Returns number of visible enemies or their corpses from those who were seen in the beginning of the turn (situation)
+        // Why corpses: because no matter what coefficients are, we don't want our troopers to prefer to see more enemies than to kill :)
+        private int visibleEnemies(@NotNull Position p) {
+            int result = 0;
+            outer: for (EnemyWarrior enemy : situation.enemies) {
+                for (Warrior ally : p.allies()) {
+                    // TODO: not very accurate, as kneeling or prone enemy sniper decreases (!) our vision range towards him
+                    if (situation.isReachable(ally.getVisionRange(), ally.point, ally.stance, enemy.point, enemy.stance)) {
+                        result++;
+                        continue outer;
+                    }
+                }
+            }
             return result;
         }
 
@@ -236,7 +255,7 @@ public abstract class Scorer {
 
             Pair<Position, List<Go>> best = MakeTurn.best(next, start);
 
-            return coeff.combatNextAllyTurn * next.scorer.evaluate(best.first);
+            return next.scorer.evaluate(best.first);
         }
 
         @Nullable

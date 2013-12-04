@@ -50,6 +50,10 @@ public class Warrior {
         return trooper.getPlayerId();
     }
 
+    public double getVisionRange() {
+        return trooper.getVisionRange();
+    }
+
     @Override
     public int hashCode() {
         return (int) trooper.getId();
