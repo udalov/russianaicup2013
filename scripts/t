@@ -4,4 +4,10 @@
 
 `dirname $0`/mt $1 $2 $3 $4 >$5
 echo "$3 $4"
-awk 'BEGIN { a[1]=0;a[2]=0;a[3]=0;a[4]=0; } { a[$1]++; if ($1<1||$1>4) print "oh dear"; } END { print a[1],a[2],a[3],a[4]; }' <$5
+len=`echo -n $4 | wc -c | bc`
+if [[ $len == 2 ]]
+then
+    awk 'BEGIN { a[1]=0;a[2]=0; } { a[$1]++; if ($1<1||$1>2) print "oh dear"; } END { print a[1],a[2]; }' <$5
+else
+    awk 'BEGIN { a[1]=0;a[2]=0;a[3]=0;a[4]=0; } { a[$1]++; if ($1<1||$1>4) print "oh dear"; } END { print a[1],a[2],a[3],a[4]; }' <$5
+fi

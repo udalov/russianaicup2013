@@ -13,10 +13,10 @@ object SmartGuy : Player("SmartGuy", javaClass<com.a.b.a.a.e.a>().getSimpleName(
 
 val LOG_FILE = "out/log.txt"
 
-fun localRunner(vis: Boolean, map: Board.Kind, teamSize: Int, seed: Long, p1: Player, p2: Player, p3: Player, p4: Player): Runnable {
+fun localRunner(vis: Boolean, map: Board.Kind, teamSize: Int, seed: Long, players: List<Player>): Runnable {
     Logger.getRootLogger()?.removeAllAppenders()
 
-    return com.a.b.c(array(
+    val args = arrayListOf(
             "-move-count=50",
             "-render-to-screen=$vis",
             "-render-to-screen-scale=1.0",
@@ -25,20 +25,17 @@ fun localRunner(vis: Boolean, map: Board.Kind, teamSize: Int, seed: Long, p1: Pl
             "-debug=true",
             "-map=${map.toString().toLowerCase()}",
             "-base-adapter-port=31001",
-            "-seed=$seed",
-            "-p1-name=${p1.name}",
-            "-p2-name=${p2.name}",
-            "-p3-name=${p3.name}",
-            "-p4-name=${p4.name}",
-            "-p1-team-size=$teamSize",
-            "-p2-team-size=$teamSize",
-            "-p3-team-size=$teamSize",
-            "-p4-team-size=$teamSize",
-            p1.classFile,
-            p2.classFile,
-            p3.classFile,
-            p4.classFile
-    ))
+            "-seed=$seed"
+    )
+
+    for ((index, player) in players.withIndices()) {
+        val i = index + 1
+        args.add("-p$i-name=${player.name}")
+        args.add("-p$i-team-size=$teamSize")
+        args.add(player.classFile)
+    }
+
+    return com.a.b.c(args.copyToArray())
 }
 
 fun runMyStrategy(port: Long) {
@@ -55,17 +52,19 @@ fun runMyStrategy(port: Long) {
     }
 }
 
+fun parsePlayer(c: Char) = when (c) {
+    'M' -> MyStrategy
+    'E' -> EmptyPlayer
+    'Q' -> QuickStartGuy
+    'S' -> SmartGuy
+    else -> throw IllegalStateException("Unknown player: $c")
+}
+
 fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadName: String) {
-    fun parse(c: Char) = when (c) {
-        'M' -> MyStrategy
-        'E' -> EmptyPlayer
-        'Q' -> QuickStartGuy
-        'S' -> SmartGuy
-        else -> throw IllegalStateException("Unknown player: $c")
-    }
+    val teamSize = if (lineup.length == 2) 5 else 4
 
     val threads = ArrayList<Thread>(5)
-    threads add Thread(localRunner(vis, map, 4, seed, parse(lineup[0]), parse(lineup[1]), parse(lineup[2]), parse(lineup[3])))
+    threads add Thread(localRunner(vis, map, teamSize, seed, lineup map ::parsePlayer))
 
     val initialPort: Long = 31001
     var myStrategies = 0
