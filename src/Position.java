@@ -1,4 +1,7 @@
-import model.*;
+import model.Bonus;
+import model.BonusType;
+import model.Direction;
+import model.TrooperStance;
 
 import java.util.Arrays;
 
@@ -64,8 +67,8 @@ public class Position {
     }
 
     @NotNull
-    public Iterable<Trooper> aliveEnemies() {
-        return Util.iterable(new Util.AbstractIterator<Trooper>() {
+    public Iterable<EnemyWarrior> aliveEnemies() {
+        return Util.iterable(new Util.AbstractIterator<EnemyWarrior>() {
             private final int size = situation.enemies.size();
             private int i = 0;
 
@@ -79,9 +82,9 @@ public class Position {
             }
 
             @Override
-            public Trooper next() {
+            public EnemyWarrior next() {
                 while (!hasNext());
-                return situation.enemies.get(i++).trooper();
+                return situation.enemies.get(i++);
             }
         });
     }
@@ -103,8 +106,8 @@ public class Position {
         for (Warrior ally : allies()) {
             if (point.equals(ally.point)) return false;
         }
-        for (Trooper enemy : aliveEnemies()) {
-            if (point.isEqualTo(enemy)) return false;
+        for (EnemyWarrior enemy : aliveEnemies()) {
+            if (point.equals(enemy.point)) return false;
         }
         return true;
     }
@@ -222,7 +225,7 @@ public class Position {
         if (ap < 0) return null;
         int hp = enemyHp[enemyIndex];
         if (hp == 0) return null;
-        Warrior enemy = situation.enemies.get(enemyIndex);
+        EnemyWarrior enemy = situation.enemies.get(enemyIndex);
         if (!situation.isReachable(effectiveShootingRange(), me, stance, enemy.point, enemy.stance)) return null;
         int[] newEnemyHp = IntArrays.replace(enemyHp, enemyIndex, Math.max(hp - situation.self.getDamage(stance), 0));
         return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected);

@@ -14,7 +14,7 @@ public class Situation {
     public final Warrior self;
     public final List<Warrior> allies;
     // Index of me in the 'allies' list
-    public final List<Warrior> enemies;
+    public final List<EnemyWarrior> enemies;
     public final List<Bonus> bonuses;
 
     public final Scorer scorer;
@@ -40,7 +40,7 @@ public class Situation {
         this.self = self;
 
         for (int i = 0, n = enemies.size(); i < n; i++) {
-            this.enemies.add(new Warrior(i, enemies.get(i)));
+            this.enemies.add(new EnemyWarrior(i, enemies.get(i)));
         }
 
         if (!enemies.isEmpty()) {
@@ -83,9 +83,5 @@ public class Situation {
     public boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance,
                                @NotNull Point object, @NotNull TrooperStance objectStance) {
         return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.x, object.y, objectStance);
-    }
-
-    public boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Point object, @NotNull TrooperStance objectStance) {
-        return world.isVisible(maxRange, viewer.getX(), viewer.getY(), viewer.getStance(), object.x, object.y, objectStance);
     }
 }

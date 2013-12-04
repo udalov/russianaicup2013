@@ -8,7 +8,7 @@ public class Warrior {
     public final TrooperType type;
     public final int index;
 
-    private final Trooper trooper;
+    protected final Trooper trooper;
 
     private Warrior(int index, @NotNull Trooper trooper, @NotNull Point point, @NotNull TrooperStance stance) {
         this.index = index;
@@ -54,6 +54,10 @@ public class Warrior {
 
     public long getPlayerId() {
         return trooper.getPlayerId();
+    }
+
+    public double getVisionRange() {
+        return trooper.getVisionRange();
     }
 
     @Override

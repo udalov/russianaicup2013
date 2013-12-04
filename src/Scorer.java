@@ -219,9 +219,9 @@ public abstract class Scorer {
 
         private int enemyTeamsThatSeeUs(@NotNull Position p) {
             int bitset = 0;
-            for (Trooper enemy : p.aliveEnemies()) {
+            for (EnemyWarrior enemy : p.aliveEnemies()) {
                 for (Warrior ally : p.allies()) {
-                    if (situation.isReachable(enemy.getVisionRange(), enemy, ally.point, ally.stance)) {
+                    if (situation.isReachable(enemy.getVisionRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
                         bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
                     }
                 }
@@ -231,8 +231,8 @@ public abstract class Scorer {
 
         private double closestEnemy(@NotNull Position p) {
             double closestEnemy = 1e100;
-            for (Trooper enemy : p.aliveEnemies()) {
-                closestEnemy = Math.min(closestEnemy, Point.create(enemy).euclideanDistance(p.me));
+            for (EnemyWarrior enemy : p.aliveEnemies()) {
+                closestEnemy = Math.min(closestEnemy, enemy.point.euclideanDistance(p.me));
             }
             return closestEnemy;
         }
@@ -255,9 +255,9 @@ public abstract class Scorer {
 
             double[] expectedDamage = new double[n];
 
-            for (Trooper enemy : p.aliveEnemies()) {
+            for (EnemyWarrior enemy : p.aliveEnemies()) {
                 int actionPoints = enemy.getInitialActionPoints();
-                if (enemy.getType() != COMMANDER && enemy.getType() != SCOUT) {
+                if (enemy.type != COMMANDER && enemy.type != SCOUT) {
                     // Assume that the enemy trooper always is in the commander aura
                     actionPoints += situation.game.getCommanderAuraBonusActionPoints();
                 }
@@ -271,10 +271,9 @@ public abstract class Scorer {
                 if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
                     int[] best = p.allyHp;
                     int bestDamage = 0;
-                    for (Pair<Integer, Point> ally : p.allies()) {
-                        Point target = ally.second;
-                        if (Point.create(enemy).euclideanDistance(target) <= situation.game.getGrenadeThrowRange()) {
-                            int[] hp = p.grenadeEffectToAllies(target);
+                    for (Warrior ally : p.allies()) {
+                        if (enemy.point.euclideanDistance(ally.point) <= situation.game.getGrenadeThrowRange()) {
+                            int[] hp = p.grenadeEffectToAllies(ally.point);
                             int damage = IntArrays.sum(IntArrays.diff(p.allyHp, hp));
                             if (damage > bestDamage) {
                                 bestDamage = damage;
@@ -301,7 +300,7 @@ public abstract class Scorer {
                     Warrior ally = situation.allies.get(j);
                     Point point = j == situation.self.index ? p.me : ally.point;
                     TrooperStance stance = j == situation.self.index ? p.stance : ally.stance;
-                    if (situation.isReachable(enemy.getShootingRange(), enemy, point, stance)) {
+                    if (situation.isReachable(enemy.getShootingRange(), enemy.point, enemy.stance, point, stance)) {
                         isReachable |= 1 << j;
                         alliesUnderSight++;
                     }
