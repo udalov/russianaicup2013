@@ -37,10 +37,16 @@
         </jar>
     </target>
 
-    <!-- Usage: ant -Dbootstrap-name=m2 bootstrap -->
-    <target name="bootstrap" depends="compile">
+    <!-- Usage: ant -Dbootstrap-name=m2 bootstrap0 -->
+    <target name="bootstrap0" depends="compile">
         <delete file="${dist}/${bootstrap-name}.jar"/>
         <jar destfile="${dist}/${bootstrap-name}.jar" basedir="${dist}/classes"/>
+    </target>
+
+    <target name="bootstrap">
+        <antcall target="bootstrap0">
+            <param name="bootstrap-name" value="m2"/>
+        </antcall>
     </target>
 
     <target name="update">
