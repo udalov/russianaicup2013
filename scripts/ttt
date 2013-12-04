@@ -13,7 +13,7 @@ rm -rf $out
 mkdir -p $out
 
 seed=$begin
-for map in DEFAULT CHEESER MAP01 MAP02 MAP03 MAP04 MAP05
+for map in MAP01 MAP05 DEFAULT MAP04 MAP03 FEFER MAP06 MAP02 CHEESER
 do
     end=`expr $seed + $step - 1`
     $CWD/t $seed $end $map $lineup $out/$map-$lineup.out
