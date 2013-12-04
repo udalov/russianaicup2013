@@ -21,8 +21,8 @@ public class Position {
 
     private final int hashCode;
 
-    public Position(@NotNull Situation situation, @NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses, @NotNull int[] enemyHp,
-                    @NotNull int[] allyHp, @NotNull int[] collected) {
+    public Position(@NotNull Situation situation, @NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses,
+                    @NotNull int[] enemyHp, @NotNull int[] allyHp, @NotNull int[] collected) {
         this.situation = situation;
         this.me = me;
         this.stance = stance;
@@ -43,8 +43,8 @@ public class Position {
     }
 
     @NotNull
-    public Iterable<Pair<Integer, Point>> allies() {
-        return Util.iterable(new Util.AbstractIterator<Pair<Integer, Point>>() {
+    public Iterable<Warrior> allies() {
+        return Util.iterable(new Util.AbstractIterator<Warrior>() {
             private int i = 0;
 
             @Override
@@ -53,9 +53,12 @@ public class Position {
             }
 
             @Override
-            public Pair<Integer, Point> next() {
-                Point ally = i == situation.self.index ? me : situation.allies.get(i).point;
-                return new Pair<>(i++, ally);
+            public Warrior next() {
+                Warrior ally = i == situation.self.index ?
+                        new Warrior(situation.self, me, stance) :
+                        situation.allies.get(i);
+                i++;
+                return ally;
             }
         });
     }
@@ -97,8 +100,8 @@ public class Position {
 
     private boolean isPassablePoint(@NotNull Point point) {
         if (!situation.army.board.isPassable(point)) return false;
-        for (Pair<Integer, Point> pair : allies()) {
-            if (point.equals(pair.second)) return false;
+        for (Warrior ally : allies()) {
+            if (point.equals(ally.point)) return false;
         }
         for (Trooper enemy : aliveEnemies()) {
             if (point.isEqualTo(enemy)) return false;
@@ -137,9 +140,8 @@ public class Position {
     @NotNull
     public int[] grenadeEffectToAllies(@NotNull Point target) {
         int[] result = new int[allyHp.length];
-        for (Pair<Integer, Point> pair : allies()) {
-            int i = pair.first;
-            result[i] = grenadeEffectToTrooper(target, pair.second, allyHp[i]);
+        for (Warrior ally : allies()) {
+            result[ally.index] = grenadeEffectToTrooper(target, ally.point, allyHp[ally.index]);
         }
         return result;
     }

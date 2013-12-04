@@ -1,7 +1,6 @@
 import model.Direction;
 import model.Trooper;
 import model.TrooperStance;
-import model.TrooperType;
 
 import java.util.*;
 
@@ -36,16 +35,15 @@ public abstract class Scorer {
 
     private int underCommanderAura(@NotNull Position p) {
         Point commander = null;
-        for (Pair<Integer, Point> pair : p.allies()) {
-            if (situation.allies.get(pair.first).type == COMMANDER) commander = pair.second;
+        for (Warrior ally : p.allies()) {
+            if (ally.type == COMMANDER) commander = ally.point;
         }
         if (commander == null) return 0;
 
         int result = 0;
-        for (Pair<Integer, Point> pair : p.allies()) {
-            TrooperType type = situation.allies.get(pair.first).type;
-            if (type != COMMANDER && type != SCOUT) {
-                if (pair.second.euclideanDistance(p.me) <= situation.game.getCommanderAuraRange()) result++;
+        for (Warrior ally : p.allies()) {
+            if (ally.type != COMMANDER && ally.type != SCOUT) {
+                if (ally.point.euclideanDistance(p.me) <= situation.game.getCommanderAuraRange()) result++;
             }
         }
         return result;
@@ -162,8 +160,8 @@ public abstract class Scorer {
             set.clear();
             queue.clear();
 
-            for (Pair<Integer, Point> ally : p.allies()) {
-                set.add(ally.second);
+            for (Warrior ally : p.allies()) {
+                set.add(ally.point);
             }
             queue.add(leader);
 
@@ -222,9 +220,8 @@ public abstract class Scorer {
         private int enemyTeamsThatSeeUs(@NotNull Position p) {
             int bitset = 0;
             for (Trooper enemy : p.aliveEnemies()) {
-                for (Pair<Integer, Point> pair : p.allies()) {
-                    TrooperStance stance = pair.first == situation.self.index ? p.stance : situation.allies.get(pair.first).stance;
-                    if (situation.isReachable(enemy.getVisionRange(), enemy, pair.second, stance)) {
+                for (Warrior ally : p.allies()) {
+                    if (situation.isReachable(enemy.getVisionRange(), enemy, ally.point, ally.stance)) {
                         bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
                     }
                 }

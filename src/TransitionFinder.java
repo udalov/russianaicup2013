@@ -35,9 +35,9 @@ public class TransitionFinder {
 
         // Heal
         if (situation.self.type == FIELD_MEDIC) {
-            for (Pair<Integer, Point> pair : cur.allies()) {
-                Position next = cur.heal(pair.first, pair.second);
-                if (next != null) add(next, Go.heal(cur.me.direction(pair.second)));
+            for (Warrior ally : cur.allies()) {
+                Position next = cur.heal(ally.index, ally.point);
+                if (next != null) add(next, Go.heal(cur.me.direction(ally.point)));
             }
         }
 
@@ -59,9 +59,9 @@ public class TransitionFinder {
         }
 
         // Use medikit
-        for (Pair<Integer, Point> pair : cur.allies()) {
-            Position next = cur.useMedikit(pair.first, pair.second);
-            if (next != null) add(next, Go.useMedikit(cur.me.direction(pair.second)));
+        for (Warrior ally : cur.allies()) {
+            Position next = cur.useMedikit(ally.index, ally.point);
+            if (next != null) add(next, Go.useMedikit(cur.me.direction(ally.point)));
         }
 
         // Change stance

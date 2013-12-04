@@ -30,7 +30,7 @@ public class Situation {
 
         Warrior self = null;
         for (int i = 0, n = allies.size(); i < n; i++) {
-            Warrior warrior = new Warrior(allies.get(i), i);
+            Warrior warrior = new Warrior(i, allies.get(i));
             this.allies.add(warrior);
             if (warrior.type == selfType) {
                 self = warrior;
@@ -40,7 +40,7 @@ public class Situation {
         this.self = self;
 
         for (int i = 0, n = enemies.size(); i < n; i++) {
-            this.enemies.add(new Warrior(enemies.get(i), i));
+            this.enemies.add(new Warrior(i, enemies.get(i)));
         }
 
         if (!enemies.isEmpty()) {

@@ -3,19 +3,27 @@ import model.TrooperStance;
 import model.TrooperType;
 
 public class Warrior {
-    private final Trooper trooper;
-
     public final Point point;
     public final TrooperStance stance;
     public final TrooperType type;
     public final int index;
 
-    public Warrior(@NotNull Trooper trooper, int index) {
-        this.trooper = trooper;
-        this.point = Point.create(trooper);
-        this.stance = trooper.getStance();
-        this.type = trooper.getType();
+    private final Trooper trooper;
+
+    private Warrior(int index, @NotNull Trooper trooper, @NotNull Point point, @NotNull TrooperStance stance) {
         this.index = index;
+        this.trooper = trooper;
+        this.point = point;
+        this.stance = stance;
+        this.type = trooper.getType();
+    }
+
+    public Warrior(int index, @NotNull Trooper trooper) {
+        this(index, trooper, Point.create(trooper), trooper.getStance());
+    }
+
+    public Warrior(@NotNull Warrior self, @NotNull Point point, @NotNull TrooperStance stance) {
+        this(self.index, self.trooper, point, stance);
     }
 
     @NotNull
