@@ -1,5 +1,6 @@
 import model.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,39 +11,43 @@ public class Situation {
     // Should be used only for reachability check
     public final World world;
     public final Army army;
-    public final Trooper self;
-    public final List<Trooper> allies;
+    public final Warrior self;
+    public final List<Warrior> allies;
     // Index of me in the 'allies' list
-    public final int myIndex;
-    public final List<Trooper> enemies;
+    public final List<Warrior> enemies;
     public final List<Bonus> bonuses;
 
     public final Scorer scorer;
 
-    public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull Trooper self, @NotNull List<Trooper> allies,
+    public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull TrooperType selfType, @NotNull List<Trooper> allies,
                      @NotNull List<Trooper> enemies, @NotNull List<Bonus> bonuses) {
         this.game = game;
         this.world = world;
         this.army = army;
-        this.self = self;
-        this.allies = allies;
-        this.enemies = enemies;
+        this.allies = new ArrayList<>(allies.size());
+        this.enemies = new ArrayList<>(enemies.size());
         this.bonuses = bonuses;
 
-        int myIndex = -1;
+        Warrior self = null;
         for (int i = 0, n = allies.size(); i < n; i++) {
-            if (allies.get(i).getType() == self.getType()) {
-                myIndex = i;
+            Warrior warrior = new Warrior(allies.get(i), i);
+            this.allies.add(warrior);
+            if (warrior.type == selfType) {
+                self = warrior;
             }
         }
-        assert myIndex >= 0 : "Where am I? " + allies;
-        this.myIndex = myIndex;
+        assert self != null : "Where am I? " + allies;
+        this.self = self;
+
+        for (int i = 0, n = enemies.size(); i < n; i++) {
+            this.enemies.add(new Warrior(enemies.get(i), i));
+        }
 
         if (!enemies.isEmpty()) {
             this.scorer = new Scorer.CombatSituation(this);
         } else {
-            Trooper leader = findLeader();
-            if (leader.getType() == self.getType()) {
+            Warrior leader = findLeader();
+            if (leader.type == selfType) {
                 this.scorer = new Scorer.Leader(this);
             } else {
                 this.scorer = new Scorer.Follower(this, leader);
@@ -51,19 +56,19 @@ public class Situation {
     }
 
     @NotNull
-    private Trooper findLeader() {
+    private Warrior findLeader() {
         // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
         List<TrooperType> leaderOrder = army.board.getKind() == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
                 Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
                 Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
 
         for (TrooperType type : leaderOrder) {
-            for (Trooper ally : allies) {
-                if (ally.getType() == type) return ally;
+            for (Warrior ally : allies) {
+                if (ally.type == type) return ally;
             }
         }
 
-        throw new IllegalStateException("No one left alive, who am I then? " + self.getType());
+        throw new IllegalStateException("No one left alive, who am I then? " + self.type);
     }
 
     public int getMoveCost(@NotNull TrooperStance stance) {
@@ -75,8 +80,9 @@ public class Situation {
         }
     }
 
-    public boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance, @NotNull Trooper object) {
-        return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.getX(), object.getY(), object.getStance());
+    public boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance,
+                               @NotNull Point object, @NotNull TrooperStance objectStance) {
+        return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.x, object.y, objectStance);
     }
 
     public boolean isReachable(double maxRange, @NotNull Trooper viewer, @NotNull Point object, @NotNull TrooperStance objectStance) {

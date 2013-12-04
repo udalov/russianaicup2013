@@ -44,7 +44,7 @@ public class MakeTurn {
 
     @NotNull
     public Go makeTurn() {
-        Situation situation = new Situation(game, world, army, self, allies, enemies, Arrays.asList(world.getBonuses()));
+        Situation situation = new Situation(game, world, army, self.getType(), allies, enemies, Arrays.asList(world.getBonuses()));
 
         List<Go> best = best(situation);
         debug(situation.scorer, best);

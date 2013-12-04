@@ -117,11 +117,11 @@ public class Army {
     }
 
     @NotNull
-    public Point getOrUpdateWayPoint(@NotNull Collection<Trooper> allies) {
+    public Point getOrUpdateWayPoint(@NotNull Collection<Warrior> allies) {
         Point wayPoint = wayPoints.get(curWayPoint);
         int curDist = 0;
-        for (Trooper ally : allies) {
-            curDist += Point.create(ally).manhattanDistance(wayPoint);
+        for (Warrior ally : allies) {
+            curDist += ally.point.manhattanDistance(wayPoint);
         }
         if (curDist < 4 * allies.size()) {
             curWayPoint = (curWayPoint + 1) % wayPoints.size();

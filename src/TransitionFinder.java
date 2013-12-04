@@ -1,5 +1,4 @@
 import model.Direction;
-import model.Trooper;
 
 import java.util.Map;
 import java.util.Queue;
@@ -35,7 +34,7 @@ public class TransitionFinder {
         }
 
         // Heal
-        if (situation.self.getType() == FIELD_MEDIC) {
+        if (situation.self.type == FIELD_MEDIC) {
             for (Pair<Integer, Point> pair : cur.allies()) {
                 Position next = cur.heal(pair.first, pair.second);
                 if (next != null) add(next, Go.heal(cur.me.direction(pair.second)));
@@ -45,14 +44,13 @@ public class TransitionFinder {
         // Shoot
         for (int i = 0, size = situation.enemies.size(); i < size; i++) {
             Position next = cur.shoot(i);
-            if (next != null) add(next, Go.shoot(Point.create(situation.enemies.get(i))));
+            if (next != null) add(next, Go.shoot(situation.enemies.get(i).point));
         }
 
         // Throw grenade
-        for (Trooper enemy : situation.enemies) {
-            Point point = Point.create(enemy);
+        for (Warrior enemy : situation.enemies) {
             for (Direction direction : Direction.values()) {
-                Point target = point.go(direction);
+                Point target = enemy.point.go(direction);
                 if (target != null) {
                     Position next = cur.throwGrenade(target);
                     if (next != null) add(next, Go.throwGrenade(target));

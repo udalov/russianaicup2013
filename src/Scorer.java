@@ -23,7 +23,7 @@ public abstract class Scorer {
         result += coeff.weightedHpOfAllies * weightedHpOfAllies(p.allyHp);
 
         // TODO: or if have a medikit
-        if (situation.self.getType() == FIELD_MEDIC) {
+        if (situation.self.type == FIELD_MEDIC) {
             result -= coeff.medicDistanceToWoundedAllies * distanceToWoundedAllies(p);
         }
 
@@ -37,13 +37,13 @@ public abstract class Scorer {
     private int underCommanderAura(@NotNull Position p) {
         Point commander = null;
         for (Pair<Integer, Point> pair : p.allies()) {
-            if (situation.allies.get(pair.first).getType() == COMMANDER) commander = pair.second;
+            if (situation.allies.get(pair.first).type == COMMANDER) commander = pair.second;
         }
         if (commander == null) return 0;
 
         int result = 0;
         for (Pair<Integer, Point> pair : p.allies()) {
-            TrooperType type = situation.allies.get(pair.first).getType();
+            TrooperType type = situation.allies.get(pair.first).type;
             if (type != COMMANDER && type != SCOUT) {
                 if (pair.second.euclideanDistance(p.me) <= situation.game.getCommanderAuraRange()) result++;
             }
@@ -63,9 +63,9 @@ public abstract class Scorer {
     private double distanceToWoundedAllies(@NotNull Position p) {
         double result = 0;
         for (int i = 0, size = situation.allies.size(); i < size; i++) {
-            if (i == situation.myIndex) continue;
-            Trooper ally = situation.allies.get(i);
-            Integer dist = situation.army.board.distance(Point.create(ally), p.me);
+            if (i == situation.self.index) continue;
+            Warrior ally = situation.allies.get(i);
+            Integer dist = situation.army.board.distance(ally.point, p.me);
             if (dist == null || dist == 0) continue;
             int toHeal = ally.getMaximalHitpoints() - p.allyHp[i];
             if (toHeal > 60) result += 3 * dist;
@@ -104,8 +104,8 @@ public abstract class Scorer {
         private int farAwayTeammates(@NotNull Position p) {
             int result = 0;
             for (int i = 0, size = situation.allies.size(); i < size; i++) {
-                if (i == situation.myIndex) continue;
-                Integer distance = situation.army.board.distance(Point.create(situation.allies.get(i)), p.me);
+                if (i == situation.self.index) continue;
+                Integer distance = situation.army.board.distance(situation.allies.get(i).point, p.me);
                 if (distance != null && distance > coeff.leaderCriticalDistanceToAllies) result++;
             }
             return result;
@@ -124,9 +124,9 @@ public abstract class Scorer {
         private final ArrayDeque<Point> queue = new ArrayDeque<>(15);
         private final List<Point> leaderPath;
 
-        public Follower(@NotNull Situation situation, @NotNull Trooper leader) {
+        public Follower(@NotNull Situation situation, @NotNull Warrior leader) {
             super(situation);
-            this.leader = Point.create(leader);
+            this.leader = leader.point;
             this.wayPoint = situation.army.getOrUpdateWayPoint(situation.allies);
             List<Point> leaderPath = situation.army.board.findPath(this.leader, wayPoint);
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
@@ -189,7 +189,7 @@ public abstract class Scorer {
 
         public CombatSituation(@NotNull Situation situation) {
             super(situation);
-            for (Trooper enemy : situation.enemies) {
+            for (Warrior enemy : situation.enemies) {
                 long id = enemy.getPlayerId();
                 if (!enemyTeams.containsKey(id)) {
                     enemyTeams.put(id, enemyTeams.size());
@@ -223,7 +223,7 @@ public abstract class Scorer {
             int bitset = 0;
             for (Trooper enemy : p.aliveEnemies()) {
                 for (Pair<Integer, Point> pair : p.allies()) {
-                    TrooperStance stance = pair.first == situation.myIndex ? p.stance : situation.allies.get(pair.first).getStance();
+                    TrooperStance stance = pair.first == situation.self.index ? p.stance : situation.allies.get(pair.first).stance;
                     if (situation.isReachable(enemy.getVisionRange(), enemy, pair.second, stance)) {
                         bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
                     }
@@ -243,8 +243,8 @@ public abstract class Scorer {
         private double distanceToAllies(@NotNull Position p) {
             double result = 0;
             for (int i = 0, size = situation.allies.size(); i < size; i++) {
-                if (i == situation.myIndex) continue;
-                Integer dist = situation.army.board.distance(Point.create(situation.allies.get(i)), p.me);
+                if (i == situation.self.index) continue;
+                Integer dist = situation.army.board.distance(situation.allies.get(i).point, p.me);
                 if (dist != null) result += dist;
             }
             return result;
@@ -301,9 +301,9 @@ public abstract class Scorer {
                 int isReachable = 0;
                 int alliesUnderSight = 0;
                 for (int j = 0; j < n; j++) {
-                    Trooper ally = situation.allies.get(j);
-                    Point point = j == situation.myIndex ? p.me : Point.create(ally);
-                    TrooperStance stance = j == situation.myIndex ? p.stance : ally.getStance();
+                    Warrior ally = situation.allies.get(j);
+                    Point point = j == situation.self.index ? p.me : ally.point;
+                    TrooperStance stance = j == situation.self.index ? p.stance : ally.stance;
                     if (situation.isReachable(enemy.getShootingRange(), enemy, point, stance)) {
                         isReachable |= 1 << j;
                         alliesUnderSight++;

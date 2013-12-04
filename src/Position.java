@@ -13,7 +13,6 @@ public class Position {
     // Indexed by BonusType.ordinal()
     public final int bonuses;
     // Indexed by WarriorTurn.enemies
-    // TODO: create and save list of points of troopers?
     public final int[] enemyHp;
     // Indexed by WarriorTurn.allies
     public final int[] allyHp;
@@ -55,7 +54,7 @@ public class Position {
 
             @Override
             public Pair<Integer, Point> next() {
-                Point ally = i == situation.myIndex ? me : Point.create(situation.allies.get(i));
+                Point ally = i == situation.self.index ? me : situation.allies.get(i).point;
                 return new Pair<>(i++, ally);
             }
         });
@@ -79,7 +78,7 @@ public class Position {
             @Override
             public Trooper next() {
                 while (!hasNext());
-                return situation.enemies.get(i++);
+                return situation.enemies.get(i++).trooper();
             }
         });
     }
@@ -109,8 +108,8 @@ public class Position {
 
     private double effectiveShootingRange() {
         double result = situation.self.getShootingRange();
-        if (situation.self.getType() == SNIPER) {
-            result -= sniperShootingRangeBonus(situation.self.getStance());
+        if (situation.self.type == SNIPER) {
+            result -= sniperShootingRangeBonus(situation.self.stance);
             result += sniperShootingRangeBonus(stance);
         }
         return result;
@@ -130,7 +129,7 @@ public class Position {
         int size = enemyHp.length;
         int[] result = new int[size];
         for (int i = 0; i < size; i++) {
-            result[i] = grenadeEffectToTrooper(target, Point.create(situation.enemies.get(i)), enemyHp[i]);
+            result[i] = grenadeEffectToTrooper(target, situation.enemies.get(i).point, enemyHp[i]);
         }
         return result;
     }
@@ -216,14 +215,14 @@ public class Position {
     }
 
     @Nullable
-    public Position shoot(int enemy) {
+    public Position shoot(int enemyIndex) {
         int ap = actionPoints - situation.self.getShootCost();
         if (ap < 0) return null;
-        int hp = enemyHp[enemy];
+        int hp = enemyHp[enemyIndex];
         if (hp == 0) return null;
-        Trooper trooper = situation.enemies.get(enemy);
-        if (!situation.isReachable(effectiveShootingRange(), me, stance, trooper)) return null;
-        int[] newEnemyHp = IntArrays.replace(enemyHp, enemy, Math.max(hp - situation.self.getDamage(stance), 0));
+        Warrior enemy = situation.enemies.get(enemyIndex);
+        if (!situation.isReachable(effectiveShootingRange(), me, stance, enemy.point, enemy.stance)) return null;
+        int[] newEnemyHp = IntArrays.replace(enemyHp, enemyIndex, Math.max(hp - situation.self.getDamage(stance), 0));
         return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
     }
 
