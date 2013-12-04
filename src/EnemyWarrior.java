@@ -16,4 +16,8 @@ public class EnemyWarrior extends Warrior {
     public int getDamage() {
         return trooper.getDamage();
     }
+
+    public double getVisionRange() {
+        return trooper.getVisionRange();
+    }
 }

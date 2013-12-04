@@ -26,6 +26,8 @@ public class MyStrategy implements Strategy {
         TrooperType myType = self.getType();
         if (!order.contains(myType)) {
             order.add(myType);
+        } else if (!army.isOrderComplete()) {
+            army.completeOrder();
         }
 
         Go go = new MakeTurn(army, self, world, game).makeTurn();

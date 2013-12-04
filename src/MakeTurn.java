@@ -46,14 +46,24 @@ public class MakeTurn {
     public Go makeTurn() {
         Situation situation = new Situation(game, world, army, self.getType(), allies, enemies, Arrays.asList(world.getBonuses()));
 
-        List<Go> best = best(situation);
+        Position start = new Position(
+                situation,
+                me,
+                self.getStance(),
+                self.getActionPoints(),
+                computeBonusesBitSet(self),
+                IntArrays.hitpointsOf(enemies),
+                IntArrays.hitpointsOf(allies),
+                IntArrays.EMPTY
+        );
+
+        List<Go> best = best(situation, start).second;
         debug(situation.scorer, best);
         return best.isEmpty() ? Go.endTurn() : best.iterator().next();
     }
 
     @NotNull
-    private List<Go> best(@NotNull Situation situation) {
-        Position start = startingPosition(situation);
+    public static Pair<Position, List<Go>> best(@NotNull Situation situation, @NotNull Position start) {
         // TODO: ArrayDeque?
         final Queue<Position> queue = new LinkedList<>();
         queue.add(start);
@@ -74,7 +84,9 @@ public class MakeTurn {
             new TransitionFinder(situation, cur, queue, prev).run();
         }
 
-        if (best == start) return Collections.emptyList();
+        assert best != null : "Where's best? " + start;
+
+        if (best == start) return new Pair<>(best, Collections.<Go>emptyList());
 
         Position cur = best;
         List<Go> result = new ArrayList<>(12);
@@ -82,27 +94,17 @@ public class MakeTurn {
             Pair<Go, Position> before = prev.get(cur);
             assert before != null : "Nothing before " + cur;
             result.add(before.first);
-            if (before.second == start) return Util.reverse(result);
+            if (before.second == start) return new Pair<>(best, Util.reverse(result));
             cur = before.second;
         }
     }
 
-    @NotNull
-    public Position startingPosition(@NotNull Situation situation) {
+    public static int computeBonusesBitSet(@NotNull Trooper self) {
         int bonuses = 0;
         if (self.isHoldingGrenade()) bonuses |= 1 << GRENADE.ordinal();
         if (self.isHoldingMedikit()) bonuses |= 1 << MEDIKIT.ordinal();
         if (self.isHoldingFieldRation()) bonuses |= 1 << FIELD_RATION.ordinal();
-        return new Position(
-                situation,
-                me,
-                self.getStance(),
-                self.getActionPoints(),
-                bonuses,
-                IntArrays.hitpointsOf(enemies),
-                IntArrays.hitpointsOf(allies),
-                IntArrays.EMPTY
-        );
+        return bonuses;
     }
 
     @NotNull

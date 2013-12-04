@@ -1,5 +1,6 @@
 import model.Direction;
 import model.TrooperStance;
+import model.TrooperType;
 
 import java.util.*;
 
@@ -182,9 +183,11 @@ public abstract class Scorer {
 
     public static class CombatSituation extends Scorer {
         private final Map<Long, Integer> enemyTeams = new HashMap<>(6);
+        private final boolean computeNextAllyTurn;
 
-        public CombatSituation(@NotNull Situation situation) {
+        public CombatSituation(@NotNull Situation situation, boolean computeNextAllyTurn) {
             super(situation);
+            this.computeNextAllyTurn = computeNextAllyTurn;
             for (Warrior enemy : situation.enemies) {
                 long id = enemy.getPlayerId();
                 if (!enemyTeams.containsKey(id)) {
@@ -212,7 +215,41 @@ public abstract class Scorer {
                 result -= coeff.combatStance * p.stance.ordinal();
             }
 
+            if (computeNextAllyTurn && situation.army.isOrderComplete()) {
+                result += nextAllyTurn(p);
+            }
+
             return result;
+        }
+
+        private double nextAllyTurn(@NotNull Position p) {
+            Warrior nextAlly = nextAllyToMakeTurn(p);
+            if (nextAlly == null) return 0;
+
+            List<Warrior> allies = new ArrayList<>(situation.allies);
+            allies.set(situation.self.index, new Warrior(situation.self, p.me, p.stance));
+
+            Situation next = new Situation(situation, nextAlly.type, allies, situation.bonuses /* TODO: some of them are collected */);
+
+            Position start = new Position(next, nextAlly.point, nextAlly.stance, nextAlly.getInitialActionPoints() /* TODO: commander aura */,
+                    MakeTurn.computeBonusesBitSet(nextAlly.trooper /* TODO: deprecate? here it's safe though */), p.enemyHp, p.allyHp, p.collected);
+
+            Pair<Position, List<Go>> best = MakeTurn.best(next, start);
+
+            return coeff.combatNextAllyTurn * next.scorer.evaluate(best.first);
+        }
+
+        @Nullable
+        private Warrior nextAllyToMakeTurn(@NotNull Position p) {
+            List<TrooperType> order = situation.army.getOrder();
+            int myIndex = order.indexOf(situation.self.type);
+            for (int i = 1; i < order.size(); i++) {
+                TrooperType type = order.get((myIndex + i) % order.size());
+                for (Warrior ally : p.allies()) {
+                    if (p.allyHp[ally.index] > 0 && ally.type == type) return ally;
+                }
+            }
+            return null;
         }
 
         private int enemyTeamsThatSeeUs(@NotNull Position p) {

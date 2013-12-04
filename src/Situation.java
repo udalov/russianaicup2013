@@ -8,12 +8,11 @@ import static model.TrooperType.*;
 
 public class Situation {
     public final Game game;
-    // Should be used only for reachability check
+    // Should be used only for reachability check and moveIndex
     public final World world;
     public final Army army;
     public final Warrior self;
     public final List<Warrior> allies;
-    // Index of me in the 'allies' list
     public final List<EnemyWarrior> enemies;
     public final List<Bonus> bonuses;
 
@@ -28,30 +27,49 @@ public class Situation {
         this.enemies = new ArrayList<>(enemies.size());
         this.bonuses = bonuses;
 
-        Warrior self = null;
         for (int i = 0, n = allies.size(); i < n; i++) {
-            Warrior warrior = new Warrior(i, allies.get(i));
-            this.allies.add(warrior);
-            if (warrior.type == selfType) {
-                self = warrior;
-            }
+            this.allies.add(new Warrior(i, allies.get(i)));
         }
-        assert self != null : "Where am I? " + allies;
-        this.self = self;
+
+        this.self = findMyself(selfType, this.allies);
 
         for (int i = 0, n = enemies.size(); i < n; i++) {
             this.enemies.add(new EnemyWarrior(i, enemies.get(i)));
         }
 
+        this.scorer = createScorer(true);
+    }
+
+    public Situation(@NotNull Situation situation, @NotNull TrooperType selfType, @NotNull List<Warrior> allies, @NotNull List<Bonus> bonuses) {
+        this.game = situation.game;
+        this.world = situation.world;
+        this.army = situation.army;
+        this.self = findMyself(selfType, allies);
+        this.allies = allies;
+        this.enemies = situation.enemies;
+        this.bonuses = bonuses;
+        this.scorer = createScorer(false);
+    }
+
+    @NotNull
+    private static Warrior findMyself(@NotNull TrooperType selfType, @NotNull List<Warrior> allies) {
+        for (Warrior ally : allies) {
+            if (ally.type == selfType) return ally;
+        }
+        throw new IllegalStateException("Where am I? " + allies);
+    }
+
+    @NotNull
+    private Scorer createScorer(boolean computeNextAllyTurn) {
         if (!enemies.isEmpty()) {
-            this.scorer = new Scorer.CombatSituation(this);
+            return new Scorer.CombatSituation(this, computeNextAllyTurn);
+        }
+
+        Warrior leader = findLeader();
+        if (leader.type == self.type) {
+            return new Scorer.Leader(this);
         } else {
-            Warrior leader = findLeader();
-            if (leader.type == selfType) {
-                this.scorer = new Scorer.Leader(this);
-            } else {
-                this.scorer = new Scorer.Follower(this, leader);
-            }
+            return new Scorer.Follower(this, leader);
         }
     }
 
@@ -83,5 +101,11 @@ public class Situation {
     public boolean isReachable(double maxRange, @NotNull Point viewer, @NotNull TrooperStance viewerStance,
                                @NotNull Point object, @NotNull TrooperStance objectStance) {
         return world.isVisible(maxRange, viewer.x, viewer.y, viewerStance, object.x, object.y, objectStance);
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return self + ", turn #" + world.getMoveIndex();
     }
 }

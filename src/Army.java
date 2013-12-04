@@ -15,6 +15,7 @@ public class Army {
     public final Const coeff;
 
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
+    private boolean isOrderComplete;
 
     private int medicSelfHealed;
 
@@ -133,6 +134,15 @@ public class Army {
     @NotNull
     public List<TrooperType> getOrder() {
         return order;
+    }
+
+    public boolean isOrderComplete() {
+        return isOrderComplete;
+    }
+
+    public void completeOrder() {
+        assert !this.isOrderComplete : "Don't do this twice";
+        this.isOrderComplete = true;
     }
 
     public boolean allowMedicSelfHealing() {
