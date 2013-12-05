@@ -23,7 +23,7 @@ public class Army {
 
     public Army(@NotNull World world) {
         board = new Board(world);
-        coeff = Const.valueOf(board.getKind().toString());
+        coeff = Const.valueOf(board.kind.toString());
 
         Trooper commander = null;
         for (Trooper trooper : world.getTroopers()) {
@@ -37,7 +37,7 @@ public class Army {
 
         curWayPoint = 0;
 
-        Debug.log("map: " + board.getKind());
+        Debug.log("map: " + board.kind);
     }
 
     private void buildWayPoints(@NotNull Trooper commander) {
@@ -87,13 +87,13 @@ public class Army {
          15 16 17 18 19
          20 21 22 23 24
          */
-        if (board.getKind() == Board.Kind.MAP02) {
+        if (board.kind == Board.Kind.MAP02) {
             wp.set(0, 11, 1, 2, 1, 11, 20, 22, 24, 13, 4, 2);
-        } else if (board.getKind() == Board.Kind.MAP03) {
+        } else if (board.kind == Board.Kind.MAP03) {
             wp.set(0, 1, 2, 3, 4, 3, 2, 7, 11, 15, 22, 19, 13, 7);
-        } else if (board.getKind() == Board.Kind.MAP05) {
+        } else if (board.kind == Board.Kind.MAP05) {
             wp.set(0, 6, 11, 16, 20, 22, 24, 18, 8, 4, 2, 7);
-        } else if (board.getKind() == Board.Kind.MAP06) {
+        } else if (board.kind == Board.Kind.MAP06) {
             // Start in 6, not 0
             wp.set(6, 7, 8, 7, 12, 17, 18, 16, 17, 12, 14, 10, 0, 2, 7);
         } else {

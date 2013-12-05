@@ -45,7 +45,7 @@ public class Board {
     public static int WIDTH = -1;
     public static int HEIGHT = -1;
 
-    private final Kind kind;
+    public final Kind kind;
     private final List<Point> passable = new ArrayList<>(WIDTH * HEIGHT);
     private final Set<Point> obstacles = new PointSet();
     private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
@@ -72,11 +72,6 @@ public class Board {
                 }
             }
         }
-    }
-
-    @NotNull
-    public Kind getKind() {
-        return kind;
     }
 
     @NotNull
