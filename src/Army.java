@@ -121,7 +121,8 @@ public class Army {
     }
 
     @NotNull
-    public Point getOrUpdateWayPoint(@NotNull Collection<Warrior> allies) {
+    public Point getOrUpdateWayPoint(@NotNull Situation situation) {
+        Collection<Warrior> allies = situation.allies;
         Point wayPoint = wayPoints.get(curWayPoint);
         int curDist = 0;
         for (Warrior ally : allies) {

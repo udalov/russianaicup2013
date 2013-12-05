@@ -79,7 +79,7 @@ public abstract class Scorer {
 
         public Leader(@NotNull Situation situation) {
             super(situation);
-            wayPoint = situation.army.getOrUpdateWayPoint(situation.allies);
+            wayPoint = situation.army.getOrUpdateWayPoint(situation);
         }
 
         @Override
@@ -124,7 +124,7 @@ public abstract class Scorer {
         public Follower(@NotNull Situation situation, @NotNull Warrior leader) {
             super(situation);
             this.leader = leader.point;
-            this.wayPoint = situation.army.getOrUpdateWayPoint(situation.allies);
+            this.wayPoint = situation.army.getOrUpdateWayPoint(situation);
             List<Point> leaderPath = situation.army.board.findPath(this.leader, wayPoint);
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
