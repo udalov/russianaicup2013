@@ -204,7 +204,14 @@ public class Position {
 
     @Override
     public String toString() {
-        return actionPoints + " " + stance + " at " + me;
+        StringBuilder sb = new StringBuilder(actionPoints + " " + stance + " at " + me);
+        if (bonuses != 0) {
+            sb.append(" with");
+            for (BonusType bonus : BonusType.values()) {
+                sb.append(" ").append(bonus);
+            }
+        }
+        return sb.toString();
     }
 
     // -------------------------------------------------------------------------
@@ -284,6 +291,7 @@ public class Position {
         if (actionPoints >= situation.self.getInitialActionPoints()) return null;
         int ap = actionPoints - situation.game.getFieldRationEatCost();
         if (ap < 0) return null;
+        ap = Math.min(situation.self.getInitialActionPoints(), ap + situation.game.getFieldRationBonusActionPoints());
         return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected, seen);
     }
 

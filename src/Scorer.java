@@ -87,7 +87,6 @@ public abstract class Scorer {
         protected double situationSpecificScore(@NotNull Position p) {
             double result = 0;
 
-            result += 3 * Integer.bitCount(p.bonuses);
             if (p.has(GRENADE)) result += coeff.hasGrenadeInMovement;
             if (p.has(MEDIKIT)) result += coeff.hasMedikitInMovement;
             if (p.has(FIELD_RATION)) result += coeff.hasFieldRationInMovement;

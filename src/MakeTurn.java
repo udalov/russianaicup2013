@@ -89,6 +89,12 @@ public class MakeTurn {
 
         assert best != null : "Where's best? " + start;
 
+        return collectResult(start, prev, best);
+    }
+
+    @NotNull
+    private static Pair<Position, List<Go>> collectResult(@NotNull Position start, @NotNull Map<Position, Pair<Go, Position>> prev,
+                                                          @NotNull Position best) {
         if (best == start) return new Pair<>(best, Collections.<Go>emptyList());
 
         Position cur = best;
