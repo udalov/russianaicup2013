@@ -125,7 +125,7 @@ public class Position {
 
     private double sniperShootingRangeBonus(@NotNull TrooperStance stance) {
         switch (stance) {
-            case STANDING: return 0;
+            case STANDING: return situation.game.getSniperStandingShootingRangeBonus();
             case KNEELING: return situation.game.getSniperKneelingShootingRangeBonus();
             case PRONE: return situation.game.getSniperProneShootingRangeBonus();
             default: throw new IllegalStateException("Sniper is so stealth, he's " + stance);
