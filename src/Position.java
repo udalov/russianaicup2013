@@ -104,7 +104,7 @@ public class Position {
     }
 
     private boolean isPassablePoint(@NotNull Point point) {
-        if (!situation.army.board.isPassable(point)) return false;
+        if (!situation.board.isPassable(point)) return false;
         for (Warrior ally : allies()) {
             if (point.equals(ally.point)) return false;
         }

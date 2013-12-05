@@ -105,11 +105,12 @@ public class MakeTurn {
     @NotNull
     public static PointSet computeSeenForSituation(@NotNull Situation situation) {
         PointSet result = new PointSet();
-        Board board = situation.army.board;
         for (Warrior ally : situation.allies) {
+            Point point = ally.point;
+            TrooperStance stance = ally.stance;
             double visionRange = ally.getVisionRange();
-            for (Point object : board.allPassable()) {
-                if (board.isPassable(object) && situation.isReachable(visionRange, ally.point, ally.stance, object, STANDING)) {
+            for (Point object : situation.board.allPassable()) {
+                if (situation.isReachable(visionRange, point, stance, object, STANDING)) {
                     result.add(object);
                 }
             }
@@ -122,11 +123,10 @@ public class MakeTurn {
                                                   @NotNull PointSet given) {
         if (situation.lightVersion) return given;
 
-        Board board = situation.army.board;
         double visionRange = situation.self.getVisionRange();
         PointSet result = null;
-        for (Point object : board.allPassable()) {
-            if (board.isPassable(object) && situation.isReachable(visionRange, viewer, viewerStance, object, STANDING)) {
+        for (Point object : situation.board.allPassable()) {
+            if (situation.isReachable(visionRange, viewer, viewerStance, object, STANDING)) {
                 if (!given.contains(object)) {
                     if (result == null) {
                         result = given.copy();

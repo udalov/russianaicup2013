@@ -11,6 +11,7 @@ public class Situation {
     // Should be used only for reachability check and moveIndex
     public final World world;
     public final Army army;
+    public final Board board;
     public final Warrior self;
     public final List<Warrior> allies;
     public final List<EnemyWarrior> enemies;
@@ -24,6 +25,7 @@ public class Situation {
         this.game = game;
         this.world = world;
         this.army = army;
+        this.board = army.board;
         this.allies = new ArrayList<>(allies.size());
         this.enemies = new ArrayList<>(enemies.size());
         this.bonuses = bonuses;
@@ -46,6 +48,7 @@ public class Situation {
         this.game = situation.game;
         this.world = situation.world;
         this.army = situation.army;
+        this.board = situation.army.board;
         this.self = findMyself(selfType, allies);
         this.allies = allies;
         this.enemies = situation.enemies;
@@ -79,7 +82,7 @@ public class Situation {
     @NotNull
     private Warrior findLeader() {
         // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
-        List<TrooperType> leaderOrder = army.board.kind == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
+        List<TrooperType> leaderOrder = board.kind == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
                 Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
                 Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
 

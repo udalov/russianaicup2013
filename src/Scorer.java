@@ -64,7 +64,7 @@ public abstract class Scorer {
         double result = 0;
         for (Warrior ally : situation.allies) {
             if (ally.equals(situation.self)) continue;
-            Integer dist = situation.army.board.distance(ally.point, p.me);
+            Integer dist = situation.board.distance(ally.point, p.me);
             if (dist == null || dist == 0) continue;
             int toHeal = ally.getMaximalHitpoints() - p.allyHp[ally.index];
             if (toHeal > 60) result += 3 * dist;
@@ -104,14 +104,14 @@ public abstract class Scorer {
             int result = 0;
             for (Warrior ally : situation.allies) {
                 if (ally.equals(situation.self)) continue;
-                Integer distance = situation.army.board.distance(ally.point, p.me);
+                Integer distance = situation.board.distance(ally.point, p.me);
                 if (distance != null && distance > coeff.leaderCriticalDistanceToAllies) result++;
             }
             return result;
         }
 
         private int distanceToWayPoint(@NotNull Position p) {
-            Integer dist = situation.army.board.distance(p.me, wayPoint);
+            Integer dist = situation.board.distance(p.me, wayPoint);
             return dist != null ? dist : 1000;
         }
     }
@@ -127,7 +127,7 @@ public abstract class Scorer {
             super(situation);
             this.leader = leader.point;
             this.wayPoint = situation.army.getOrUpdateWayPoint(situation);
-            List<Point> leaderPath = situation.army.board.findPath(this.leader, wayPoint);
+            List<Point> leaderPath = situation.board.findPath(this.leader, wayPoint);
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
 
@@ -139,7 +139,7 @@ public abstract class Scorer {
             if (p.has(MEDIKIT)) result += coeff.hasMedikitInMovement;
             if (p.has(FIELD_RATION)) result += coeff.hasFieldRationInMovement;
 
-            Integer dist = situation.army.board.distance(p.me, leader);
+            Integer dist = situation.board.distance(p.me, leader);
             if (dist != null) result -= coeff.followerDistanceToLeader * dist;
 
             int freeCells = leaderDegreeOfFreedom(p);
@@ -171,7 +171,7 @@ public abstract class Scorer {
                 Point point = queue.poll();
                 for (Direction direction : Util.DIRECTIONS) {
                     Point q = point.go(direction);
-                    if (q != null && situation.army.board.isPassable(q) && !set.contains(q)) {
+                    if (q != null && situation.board.isPassable(q) && !set.contains(q)) {
                         set.add(q);
                         queue.add(q);
                         if (++result == 5) return result;
@@ -296,7 +296,7 @@ public abstract class Scorer {
             double result = 0;
             for (Warrior ally : situation.allies) {
                 if (ally.equals(situation.self)) continue;
-                Integer dist = situation.army.board.distance(ally.point, p.me);
+                Integer dist = situation.board.distance(ally.point, p.me);
                 if (dist != null) result += dist;
             }
             return result;
