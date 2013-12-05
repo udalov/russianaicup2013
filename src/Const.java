@@ -25,6 +25,7 @@ public enum Const {
     public double medicDistanceToWoundedAllies = 0.5;
     public double underCommanderAura = 5;
     public double pointsSeen = 0.02;
+    public double stance = 1;
 
     public double maxHpToHeal = 85;
 
@@ -34,7 +35,6 @@ public enum Const {
     public double expectedDamageOnNextTurn = 0.5;
     public double bonusInCombat = 0.1;
     public double distanceToAlliesInCombat = 0.01;
-    public double combatStance = 5;
     public double combatNextAllyTurn = 0.05;
     public double combatVisibleEnemies = 20;
     public double shootablePoints = 0.01;

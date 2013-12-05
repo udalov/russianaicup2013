@@ -30,6 +30,10 @@ public abstract class Scorer {
 
         result += coeff.pointsSeen * p.seen.size();
 
+        if (4 <= situation.world.getMoveIndex() && situation.world.getMoveIndex() <= 32) {
+            result -= coeff.stance * p.stance.ordinal();
+        }
+
         result += situationSpecificScore(p);
 
         return result;
@@ -211,10 +215,6 @@ public abstract class Scorer {
 
             result -= coeff.distanceToAlliesInCombat * distanceToAllies(p);
 
-            if (closestEnemy(p) < 8 /* TODO */) {
-                result -= coeff.combatStance * p.stance.ordinal();
-            }
-
             // TODO: only if high hp?
             result += coeff.combatVisibleEnemies * visibleEnemies(p);
 
@@ -298,14 +298,6 @@ public abstract class Scorer {
                 }
             }
             return Integer.bitCount(bitset);
-        }
-
-        private double closestEnemy(@NotNull Position p) {
-            double closestEnemy = 1e100;
-            for (EnemyWarrior enemy : p.aliveEnemies()) {
-                closestEnemy = Math.min(closestEnemy, enemy.point.euclideanDistance(p.me));
-            }
-            return closestEnemy;
         }
 
         private double distanceToAllies(@NotNull Position p) {
