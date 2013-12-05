@@ -188,7 +188,7 @@ public abstract class Scorer {
 
     public static class CombatSituation extends Scorer {
         private final Map<Long, Integer> enemyTeams = new HashMap<>(6);
-        private final PointSet set = new PointSet();
+        private final PointMap<Integer> map = new PointMap<>();
 
         public CombatSituation(@NotNull Situation situation) {
             super(situation);
@@ -230,15 +230,16 @@ public abstract class Scorer {
         }
 
         private double shootablePoints(@NotNull Position p) {
-            set.clear();
+            map.clear();
             for (Warrior warrior : p.allies()) {
                 for (Point point : situation.board.allPassable()) {
                     if (situation.isReachable(warrior.getShootingRange(), warrior.point, warrior.stance, point, STANDING)) {
-                        set.add(point);
+                        Integer old = map.get(point);
+                        map.put(point, old != null ? 2 * old + 1 : 1);
                     }
                 }
             }
-            return set.size();
+            return map.size();
         }
 
         // Returns number of visible enemies or their corpses from those who were seen in the beginning of the turn (situation)

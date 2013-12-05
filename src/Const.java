@@ -37,7 +37,7 @@ public enum Const {
     public double distanceToAlliesInCombat = 0.01;
     public double combatNextAllyTurn = 0.05;
     public double combatVisibleEnemies = 20;
-    public double shootablePoints = 0.01;
+    public double shootablePoints = 0.005;
 
     public double hasGrenadeInMovement = 1;
     public double hasMedikitInMovement = 1;
