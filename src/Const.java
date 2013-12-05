@@ -43,8 +43,7 @@ public enum Const {
     public double hasMedikitInMovement = 1;
     public double hasFieldRationInMovement = 11;
 
-    public double followerDistanceToLeader = 1;
-    public double leaderDegreeOfFreedom = 100;
+    public double followerDistanceToLeader = 0.4;
     public double isFollowerBlockingLeader = 10;
 
     public double leaderDistanceToWayPoint = 1;

@@ -1,4 +1,3 @@
-import model.Direction;
 import model.TrooperType;
 
 import java.util.*;
@@ -121,16 +120,12 @@ public abstract class Scorer {
 
     public static class Follower extends Scorer {
         private final Point leader;
-        private final Point wayPoint;
-        private final Set<Point> set = new PointSet();
-        private final ArrayDeque<Point> queue = new ArrayDeque<>(15);
         private final List<Point> leaderPath;
 
         public Follower(@NotNull Situation situation, @NotNull Warrior leader) {
             super(situation);
             this.leader = leader.point;
-            this.wayPoint = situation.army.getOrUpdateWayPoint(situation);
-            List<Point> leaderPath = situation.board.findPath(this.leader, wayPoint);
+            List<Point> leaderPath = situation.board.findPath(this.leader, situation.army.getOrUpdateWayPoint(situation));
             this.leaderPath = leaderPath == null ? Collections.<Point>emptyList() : leaderPath;
         }
 
@@ -145,9 +140,6 @@ public abstract class Scorer {
             Integer dist = situation.board.distance(p.me, leader);
             if (dist != null) result -= coeff.followerDistanceToLeader * dist;
 
-            int freeCells = leaderDegreeOfFreedom(p);
-            result -= coeff.leaderDegreeOfFreedom * Math.max(5 - freeCells, 0);
-
             if (isBlockingLeader(p)) result -= coeff.isFollowerBlockingLeader;
 
             return result;
@@ -158,31 +150,6 @@ public abstract class Scorer {
                 if (p.me.equals(point)) return true;
             }
             return false;
-        }
-
-        private int leaderDegreeOfFreedom(@NotNull Position p) {
-            set.clear();
-            queue.clear();
-
-            for (Warrior ally : p.allies()) {
-                set.add(ally.point);
-            }
-            queue.add(leader);
-
-            int result = 1;
-            while (!queue.isEmpty()) {
-                Point point = queue.poll();
-                for (Direction direction : Util.DIRECTIONS) {
-                    Point q = point.go(direction);
-                    if (q != null && situation.board.isPassable(q) && !set.contains(q)) {
-                        set.add(q);
-                        queue.add(q);
-                        if (++result == 5) return result;
-                    }
-                }
-            }
-
-            return result;
         }
     }
 
