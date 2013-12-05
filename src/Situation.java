@@ -83,8 +83,8 @@ public class Situation {
     private Warrior findLeader() {
         // TODO: this is a hack to make medic follow sniper in the beginning on MAP03
         List<TrooperType> leaderOrder = board.kind == Board.Kind.MAP03 && world.getMoveIndex() <= 3 ?
-                Arrays.asList(SNIPER, FIELD_MEDIC, SOLDIER, COMMANDER, SCOUT) :
-                Arrays.asList(SOLDIER, COMMANDER, FIELD_MEDIC, SCOUT, SNIPER);
+                Arrays.asList(SNIPER, SCOUT, COMMANDER, SOLDIER, FIELD_MEDIC) :
+                Arrays.asList(SCOUT, COMMANDER, SOLDIER, SNIPER, FIELD_MEDIC);
 
         for (TrooperType type : leaderOrder) {
             for (Warrior ally : allies) {
