@@ -1,5 +1,4 @@
 import model.Direction;
-import model.TrooperStance;
 import model.TrooperType;
 
 import java.util.*;
@@ -320,30 +319,36 @@ public abstract class Scorer {
                     actionPoints += situation.game.getFieldRationBonusActionPoints() - situation.game.getFieldRationEatCost();
                 }
 
-/*
-                // TODO: fix and uncomment expected damage from grenades
                 // Assume that he'll always throw a grenade if he has one
                 if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
+                    double grenadeThrowRange = situation.game.getGrenadeThrowRange();
                     int[] best = p.allyHp;
-                    int bestDamage = 0;
+                    int maxScore = 0;
                     for (Warrior ally : p.allies()) {
-                        if (enemy.point.euclideanDistance(ally.point) <= situation.game.getGrenadeThrowRange()) {
-                            int[] hp = p.grenadeEffectToAllies(ally.point);
-                            int damage = IntArrays.sum(IntArrays.diff(p.allyHp, hp));
-                            if (damage > bestDamage) {
-                                bestDamage = damage;
-                                best = hp;
+                        for (Direction direction : Direction.values()) {
+                            Point target = ally.point.go(direction);
+                            if (target != null && enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
+                                int[] hp = p.grenadeEffectToAllies(target);
+                                int score = 0;
+                                for (int i = 0; i < n; i++) {
+                                    score += p.allyHp[i] - hp[i];
+                                    if (hp[i] == 0) score += coeff.killEnemy;
+                                }
+
+                                if (score > maxScore) {
+                                    maxScore = score;
+                                    best = hp;
+                                }
                             }
                         }
                     }
-                    if (bestDamage > 0) {
+                    if (maxScore > 60) {
                         actionPoints -= situation.game.getGrenadeThrowCost();
                         for (int i = 0; i < p.allyHp.length; i++) {
                             expectedDamage[i] += p.allyHp[i] - best[i];
                         }
                     }
                 }
-*/
 
                 // Assume that he's always shooting right away until the end of his turn
                 // TODO: handle the case when he lowers the stance in the beginning
@@ -351,12 +356,9 @@ public abstract class Scorer {
 
                 int isReachable = 0;
                 int alliesUnderSight = 0;
-                for (int j = 0; j < n; j++) {
-                    Warrior ally = situation.allies.get(j);
-                    Point point = j == situation.self.index ? p.me : ally.point;
-                    TrooperStance stance = j == situation.self.index ? p.stance : ally.stance;
-                    if (situation.isReachable(enemy.getShootingRange(), enemy.point, enemy.stance, point, stance)) {
-                        isReachable |= 1 << j;
+                for (Warrior ally : p.allies()) {
+                    if (situation.isReachable(enemy.getShootingRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
+                        isReachable |= 1 << ally.index;
                         alliesUnderSight++;
                     }
                 }
