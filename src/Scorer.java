@@ -4,6 +4,7 @@ import model.TrooperType;
 import java.util.*;
 
 import static model.BonusType.*;
+import static model.TrooperStance.STANDING;
 import static model.TrooperType.*;
 
 public abstract class Scorer {
@@ -183,6 +184,7 @@ public abstract class Scorer {
 
     public static class CombatSituation extends Scorer {
         private final Map<Long, Integer> enemyTeams = new HashMap<>(6);
+        private final PointSet set = new PointSet();
 
         public CombatSituation(@NotNull Situation situation) {
             super(situation);
@@ -213,14 +215,30 @@ public abstract class Scorer {
                 result -= coeff.combatStance * p.stance.ordinal();
             }
 
-            if (!situation.lightVersion && situation.army.isOrderComplete()) {
-                result += coeff.combatNextAllyTurn * nextAllyTurn(p);
-            }
-
             // TODO: only if high hp?
             result += coeff.combatVisibleEnemies * visibleEnemies(p);
 
+            if (!situation.lightVersion) {
+                if (situation.army.isOrderComplete()) {
+                    result += coeff.combatNextAllyTurn * nextAllyTurn(p);
+                }
+
+                result += coeff.shootablePoints * shootablePoints(p);
+            }
+
             return result;
+        }
+
+        private double shootablePoints(@NotNull Position p) {
+            set.clear();
+            for (Warrior warrior : p.allies()) {
+                for (Point point : situation.board.allPassable()) {
+                    if (situation.isReachable(warrior.getShootingRange(), warrior.point, warrior.stance, point, STANDING)) {
+                        set.add(point);
+                    }
+                }
+            }
+            return set.size();
         }
 
         // Returns number of visible enemies or their corpses from those who were seen in the beginning of the turn (situation)
