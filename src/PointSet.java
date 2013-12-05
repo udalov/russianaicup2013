@@ -1,20 +1,20 @@
-import java.util.BitSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 
 public class PointSet implements Set<Point> {
     private int size;
-    // TODO: long[]
-    private final BitSet data;
+    private final long[] data;
 
-    private PointSet(@NotNull BitSet data) {
+    private PointSet(int size, @NotNull long[] data) {
         this.data = data;
-        this.size = data.cardinality();
+        this.size = size;
     }
 
     public PointSet() {
-        this(new BitSet(Board.WIDTH * Board.HEIGHT));
+        // ceil(20 * 30 / 64) = 10
+        this(0, new long[10]);
     }
 
     @Override
@@ -29,14 +29,16 @@ public class PointSet implements Set<Point> {
 
     @Override
     public boolean contains(Object o) {
-        return o instanceof Point && data.get(((Point) o).index());
+        int i = ((Point) o).index();
+        return (data[i >> 6] & (1L << (i & 63))) != 0;
     }
 
     @Override
     public boolean add(@NotNull Point p) {
         int i = p.index();
-        if (data.get(i)) return false;
-        data.set(i);
+        long k = 1L << (i & 63);
+        if ((data[i >> 6] & k) != 0) return false;
+        data[i >> 6] |= k;
         size++;
         return true;
     }
@@ -44,13 +46,13 @@ public class PointSet implements Set<Point> {
     @Override
     public void clear() {
         size = 0;
-        data.clear();
+        Arrays.fill(data, 0);
     }
 
 
     @NotNull
     public PointSet copy() {
-        return new PointSet((BitSet) data.clone());
+        return new PointSet(size, data.clone());
     }
 
 
