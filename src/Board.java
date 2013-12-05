@@ -46,6 +46,7 @@ public class Board {
     public static int HEIGHT = -1;
 
     private final Kind kind;
+    private final List<Point> passable = new ArrayList<>(WIDTH * HEIGHT);
     private final Set<Point> obstacles = new PointSet();
     private final Map<Point, Map<Point, Integer>> distances = new PointMap<>();
 
@@ -62,9 +63,12 @@ public class Board {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
-                if (cells[i][j] != CellType.FREE) {
+                Point point = Point.create(i, j);
+                if (cells[i][j] == CellType.FREE) {
+                    passable.add(point);
+                } else {
                     //noinspection ConstantConditions
-                    obstacles.add(Point.create(i, j));
+                    obstacles.add(point);
                 }
             }
         }
@@ -73,6 +77,11 @@ public class Board {
     @NotNull
     public Kind getKind() {
         return kind;
+    }
+
+    @NotNull
+    public Iterable<Point> allPassable() {
+        return passable;
     }
 
     private int worldMapHashCode(@NotNull CellType[][] cells) {

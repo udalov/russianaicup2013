@@ -16,6 +16,7 @@ public class Situation {
     public final List<EnemyWarrior> enemies;
     public final List<Bonus> bonuses;
 
+    public final boolean lightVersion;
     public final Scorer scorer;
 
     public Situation(@NotNull Game game, @NotNull World world, @NotNull Army army, @NotNull TrooperType selfType, @NotNull List<Trooper> allies,
@@ -37,7 +38,8 @@ public class Situation {
             this.enemies.add(new EnemyWarrior(i, enemies.get(i)));
         }
 
-        this.scorer = createScorer(true);
+        this.lightVersion = false;
+        this.scorer = createScorer();
     }
 
     public Situation(@NotNull Situation situation, @NotNull TrooperType selfType, @NotNull List<Warrior> allies, @NotNull List<Bonus> bonuses) {
@@ -48,7 +50,8 @@ public class Situation {
         this.allies = allies;
         this.enemies = situation.enemies;
         this.bonuses = bonuses;
-        this.scorer = createScorer(false);
+        this.lightVersion = true;
+        this.scorer = createScorer();
     }
 
     @NotNull
@@ -60,9 +63,9 @@ public class Situation {
     }
 
     @NotNull
-    private Scorer createScorer(boolean computeNextAllyTurn) {
+    private Scorer createScorer() {
         if (!enemies.isEmpty()) {
-            return new Scorer.CombatSituation(this, computeNextAllyTurn);
+            return new Scorer.CombatSituation(this);
         }
 
         Warrior leader = findLeader();

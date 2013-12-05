@@ -4,8 +4,18 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class PointSet implements Set<Point> {
-    private int size = 0;
-    private final BitSet data = new BitSet(Board.WIDTH * Board.HEIGHT);
+    private int size;
+    // TODO: long[]
+    private final BitSet data;
+
+    private PointSet(@NotNull BitSet data) {
+        this.data = data;
+        this.size = data.cardinality();
+    }
+
+    public PointSet() {
+        this(new BitSet(Board.WIDTH * Board.HEIGHT));
+    }
 
     @Override
     public int size() {
@@ -38,6 +48,12 @@ public class PointSet implements Set<Point> {
     }
 
 
+    @NotNull
+    public PointSet copy() {
+        return new PointSet((BitSet) data.clone());
+    }
+
+
     @Override
     @NotNull
     public Iterator<Point> iterator() {
@@ -67,17 +83,17 @@ public class PointSet implements Set<Point> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends Point> c) {
+    public boolean addAll(@NotNull Collection<? extends Point> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
+    public boolean retainAll(@NotNull Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
+    public boolean removeAll(@NotNull Collection<?> c) {
         throw new UnsupportedOperationException();
     }
 

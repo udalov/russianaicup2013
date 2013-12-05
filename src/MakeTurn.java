@@ -1,10 +1,12 @@
 import model.Game;
 import model.Trooper;
+import model.TrooperStance;
 import model.World;
 
 import java.util.*;
 
 import static model.BonusType.*;
+import static model.TrooperStance.STANDING;
 
 public class MakeTurn {
     private final Army army;
@@ -54,7 +56,8 @@ public class MakeTurn {
                 computeBonusesBitSet(self),
                 IntArrays.hitpointsOf(enemies),
                 IntArrays.hitpointsOf(allies),
-                IntArrays.EMPTY
+                IntArrays.EMPTY,
+                computeSeenForSituation(situation)
         );
 
         List<Go> best = best(situation, start).second;
@@ -97,6 +100,43 @@ public class MakeTurn {
             if (before.second == start) return new Pair<>(best, Util.reverse(result));
             cur = before.second;
         }
+    }
+
+    @NotNull
+    public static PointSet computeSeenForSituation(@NotNull Situation situation) {
+        PointSet result = new PointSet();
+        Board board = situation.army.board;
+        for (Warrior ally : situation.allies) {
+            double visionRange = ally.getVisionRange();
+            for (Point object : board.allPassable()) {
+                if (board.isPassable(object) && situation.isReachable(visionRange, ally.point, ally.stance, object, STANDING)) {
+                    result.add(object);
+                }
+            }
+        }
+        return result;
+    }
+
+    @NotNull
+    public static PointSet computeSeenForPosition(@NotNull Situation situation, @NotNull Point viewer, @NotNull TrooperStance viewerStance,
+                                                  @NotNull PointSet given) {
+        if (situation.lightVersion) return given;
+
+        Board board = situation.army.board;
+        double visionRange = situation.self.getVisionRange();
+        PointSet result = null;
+        for (Point object : board.allPassable()) {
+            if (board.isPassable(object) && situation.isReachable(visionRange, viewer, viewerStance, object, STANDING)) {
+                if (!given.contains(object)) {
+                    if (result == null) {
+                        result = given.copy();
+                    }
+                    result.add(object);
+                }
+            }
+        }
+
+        return result != null ? result : given;
     }
 
     public static int computeBonusesBitSet(@NotNull Trooper self) {

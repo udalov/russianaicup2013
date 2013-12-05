@@ -28,6 +28,8 @@ public abstract class Scorer {
 
         result += coeff.underCommanderAura * underCommanderAura(p);
 
+        result += coeff.pointsSeen * p.seen.size();
+
         result += situationSpecificScore(p);
 
         return result;
@@ -183,11 +185,9 @@ public abstract class Scorer {
 
     public static class CombatSituation extends Scorer {
         private final Map<Long, Integer> enemyTeams = new HashMap<>(6);
-        private final boolean computeNextAllyTurn;
 
-        public CombatSituation(@NotNull Situation situation, boolean computeNextAllyTurn) {
+        public CombatSituation(@NotNull Situation situation) {
             super(situation);
-            this.computeNextAllyTurn = computeNextAllyTurn;
             for (Warrior enemy : situation.enemies) {
                 long id = enemy.getPlayerId();
                 if (!enemyTeams.containsKey(id)) {
@@ -215,7 +215,7 @@ public abstract class Scorer {
                 result -= coeff.combatStance * p.stance.ordinal();
             }
 
-            if (computeNextAllyTurn && situation.army.isOrderComplete()) {
+            if (!situation.lightVersion && situation.army.isOrderComplete()) {
                 result += coeff.combatNextAllyTurn * nextAllyTurn(p);
             }
 
@@ -251,7 +251,8 @@ public abstract class Scorer {
             Situation next = new Situation(situation, nextAlly.type, allies, situation.bonuses /* TODO: some of them are collected */);
 
             Position start = new Position(next, nextAlly.point, nextAlly.stance, nextAlly.getInitialActionPoints() /* TODO: commander aura */,
-                    MakeTurn.computeBonusesBitSet(nextAlly.trooper /* TODO: deprecate? here it's safe though */), p.enemyHp, p.allyHp, p.collected);
+                    MakeTurn.computeBonusesBitSet(nextAlly.trooper /* TODO: deprecate? here it's safe though */), p.enemyHp, p.allyHp, p.collected,
+                    MakeTurn.computeSeenForSituation(next));
 
             Pair<Position, List<Go>> best = MakeTurn.best(next, start);
 

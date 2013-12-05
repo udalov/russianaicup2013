@@ -21,11 +21,12 @@ public class Position {
     public final int[] allyHp;
     // id of collected bonuses
     public final int[] collected;
+    public final PointSet seen;
 
     private final int hashCode;
 
     public Position(@NotNull Situation situation, @NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses,
-                    @NotNull int[] enemyHp, @NotNull int[] allyHp, @NotNull int[] collected) {
+                    @NotNull int[] enemyHp, @NotNull int[] allyHp, @NotNull int[] collected, @NotNull PointSet seen) {
         this.situation = situation;
         this.me = me;
         this.stance = stance;
@@ -34,6 +35,7 @@ public class Position {
         this.enemyHp = enemyHp;
         this.allyHp = allyHp;
         this.collected = collected;
+        this.seen = seen;
 
         int hash = me.hashCode();
         hash = 31 * hash + stance.hashCode();
@@ -216,7 +218,8 @@ public class Position {
         Bonus bonus = maybeCollectBonus(point);
         int newBonuses = bonus == null ? bonuses : with(bonus.getType());
         int[] newCollected = bonus == null ? collected : IntArrays.add(collected, (int) bonus.getId());
-        return new Position(situation, point, stance, ap, newBonuses, enemyHp, allyHp, newCollected);
+        PointSet newSeen = MakeTurn.computeSeenForPosition(situation, point, stance, seen);
+        return new Position(situation, point, stance, ap, newBonuses, enemyHp, allyHp, newCollected, newSeen);
     }
 
     @Nullable
@@ -227,7 +230,7 @@ public class Position {
         if (hp == 0) return null;
         if (!situation.isReachable(effectiveShootingRange(), me, stance, enemy.point, enemy.stance)) return null;
         int[] newEnemyHp = IntArrays.replace(enemyHp, enemy.index, Math.max(hp - situation.self.getDamage(stance), 0));
-        return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected);
+        return new Position(situation, me, stance, ap, bonuses, newEnemyHp, allyHp, collected, seen);
     }
 
     @Nullable
@@ -236,7 +239,8 @@ public class Position {
         if (ap < 0) return null;
         TrooperStance newStance = Util.higher(stance);
         if (newStance == null) return null;
-        return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected);
+        PointSet newSeen = MakeTurn.computeSeenForPosition(situation, me, newStance, seen);
+        return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected, newSeen);
     }
 
     @Nullable
@@ -245,7 +249,8 @@ public class Position {
         if (ap < 0) return null;
         TrooperStance newStance = Util.lower(stance);
         if (newStance == null) return null;
-        return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected);
+        PointSet newSeen = MakeTurn.computeSeenForPosition(situation, me, newStance, seen);
+        return new Position(situation, me, newStance, ap, bonuses, enemyHp, allyHp, collected, newSeen);
     }
 
     @Nullable
@@ -257,7 +262,7 @@ public class Position {
         int[] newEnemyHp = grenadeEffectToEnemies(target);
         if (Arrays.equals(enemyHp, newEnemyHp)) return null;
         int[] newAllyHp = grenadeEffectToAllies(target);
-        return new Position(situation, me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected);
+        return new Position(situation, me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected, seen);
     }
 
     @Nullable
@@ -270,7 +275,7 @@ public class Position {
         else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getMedikitBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
-        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
+        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected, seen);
     }
 
     @Nullable
@@ -279,7 +284,7 @@ public class Position {
         if (actionPoints >= situation.self.getInitialActionPoints()) return null;
         int ap = actionPoints - situation.game.getFieldRationEatCost();
         if (ap < 0) return null;
-        return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected);
+        return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected, seen);
     }
 
     @Nullable
@@ -291,6 +296,6 @@ public class Position {
         else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getFieldMedicHealBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
-        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected);
+        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected, seen);
     }
 }
