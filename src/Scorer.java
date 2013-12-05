@@ -318,15 +318,15 @@ public abstract class Scorer {
                     actionPoints += situation.game.getFieldRationBonusActionPoints() - situation.game.getFieldRationEatCost();
                 }
 
-                // Assume that he'll always throw a grenade if he has one
-                if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
-                    double grenadeThrowRange = situation.game.getGrenadeThrowRange();
-                    int[] best = p.allyHp;
-                    int maxScore = 0;
-                    for (Warrior ally : p.allies()) {
-                        for (Direction direction : Direction.values()) {
-                            Point target = ally.point.go(direction);
-                            if (target != null && enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
+                if (!situation.lightVersion) {
+                    // Assume that he'll always throw a grenade if he has one
+                    if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
+                        double grenadeThrowRange = situation.game.getGrenadeThrowRange();
+                        int[] best = p.allyHp;
+                        int maxScore = 0;
+                        for (Warrior ally : p.allies()) {
+                            Point target = ally.point;
+                            if (enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
                                 int[] hp = p.grenadeEffectToAllies(target);
                                 int score = 0;
                                 for (int i = 0; i < n; i++) {
@@ -340,11 +340,11 @@ public abstract class Scorer {
                                 }
                             }
                         }
-                    }
-                    if (maxScore > 60) {
-                        actionPoints -= situation.game.getGrenadeThrowCost();
-                        for (int i = 0; i < p.allyHp.length; i++) {
-                            expectedDamage[i] += p.allyHp[i] - best[i];
+                        if (maxScore > 60) {
+                            actionPoints -= situation.game.getGrenadeThrowCost();
+                            for (int i = 0; i < p.allyHp.length; i++) {
+                                expectedDamage[i] += p.allyHp[i] - best[i];
+                            }
                         }
                     }
                 }
