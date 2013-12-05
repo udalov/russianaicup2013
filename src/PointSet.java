@@ -108,4 +108,16 @@ public class PointSet implements Set<Point> {
     public int hashCode() {
         throw new UnsupportedOperationException();
     }
+
+    @NotNull
+    public String debug() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < 20; i++) {
+            for (int j = 0; j < 30; j++) {
+                result.append(contains(Point.create(j, i)) ? '#' : '.');
+            }
+            result.append("\n");
+        }
+        return result.toString();
+    }
 }
