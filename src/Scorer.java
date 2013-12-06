@@ -245,7 +245,7 @@ public abstract class Scorer {
             List<Warrior> allies = new ArrayList<>(situation.allies);
             allies.set(situation.self.index, new Warrior(situation.self, p.me, p.stance));
 
-            Situation next = new Situation(situation, nextAlly.type, allies, situation.bonuses /* TODO: some of them are collected */);
+            Situation next = new Situation(situation, nextAlly.type, allies);
 
             Position start = new Position(next, nextAlly.point, nextAlly.stance, nextAllyInitialActionPoints(p, nextAlly),
                     MakeTurn.computeBonusesBitSet(nextAlly.trooper /* TODO: deprecate? here it's safe though */), p.enemyHp, p.allyHp, p.collected,
@@ -332,7 +332,6 @@ public abstract class Scorer {
                 }
 
                 if (!situation.lightVersion) {
-                    // Assume that he'll always throw a grenade if he has one
                     if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
                         double grenadeThrowRange = situation.game.getGrenadeThrowRange();
                         int[] best = p.allyHp;
@@ -353,6 +352,7 @@ public abstract class Scorer {
                                 }
                             }
                         }
+                        // Assume that he'll only throw grenade if it'll bring more than 60 of damage
                         if (maxScore > 60) {
                             actionPoints -= situation.game.getGrenadeThrowCost();
                             for (int i = 0; i < p.allyHp.length; i++) {

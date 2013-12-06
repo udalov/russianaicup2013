@@ -44,7 +44,7 @@ public class Situation {
         this.scorer = createScorer();
     }
 
-    public Situation(@NotNull Situation situation, @NotNull TrooperType selfType, @NotNull List<Warrior> allies, @NotNull List<Bonus> bonuses) {
+    public Situation(@NotNull Situation situation, @NotNull TrooperType selfType, @NotNull List<Warrior> allies) {
         this.game = situation.game;
         this.world = situation.world;
         this.army = situation.army;
@@ -52,7 +52,7 @@ public class Situation {
         this.self = findMyself(selfType, allies);
         this.allies = allies;
         this.enemies = situation.enemies;
-        this.bonuses = bonuses;
+        this.bonuses = situation.bonuses;
         this.lightVersion = true;
         this.scorer = createScorer();
     }
