@@ -1,12 +1,36 @@
 import model.*;
 
 import static model.ActionType.*;
+import static model.Direction.*;
 import static model.TrooperStance.PRONE;
 import static model.TrooperStance.STANDING;
 import static model.TrooperType.COMMANDER;
 import static model.TrooperType.FIELD_MEDIC;
 
 public final class Go {
+    private static final Go GO_END_TURN = new Go(END_TURN);
+    private static final Go GO_RAISE_STANCE = new Go(RAISE_STANCE);
+    private static final Go GO_LOWER_STANCE = new Go(LOWER_STANCE);
+    private static final Go GO_EAT_FIELD_RATION = new Go(EAT_FIELD_RATION);
+
+    private static final Go GO_MOVE_CURRENT_POINT = new Go(MOVE, CURRENT_POINT);
+    private static final Go GO_MOVE_NORTH = new Go(MOVE, NORTH);
+    private static final Go GO_MOVE_EAST = new Go(MOVE, EAST);
+    private static final Go GO_MOVE_SOUTH = new Go(MOVE, SOUTH);
+    private static final Go GO_MOVE_WEST = new Go(MOVE, WEST);
+
+    private static final Go GO_USE_MEDIKIT_CURRENT_POINT = new Go(USE_MEDIKIT, CURRENT_POINT);
+    private static final Go GO_USE_MEDIKIT_NORTH = new Go(USE_MEDIKIT, NORTH);
+    private static final Go GO_USE_MEDIKIT_EAST = new Go(USE_MEDIKIT, EAST);
+    private static final Go GO_USE_MEDIKIT_SOUTH = new Go(USE_MEDIKIT, SOUTH);
+    private static final Go GO_USE_MEDIKIT_WEST = new Go(USE_MEDIKIT, WEST);
+
+    private static final Go GO_HEAL_CURRENT_POINT = new Go(HEAL, CURRENT_POINT);
+    private static final Go GO_HEAL_NORTH = new Go(HEAL, NORTH);
+    private static final Go GO_HEAL_EAST = new Go(HEAL, EAST);
+    private static final Go GO_HEAL_SOUTH = new Go(HEAL, SOUTH);
+    private static final Go GO_HEAL_WEST = new Go(HEAL, WEST);
+
     private final ActionType action;
     private final Direction direction;
     private final Point point;
@@ -15,6 +39,18 @@ public final class Go {
         this.action = action;
         this.direction = direction;
         this.point = point;
+    }
+
+    private Go(@NotNull ActionType action, @Nullable Direction direction) {
+        this(action, direction, null);
+    }
+
+    private Go(@NotNull ActionType action, @Nullable Point point) {
+        this(action, null, point);
+    }
+
+    private Go(@NotNull ActionType action) {
+        this(action, null, null);
     }
 
     public void execute(@NotNull Move move) {
@@ -31,47 +67,68 @@ public final class Go {
 
     @NotNull
     public static Go endTurn() {
-        return new Go(END_TURN, null, null);
+        return GO_END_TURN;
     }
 
     @NotNull
     public static Go move(@NotNull Direction direction) {
-        return new Go(MOVE, direction, null);
+        switch (direction) {
+            case CURRENT_POINT: return GO_MOVE_CURRENT_POINT;
+            case NORTH: return GO_MOVE_NORTH;
+            case EAST: return GO_MOVE_EAST;
+            case SOUTH: return GO_MOVE_SOUTH;
+            case WEST: return GO_MOVE_WEST;
+            default: return new Go(MOVE, direction);
+        }
     }
 
     @NotNull
     public static Go shoot(@NotNull Point point) {
-        return new Go(SHOOT, null, point);
+        return new Go(SHOOT, point);
     }
 
     @NotNull
     public static Go raiseStance() {
-        return new Go(RAISE_STANCE, null, null);
+        return GO_RAISE_STANCE;
     }
 
     @NotNull
     public static Go lowerStance() {
-        return new Go(LOWER_STANCE, null, null);
+        return GO_LOWER_STANCE;
     }
 
     @NotNull
     public static Go throwGrenade(@NotNull Point point) {
-        return new Go(THROW_GRENADE, null, point);
+        return new Go(THROW_GRENADE, point);
     }
 
     @NotNull
     public static Go useMedikit(@NotNull Direction direction) {
-        return new Go(USE_MEDIKIT, direction, null);
+        switch (direction) {
+            case CURRENT_POINT: return GO_USE_MEDIKIT_CURRENT_POINT;
+            case NORTH: return GO_USE_MEDIKIT_NORTH;
+            case EAST: return GO_USE_MEDIKIT_EAST;
+            case SOUTH: return GO_USE_MEDIKIT_SOUTH;
+            case WEST: return GO_USE_MEDIKIT_WEST;
+            default: return new Go(USE_MEDIKIT, direction);
+        }
     }
 
     @NotNull
     public static Go eatFieldRation() {
-        return new Go(EAT_FIELD_RATION, null, null);
+        return GO_EAT_FIELD_RATION;
     }
 
     @NotNull
     public static Go heal(@NotNull Direction direction) {
-        return new Go(HEAL, direction, null);
+        switch (direction) {
+            case CURRENT_POINT: return GO_HEAL_CURRENT_POINT;
+            case NORTH: return GO_HEAL_NORTH;
+            case EAST: return GO_HEAL_EAST;
+            case SOUTH: return GO_HEAL_SOUTH;
+            case WEST: return GO_HEAL_WEST;
+            default: return new Go(HEAL, direction);
+        }
     }
 
     @Override

@@ -321,7 +321,7 @@ public abstract class Scorer {
                         for (Warrior ally : p.allies) {
                             Point target = ally.point;
                             if (enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
-                                int[] hp = p.grenadeEffectToAllies(target);
+                                int[] hp = p.grenadeEffect(target, p.allies, p.allyHp);
                                 int score = 0;
                                 for (int i = 0; i < n; i++) {
                                     score += p.allyHp[i] - hp[i];

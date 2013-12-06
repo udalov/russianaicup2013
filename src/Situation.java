@@ -48,7 +48,7 @@ public class Situation {
         this.game = situation.game;
         this.world = situation.world;
         this.army = situation.army;
-        this.board = situation.army.board;
+        this.board = situation.board;
         this.self = findMyself(selfType, allies);
         this.allies = allies;
         this.enemies = situation.enemies;

@@ -96,22 +96,19 @@ public class Position {
     }
 
     @NotNull
-    private int[] grenadeEffectToEnemies(@NotNull Point target) {
-        int size = enemyHp.length;
-        int[] result = new int[size];
-        for (EnemyWarrior enemy : situation.enemies) {
-            result[enemy.index] = grenadeEffectToTrooper(target, enemy.point, enemyHp[enemy.index]);
+    public int[] grenadeEffect(@NotNull Point target, @NotNull List<? extends Warrior> warriors, @NotNull int[] hp) {
+        int[] result = null;
+        for (Warrior warrior : warriors) {
+            int was = hp[warrior.index];
+            int now = grenadeEffectToTrooper(target, warrior.point, was);
+            if (was != now) {
+                if (result == null) {
+                    result = Arrays.copyOf(hp, hp.length);
+                }
+                result[warrior.index] = now;
+            }
         }
-        return result;
-    }
-
-    @NotNull
-    public int[] grenadeEffectToAllies(@NotNull Point target) {
-        int[] result = new int[allyHp.length];
-        for (Warrior ally : allies) {
-            result[ally.index] = grenadeEffectToTrooper(target, ally.point, allyHp[ally.index]);
-        }
-        return result;
+        return result != null ? result : hp;
     }
 
     private int grenadeEffectToTrooper(@NotNull Point target, @NotNull Point trooper, int hitpoints) {
@@ -229,9 +226,10 @@ public class Position {
         int ap = actionPoints - situation.game.getGrenadeThrowCost();
         if (ap < 0) return null;
         if (!me.withinEuclidean(target, situation.game.getGrenadeThrowRange())) return null;
-        int[] newEnemyHp = grenadeEffectToEnemies(target);
+        int[] newEnemyHp = grenadeEffect(target, situation.enemies, enemyHp);
         if (Arrays.equals(enemyHp, newEnemyHp)) return null;
-        int[] newAllyHp = grenadeEffectToAllies(target);
+        int[] newAllyHp = grenadeEffect(target, allies, allyHp);
+        // TODO: update collected
         return new Position(situation, me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected, seen);
     }
 
@@ -245,6 +243,7 @@ public class Position {
         else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getMedikitBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
+        // TODO: update collected
         return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected, seen);
     }
 
@@ -255,6 +254,7 @@ public class Position {
         int ap = actionPoints - situation.game.getFieldRationEatCost();
         if (ap < 0) return null;
         ap = Math.min(situation.self.getInitialActionPoints(), ap + situation.game.getFieldRationBonusActionPoints());
+        // TODO: update collected
         return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected, seen);
     }
 

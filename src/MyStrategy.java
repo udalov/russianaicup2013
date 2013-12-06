@@ -31,8 +31,7 @@ public class MyStrategy implements Strategy {
         }
 
         Go go = new MakeTurn(army, self, world, game).makeTurn();
-        // TODO: only validate locally, do nothing or end turn on the server
-        go.validate(self, world, game);
+        // go.validate(self, world, game);
         go.execute(move);
     }
 }
