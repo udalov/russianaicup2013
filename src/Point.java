@@ -110,7 +110,7 @@ public final class Point {
 
     @Override
     public int hashCode() {
-        return index();
+        return index() + 1;
     }
 
     @Override

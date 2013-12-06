@@ -31,8 +31,7 @@ public abstract class Scorer {
 
         result += coeff.weightedHpOfAllies * weightedHpOfAllies(p.allyHp);
 
-        TrooperType selfType = situation.self.type;
-        if (selfType == FIELD_MEDIC) {
+        if (situation.self.type == FIELD_MEDIC) {
             // TODO: or if have a medikit
             result -= coeff.medicDistanceToWoundedAllies * distanceToWoundedAllies(p);
         }
@@ -55,13 +54,13 @@ public abstract class Scorer {
 
         if (situation.self.type != COMMANDER) {
             if (commanderSituation == null || situation.self.type == SCOUT) return 0;
-            return p.me.euclideanDistance(commanderSituation.point) <= auraRange ? 1 : 0;
+            return p.me.withinEuclidean(commanderSituation.point, auraRange) ? 1 : 0;
         }
 
         int result = 0;
         for (Warrior ally : p.allies) {
             if (ally.type != COMMANDER && ally.type != SCOUT) {
-                if (ally.point.euclideanDistance(p.me) <= auraRange) result++;
+                if (ally.point.withinEuclidean(p.me, auraRange)) result++;
             }
         }
         return result;
@@ -315,7 +314,9 @@ public abstract class Scorer {
             // Assume that all enemies see us, but this is not always true
             // TODO: count number of other teams having at least one trooper who sees us
 
-            int n = situation.allies.size();
+            List<Warrior> allies = p.allies;
+            int[] allyHp = p.allyHp;
+            int n = allies.size();
 
             double[] expectedDamage = new double[n];
 
@@ -334,15 +335,15 @@ public abstract class Scorer {
                 if (!situation.lightVersion) {
                     if (enemy.isHoldingGrenade() && actionPoints >= situation.game.getGrenadeThrowCost()) {
                         double grenadeThrowRange = situation.game.getGrenadeThrowRange();
-                        int[] best = p.allyHp;
+                        int[] best = allyHp;
                         int maxScore = 0;
-                        for (Warrior ally : p.allies) {
+                        for (Warrior ally : allies) {
                             Point target = ally.point;
-                            if (enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
-                                int[] hp = p.grenadeEffect(target, p.allies, p.allyHp);
+                            if (enemy.point.withinEuclidean(target, grenadeThrowRange)) {
+                                int[] hp = p.grenadeEffect(target, allies, allyHp);
                                 int score = 0;
                                 for (int i = 0; i < n; i++) {
-                                    score += p.allyHp[i] - hp[i];
+                                    score += allyHp[i] - hp[i];
                                     if (hp[i] == 0) score += coeff.killEnemy;
                                 }
 
@@ -355,8 +356,8 @@ public abstract class Scorer {
                         // Assume that he'll only throw grenade if it'll bring more than 60 of damage
                         if (maxScore > 60) {
                             actionPoints -= situation.game.getGrenadeThrowCost();
-                            for (int i = 0; i < p.allyHp.length; i++) {
-                                expectedDamage[i] += p.allyHp[i] - best[i];
+                            for (int i = 0; i < allyHp.length; i++) {
+                                expectedDamage[i] += allyHp[i] - best[i];
                             }
                         }
                     }
@@ -368,7 +369,7 @@ public abstract class Scorer {
 
                 int isReachable = 0;
                 int alliesUnderSight = 0;
-                for (Warrior ally : p.allies) {
+                for (Warrior ally : allies) {
                     if (situation.isReachable(enemy.getShootingRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
                         isReachable |= 1 << ally.index;
                         alliesUnderSight++;
@@ -385,7 +386,7 @@ public abstract class Scorer {
 
             double result = 0.;
             for (int i = 0; i < n; i++) {
-                result += Math.min(expectedDamage[i], p.allyHp[i]);
+                result += Math.min(expectedDamage[i], allyHp[i]);
             }
 
             return result;
