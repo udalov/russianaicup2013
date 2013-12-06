@@ -187,16 +187,11 @@ public abstract class Scorer {
             result -= coeff.enemyHp * IntArrays.sum(p.enemyHp);
             result += coeff.killEnemy * IntArrays.numberOfZeros(p.enemyHp);
 
-            result -= coeff.enemyTeamsThatSeeUs * enemyTeamsThatSeeUs(p);
-
             result -= coeff.expectedDamageOnNextTurn * expectedDamageOnNextTurn(p);
 
             result += coeff.bonusInCombat * Integer.bitCount(p.bonuses);
 
             result -= coeff.distanceToAlliesInCombat * distanceToAllies(p);
-
-            // TODO: only if high hp?
-            result += coeff.combatVisibleEnemies * visibleEnemies(p);
 
             if (!situation.lightVersion) {
                 if (situation.army.isOrderComplete()) {
@@ -204,6 +199,11 @@ public abstract class Scorer {
                 }
 
                 result += coeff.shootablePoints * shootablePoints(p);
+
+                // TODO: only if high hp?
+                result += coeff.combatVisibleEnemies * visibleEnemies(p);
+
+                result -= coeff.enemyTeamsThatSeeUs * enemyTeamsThatSeeUs(p);
             }
 
             return result;
