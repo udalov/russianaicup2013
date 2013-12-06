@@ -10,20 +10,20 @@ public abstract class Scorer {
     protected final Situation situation;
     protected final Const coeff;
 
-    private final Point commanderSituationPoint;
+    protected final Warrior commanderSituation;
 
     public Scorer(@NotNull Situation situation) {
         this.situation = situation;
         this.coeff = situation.army.coeff;
 
-        Point commander = null;
+        Warrior commander = null;
         for (Warrior ally : situation.allies) {
             if (ally.type == COMMANDER) {
-                commander = ally.point;
+                commander = ally;
                 break;
             }
         }
-        this.commanderSituationPoint = commander;
+        this.commanderSituation = commander;
     }
 
     public final double evaluate(@NotNull Position p) {
@@ -54,8 +54,8 @@ public abstract class Scorer {
         double auraRange = situation.game.getCommanderAuraRange();
 
         if (situation.self.type != COMMANDER) {
-            if (commanderSituationPoint == null || situation.self.type == SCOUT) return 0;
-            return p.me.euclideanDistance(commanderSituationPoint) <= auraRange ? 1 : 0;
+            if (commanderSituation == null || situation.self.type == SCOUT) return 0;
+            return p.me.euclideanDistance(commanderSituation.point) <= auraRange ? 1 : 0;
         }
 
         int result = 0;
@@ -247,13 +247,32 @@ public abstract class Scorer {
 
             Situation next = new Situation(situation, nextAlly.type, allies, situation.bonuses /* TODO: some of them are collected */);
 
-            Position start = new Position(next, nextAlly.point, nextAlly.stance, nextAlly.getInitialActionPoints() /* TODO: commander aura */,
+            Position start = new Position(next, nextAlly.point, nextAlly.stance, nextAllyInitialActionPoints(p, nextAlly),
                     MakeTurn.computeBonusesBitSet(nextAlly.trooper /* TODO: deprecate? here it's safe though */), p.enemyHp, p.allyHp, p.collected,
                     MakeTurn.computeSeenForSituation(next));
 
             Pair<Position, List<Go>> best = MakeTurn.best(next, start);
 
             return next.scorer.evaluate(best.first);
+        }
+
+        private int nextAllyInitialActionPoints(@NotNull Position p, @NotNull Warrior nextAlly) {
+            int result = nextAlly.getInitialActionPoints();
+
+            Point commander;
+            if (situation.self.type == COMMANDER) {
+                commander = p.me;
+            } else if (commanderSituation != null) {
+                commander = commanderSituation.point;
+            } else {
+                return result;
+            }
+
+            if (nextAlly.point.withinEuclidean(commander, situation.game.getCommanderAuraRange())) {
+                return result + situation.game.getCommanderAuraBonusActionPoints();
+            } else {
+                return result;
+            }
         }
 
         @Nullable
