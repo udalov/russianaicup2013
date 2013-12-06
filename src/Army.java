@@ -94,7 +94,7 @@ public class Army {
         } else if (board.kind == Board.Kind.MAP03) {
             wp.set(0, 1, 2, 3, 4, 3, 2, 7, 11, 15, 22, 19, 13, 7);
         } else if (board.kind == Board.Kind.MAP05) {
-            wp.set(0, 6, 11, 16, 20, 22, 24, 18, 8, 4, 2, 7);
+            wp.set(0, 2, 4, 2, 0, 6, 16, 20, 22, 24, 18, 3);
         } else if (board.kind == Board.Kind.MAP06) {
             // Start in 6, not 0
             wp.set(6, 7, 8, 7, 12, 17, 18, 16, 17, 12, 14, 10, 0, 2, 7);
