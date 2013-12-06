@@ -37,13 +37,7 @@ public abstract class Scorer {
             result -= coeff.medicDistanceToWoundedAllies * distanceToWoundedAllies(p);
         }
 
-        if (selfType == COMMANDER) {
-            result += coeff.underCommanderAura * underCommanderAura(p);
-        } else if (selfType != SCOUT) {
-            if (p.me.euclideanDistance(commanderSituationPoint) <= situation.game.getCommanderAuraRange()) {
-                result += coeff.underCommanderAura;
-            }
-        }
+        result += coeff.underCommanderAura * underCommanderAura(p);
 
         result += coeff.pointsSeen * p.seen.size();
 
@@ -58,6 +52,12 @@ public abstract class Scorer {
 
     private int underCommanderAura(@NotNull Position p) {
         double auraRange = situation.game.getCommanderAuraRange();
+
+        if (situation.self.type != COMMANDER) {
+            if (commanderSituationPoint == null || situation.self.type == SCOUT) return 0;
+            return p.me.euclideanDistance(commanderSituationPoint) <= auraRange ? 1 : 0;
+        }
+
         int result = 0;
         for (Warrior ally : p.allies) {
             if (ally.type != COMMANDER && ally.type != SCOUT) {
