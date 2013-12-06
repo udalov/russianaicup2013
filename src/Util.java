@@ -38,22 +38,4 @@ public class Util {
         Collections.reverse(result);
         return result;
     }
-
-    @NotNull
-    public static <T> Iterable<T> iterable(@NotNull final AbstractIterator<T> iterator) {
-        return new Iterable<T>() {
-            @Override
-            @NotNull
-            public Iterator<T> iterator() {
-                return iterator;
-            }
-        };
-    }
-
-    public static abstract class AbstractIterator<T> implements Iterator<T> {
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("Oh please");
-        }
-    }
 }

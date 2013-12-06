@@ -3,7 +3,9 @@ import model.BonusType;
 import model.Direction;
 import model.TrooperStance;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static model.BonusType.*;
 import static model.TrooperType.SNIPER;
@@ -23,6 +25,8 @@ public class Position {
     public final int[] collected;
     public final PointSet seen;
 
+    public final List<Warrior> allies;
+
     private final int hashCode;
 
     public Position(@NotNull Situation situation, @NotNull Point me, @NotNull TrooperStance stance, int actionPoints, int bonuses,
@@ -37,6 +41,9 @@ public class Position {
         this.collected = collected;
         this.seen = seen;
 
+        this.allies = new ArrayList<>(situation.allies);
+        this.allies.set(situation.self.index, new Warrior(situation.self, me, stance));
+
         int hash = me.hashCode();
         hash = 31 * hash + stance.hashCode();
         hash = 31 * hash + actionPoints;
@@ -45,50 +52,6 @@ public class Position {
         hash = 31 * hash + Arrays.hashCode(allyHp);
         hash = 31 * hash + Arrays.hashCode(collected);
         this.hashCode = hash;
-    }
-
-    @NotNull
-    public Iterable<Warrior> allies() {
-        return Util.iterable(new Util.AbstractIterator<Warrior>() {
-            private int i = 0;
-
-            @Override
-            public boolean hasNext() {
-                return i < situation.allies.size();
-            }
-
-            @Override
-            public Warrior next() {
-                Warrior ally = i == situation.self.index ?
-                        new Warrior(situation.self, me, stance) :
-                        situation.allies.get(i);
-                i++;
-                return ally;
-            }
-        });
-    }
-
-    @NotNull
-    public Iterable<EnemyWarrior> aliveEnemies() {
-        return Util.iterable(new Util.AbstractIterator<EnemyWarrior>() {
-            private final int size = situation.enemies.size();
-            private int i = 0;
-
-            @Override
-            public boolean hasNext() {
-                while (i < size) {
-                    if (enemyHp[i] > 0) return true;
-                    i++;
-                }
-                return false;
-            }
-
-            @Override
-            public EnemyWarrior next() {
-                while (!hasNext());
-                return situation.enemies.get(i++);
-            }
-        });
     }
 
     public boolean has(@NotNull BonusType bonus) {
@@ -105,11 +68,11 @@ public class Position {
 
     private boolean isPassablePoint(@NotNull Point point) {
         if (!situation.board.isPassable(point)) return false;
-        for (Warrior ally : allies()) {
+        for (Warrior ally : allies) {
             if (point.equals(ally.point)) return false;
         }
-        for (EnemyWarrior enemy : aliveEnemies()) {
-            if (point.equals(enemy.point)) return false;
+        for (EnemyWarrior enemy : situation.enemies) {
+            if (enemyHp[enemy.index] > 0 && point.equals(enemy.point)) return false;
         }
         return true;
     }
@@ -145,7 +108,7 @@ public class Position {
     @NotNull
     public int[] grenadeEffectToAllies(@NotNull Point target) {
         int[] result = new int[allyHp.length];
-        for (Warrior ally : allies()) {
+        for (Warrior ally : allies) {
             result[ally.index] = grenadeEffectToTrooper(target, ally.point, allyHp[ally.index]);
         }
         return result;

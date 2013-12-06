@@ -40,13 +40,13 @@ public abstract class Scorer {
 
     private int underCommanderAura(@NotNull Position p) {
         Point commander = null;
-        for (Warrior ally : p.allies()) {
+        for (Warrior ally : p.allies) {
             if (ally.type == COMMANDER) commander = ally.point;
         }
         if (commander == null) return 0;
 
         int result = 0;
-        for (Warrior ally : p.allies()) {
+        for (Warrior ally : p.allies) {
             if (ally.type != COMMANDER && ally.type != SCOUT) {
                 if (ally.point.euclideanDistance(p.me) <= situation.game.getCommanderAuraRange()) result++;
             }
@@ -198,7 +198,7 @@ public abstract class Scorer {
 
         private double shootablePoints(@NotNull Position p) {
             map.clear();
-            for (Warrior warrior : p.allies()) {
+            for (Warrior warrior : p.allies) {
                 for (Point point : situation.board.allPassable()) {
                     if (situation.isReachable(warrior.getShootingRange(), warrior.point, warrior.stance, point, STANDING)) {
                         Integer old = map.get(point);
@@ -214,7 +214,7 @@ public abstract class Scorer {
         private int visibleEnemies(@NotNull Position p) {
             int result = 0;
             outer: for (EnemyWarrior enemy : situation.enemies) {
-                for (Warrior ally : p.allies()) {
+                for (Warrior ally : p.allies) {
                     // TODO: not very accurate, as kneeling or prone enemy sniper decreases (!) our vision range towards him
                     if (situation.isReachable(ally.getVisionRange(), ally.point, ally.stance, enemy.point, enemy.stance)) {
                         result++;
@@ -249,7 +249,7 @@ public abstract class Scorer {
             int myIndex = order.indexOf(situation.self.type);
             for (int i = 1; i < order.size(); i++) {
                 TrooperType type = order.get((myIndex + i) % order.size());
-                for (Warrior ally : p.allies()) {
+                for (Warrior ally : p.allies) {
                     if (p.allyHp[ally.index] > 0 && ally.type == type) return ally;
                 }
             }
@@ -258,8 +258,9 @@ public abstract class Scorer {
 
         private int enemyTeamsThatSeeUs(@NotNull Position p) {
             int bitset = 0;
-            for (EnemyWarrior enemy : p.aliveEnemies()) {
-                for (Warrior ally : p.allies()) {
+            for (EnemyWarrior enemy : situation.enemies) {
+                if (p.enemyHp[enemy.index] <= 0) continue;
+                for (Warrior ally : p.allies) {
                     if (situation.isReachable(enemy.getVisionRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
                         bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
                     }
@@ -286,7 +287,9 @@ public abstract class Scorer {
 
             double[] expectedDamage = new double[n];
 
-            for (EnemyWarrior enemy : p.aliveEnemies()) {
+            for (EnemyWarrior enemy : situation.enemies) {
+                if (p.enemyHp[enemy.index] <= 0) continue;
+
                 int actionPoints = enemy.getInitialActionPoints();
                 if (enemy.type != COMMANDER && enemy.type != SCOUT) {
                     // Assume that the enemy trooper always is in the commander aura
@@ -302,7 +305,7 @@ public abstract class Scorer {
                         double grenadeThrowRange = situation.game.getGrenadeThrowRange();
                         int[] best = p.allyHp;
                         int maxScore = 0;
-                        for (Warrior ally : p.allies()) {
+                        for (Warrior ally : p.allies) {
                             Point target = ally.point;
                             if (enemy.point.euclideanDistance(target) <= grenadeThrowRange) {
                                 int[] hp = p.grenadeEffectToAllies(target);
@@ -333,7 +336,7 @@ public abstract class Scorer {
 
                 int isReachable = 0;
                 int alliesUnderSight = 0;
-                for (Warrior ally : p.allies()) {
+                for (Warrior ally : p.allies) {
                     if (situation.isReachable(enemy.getShootingRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
                         isReachable |= 1 << ally.index;
                         alliesUnderSight++;
