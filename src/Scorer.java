@@ -10,9 +10,20 @@ public abstract class Scorer {
     protected final Situation situation;
     protected final Const coeff;
 
+    private final Point commanderSituationPoint;
+
     public Scorer(@NotNull Situation situation) {
         this.situation = situation;
         this.coeff = situation.army.coeff;
+
+        Point commander = null;
+        for (Warrior ally : situation.allies) {
+            if (ally.type == COMMANDER) {
+                commander = ally.point;
+                break;
+            }
+        }
+        this.commanderSituationPoint = commander;
     }
 
     public final double evaluate(@NotNull Position p) {
@@ -20,12 +31,19 @@ public abstract class Scorer {
 
         result += coeff.weightedHpOfAllies * weightedHpOfAllies(p.allyHp);
 
-        // TODO: or if have a medikit
-        if (situation.self.type == FIELD_MEDIC) {
+        TrooperType selfType = situation.self.type;
+        if (selfType == FIELD_MEDIC) {
+            // TODO: or if have a medikit
             result -= coeff.medicDistanceToWoundedAllies * distanceToWoundedAllies(p);
         }
 
-        result += coeff.underCommanderAura * underCommanderAura(p);
+        if (selfType == COMMANDER) {
+            result += coeff.underCommanderAura * underCommanderAura(p);
+        } else if (selfType != SCOUT) {
+            if (p.me.euclideanDistance(commanderSituationPoint) <= situation.game.getCommanderAuraRange()) {
+                result += coeff.underCommanderAura;
+            }
+        }
 
         result += coeff.pointsSeen * p.seen.size();
 
@@ -39,16 +57,11 @@ public abstract class Scorer {
     }
 
     private int underCommanderAura(@NotNull Position p) {
-        Point commander = null;
-        for (Warrior ally : p.allies) {
-            if (ally.type == COMMANDER) commander = ally.point;
-        }
-        if (commander == null) return 0;
-
+        double auraRange = situation.game.getCommanderAuraRange();
         int result = 0;
         for (Warrior ally : p.allies) {
             if (ally.type != COMMANDER && ally.type != SCOUT) {
-                if (ally.point.euclideanDistance(p.me) <= situation.game.getCommanderAuraRange()) result++;
+                if (ally.point.euclideanDistance(p.me) <= auraRange) result++;
             }
         }
         return result;
