@@ -17,8 +17,6 @@ public class Army {
     private final List<TrooperType> order = new ArrayList<>(TrooperType.values().length);
     private boolean isOrderComplete;
 
-    private int medicSelfHealed;
-
     private final Map<TrooperType, Pair<Integer, TurnLocalData>> turnLocalData = new HashMap<>();
 
     public Army(@NotNull World world) {
@@ -147,14 +145,6 @@ public class Army {
     public void completeOrder() {
         assert !this.isOrderComplete : "Don't do this twice";
         this.isOrderComplete = true;
-    }
-
-    public boolean allowMedicSelfHealing() {
-        return medicSelfHealed < 30;
-    }
-
-    public void medicSelfHealed() {
-        medicSelfHealed++;
     }
 
     @Nullable
