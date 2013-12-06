@@ -133,9 +133,15 @@ public class Position {
 
     @Nullable
     private Bonus maybeCollectBonus(@NotNull Point point) {
+        Bonus bonus = bonusAt(point);
+        return bonus != null && !has(bonus.getType()) ? bonus : null;
+    }
+
+    @Nullable
+    private Bonus bonusAt(@NotNull Point point) {
         for (Bonus bonus : situation.bonuses) {
             if (point.isEqualTo(bonus)) {
-                return has(bonus.getType()) || IntArrays.contains(collected, (int) bonus.getId()) ? null : bonus;
+                return IntArrays.contains(collected, (int) bonus.getId()) ? null : bonus;
             }
         }
         return null;
@@ -229,8 +235,10 @@ public class Position {
         int[] newEnemyHp = grenadeEffect(target, situation.enemies, enemyHp);
         if (Arrays.equals(enemyHp, newEnemyHp)) return null;
         int[] newAllyHp = grenadeEffect(target, allies, allyHp);
-        // TODO: update collected
-        return new Position(situation, me, stance, ap, without(GRENADE), newEnemyHp, newAllyHp, collected, seen);
+        Bonus bonus = bonusAt(me);
+        int newBonuses = bonus != null ? bonuses : without(GRENADE);
+        int[] newCollected = bonus != null ? IntArrays.add(collected, (int) bonus.getId()) : collected;
+        return new Position(situation, me, stance, ap, newBonuses, newEnemyHp, newAllyHp, newCollected, seen);
     }
 
     @Nullable
@@ -243,8 +251,10 @@ public class Position {
         else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getMedikitBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
-        // TODO: update collected
-        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected, seen);
+        Bonus bonus = bonusAt(me);
+        int newBonuses = bonus != null ? bonuses : without(MEDIKIT);
+        int[] newCollected = bonus != null ? IntArrays.add(collected, (int) bonus.getId()) : collected;
+        return new Position(situation, me, stance, ap, newBonuses, enemyHp, newAllyHp, newCollected, seen);
     }
 
     @Nullable
@@ -254,8 +264,10 @@ public class Position {
         int ap = actionPoints - situation.game.getFieldRationEatCost();
         if (ap < 0) return null;
         ap = Math.min(situation.self.getInitialActionPoints(), ap + situation.game.getFieldRationBonusActionPoints());
-        // TODO: update collected
-        return new Position(situation, me, stance, ap, without(FIELD_RATION), enemyHp, allyHp, collected, seen);
+        Bonus bonus = bonusAt(me);
+        int newBonuses = bonus != null ? bonuses : without(FIELD_RATION);
+        int[] newCollected = bonus != null ? IntArrays.add(collected, (int) bonus.getId()) : collected;
+        return new Position(situation, me, stance, ap, newBonuses, enemyHp, allyHp, newCollected, seen);
     }
 
     @Nullable
