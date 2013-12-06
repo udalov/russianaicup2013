@@ -289,11 +289,12 @@ public abstract class Scorer {
 
         private int enemyTeamsThatSeeUs(@NotNull Position p) {
             int bitset = 0;
-            for (EnemyWarrior enemy : situation.enemies) {
+            outer: for (EnemyWarrior enemy : situation.enemies) {
                 if (p.enemyHp[enemy.index] <= 0) continue;
                 for (Warrior ally : p.allies) {
                     if (situation.isReachable(enemy.getVisionRange(), enemy.point, enemy.stance, ally.point, ally.stance)) {
                         bitset |= 1 << enemyTeams.get(enemy.getPlayerId());
+                        continue outer;
                     }
                 }
             }
