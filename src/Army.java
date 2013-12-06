@@ -85,7 +85,9 @@ public class Army {
          15 16 17 18 19
          20 21 22 23 24
          */
-        if (board.kind == Board.Kind.MAP02) {
+        if (board.kind == Board.Kind.FEFER) {
+            wp.set(0, 6, 0, 1, 2, 7, 2, 3, 4, 24, 12, 20);
+        } else if (board.kind == Board.Kind.MAP02) {
             wp.set(0, 11, 1, 2, 1, 11, 20, 22, 24, 13, 4, 2);
         } else if (board.kind == Board.Kind.MAP03) {
             wp.set(0, 1, 2, 3, 4, 3, 2, 7, 11, 15, 22, 19, 13, 7);
