@@ -45,8 +45,7 @@ public class Position {
         this.allies.set(situation.self.index, new Warrior(situation.self, me, stance));
 
         int hash = me.hashCode();
-        hash = 31 * hash + stance.hashCode();
-        hash = 31 * hash + actionPoints;
+        hash = 31 * hash + stance.ordinal() + 1;
         hash = 31 * hash + bonuses;
         hash = 31 * hash + Arrays.hashCode(enemyHp);
         hash = 31 * hash + Arrays.hashCode(allyHp);
@@ -154,7 +153,6 @@ public class Position {
         Position that = (Position) o;
 
         return hashCode == that.hashCode &&
-                actionPoints == that.actionPoints &&
                 bonuses == that.bonuses &&
                 stance == that.stance &&
                 me.equals(that.me) &&
