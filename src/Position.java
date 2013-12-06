@@ -267,6 +267,6 @@ public class Position {
         else if (ally.point.isNeighbor(me)) newAllyHp = healEffect(ally.index, situation.game.getFieldMedicHealBonusHitpoints());
         else return null;
         if (Arrays.equals(allyHp, newAllyHp)) return null;
-        return new Position(situation, me, stance, ap, without(MEDIKIT), enemyHp, newAllyHp, collected, seen);
+        return new Position(situation, me, stance, ap, bonuses, enemyHp, newAllyHp, collected, seen);
     }
 }
