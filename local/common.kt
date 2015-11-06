@@ -1,15 +1,17 @@
 package runner
 
+import Board
 import org.apache.log4j.Logger
-import java.util.ArrayList
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.net.ConnectException
+import java.util.*
 
 open class Player(val name: String, val classFile: String)
 object MyStrategy : Player("MyStrategy", "#LocalTestPlayer")
-object EmptyPlayer : Player("EmptyPlayer", javaClass<com.a.b.a.a.e.b>().getSimpleName() + ".class")
-object QuickStartGuy : Player("QuickStartGuy", javaClass<com.a.b.a.a.e.c>().getSimpleName() + ".class")
-object SmartGuy : Player("SmartGuy", javaClass<com.a.b.a.a.e.a>().getSimpleName() + ".class")
+object EmptyPlayer : Player("EmptyPlayer", com.a.b.a.a.e.b::class.java.simpleName + ".class")
+object QuickStartGuy : Player("QuickStartGuy", com.a.b.a.a.e.c::class.java.simpleName + ".class")
+object SmartGuy : Player("SmartGuy", com.a.b.a.a.e.a::class.java.simpleName + ".class")
 
 val LOG_FILE = "out/log.txt"
 
@@ -28,22 +30,28 @@ fun localRunner(vis: Boolean, map: Board.Kind, teamSize: Int, seed: Long, player
             "-seed=$seed"
     )
 
-    for ((index, player) in players.withIndices()) {
+    for ((index, player) in players.withIndex()) {
         val i = index + 1
         args.add("-p$i-name=${player.name}")
         args.add("-p$i-team-size=$teamSize")
         args.add(player.classFile)
     }
 
-    return com.a.b.c(args.copyToArray())
+    return com.a.b.c(args.toTypedArray())
 }
 
 fun runMyStrategy(port: Long) {
     while (true) {
         try {
-            Runner.main(array("127.0.0.1", "$port", "0000000000000000"))
+            val runnerClass = Class.forName("Runner")
+            val main = runnerClass.getDeclaredMethod("main", Array<String>::class.java)
+            try {
+                main(null, arrayOf("127.0.0.1", "$port", "0000000000000000"))
+            } catch (e: InvocationTargetException) {
+                throw e.targetException
+            }
         } catch (e: ConnectException) {
-            if (e.getMessage()?.startsWith("Connection refused") ?: false) {
+            if (e.message?.startsWith("Connection refused") ?: false) {
                 Thread.sleep(40)
                 continue
             } else throw e
@@ -64,7 +72,7 @@ fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadNam
     val teamSize = if (lineup.length == 2) 5 else 4
 
     val threads = ArrayList<Thread>(5)
-    threads add Thread(localRunner(vis, map, teamSize, seed, lineup map ::parsePlayer))
+    threads.add(Thread(localRunner(vis, map, teamSize, seed, lineup.map(::parsePlayer))))
 
     val initialPort: Long = 31001
     var myStrategies = 0
@@ -75,20 +83,20 @@ fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadNam
         val port = initialPort + (myStrategies++)
 
         if (myStrategies == 1) {
-            threads add Thread {
-                Thread.currentThread().setName(threadName)
+            threads.add(Thread {
+                Thread.currentThread().name = threadName
                 runMyStrategy(port)
-            }
+            })
             continue
         }
 
         val file = File("dist/m${myStrategies}.jar")
-        assert(file.exists(), "Compile a strategy to test against to: $file")
-        threads add Thread {
-            Thread.currentThread().setName(threadName)
+        assert(file.exists()) { "Compile a strategy to test against to: $file" }
+        threads.add(Thread {
+            Thread.currentThread().name = threadName
             while (true) {
                 val process = Runtime.getRuntime().exec("java -cp $file Runner 127.0.0.1 $port 0000000000000000")
-                val err = process.getErrorStream()?.reader()
+                val err = process.errorStream?.reader()
                 process.waitFor()
                 if (err?.readText()?.contains("Connection refused") ?: false) {
                     Thread.sleep(40)
@@ -96,7 +104,7 @@ fun runGame(vis: Boolean, map: Board.Kind, seed: Long, lineup: String, threadNam
                 }
                 break
             }
-        }
+        })
     }
 
     for (thread in threads) {

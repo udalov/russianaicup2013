@@ -1,9 +1,11 @@
 package runner.local
 
-import runner.*
+import Board.Kind.MAP06
+import runner.LOG_FILE
+import runner.runGame
+import runner.time
 import java.io.File
-import java.util.Random
-import Board.Kind.*
+import java.util.*
 
 fun main(args: Array<String>) = time {
     val seed = Math.abs(Random().nextLong())
